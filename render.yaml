@@ -13,7 +13,7 @@ services:
     name: brimlearn
     runtime: node
     plan: free
-    buildCommand: npm ci && npm run build
+    buildCommand: npm cache clean --force && npm ci --prefer-online && node -e "console.log('PLUGIN_INSTALLED', require.resolve('@tailwindcss/vite'))" && npm run build
     startCommand: npm start
     healthCheckPath: /api/oauth/google/config
     autoDeploy: true
