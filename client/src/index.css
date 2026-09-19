@@ -1,0 +1,127 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  --primary: #173f31;
+  --primary-foreground: #f5f8ef;
+  --sidebar-primary: #173f31;
+  --sidebar-primary-foreground: #f5f8ef;
+  --chart-1: #3b926f;
+  --chart-2: #ff9a87;
+  --chart-3: #d8f36a;
+  --chart-4: #8f72b4;
+  --chart-5: #c58e3d;
+  --radius: 0.9rem;
+  --background: #fbfbf6;
+  --foreground: #183c31;
+  --card: #ffffff;
+  --card-foreground: #183c31;
+  --popover: #ffffff;
+  --popover-foreground: #183c31;
+  --secondary: #f3f6ef;
+  --secondary-foreground: #527064;
+  --muted: #f3f6ef;
+  --muted-foreground: #7d958b;
+  --accent: #f3f6ef;
+  --accent-foreground: #183c31;
+  --destructive: #d45a4a;
+  --destructive-foreground: #ffffff;
+  --border: #e1e8df;
+  --input: #e1e8df;
+  --ring: #5d9c7d;
+  --sidebar: #123d30;
+  --sidebar-foreground: #eef6dc;
+  --sidebar-accent: #194c3a;
+  --sidebar-accent-foreground: #eef6dc;
+  --sidebar-border: rgba(255,255,255,.12);
+  --sidebar-ring: #d8f36a;
+}
+
+.dark {
+  --background: #0e2b22;
+  --foreground: #eef6dc;
+  --card: #123d30;
+  --card-foreground: #eef6dc;
+  --popover: #123d30;
+  --popover-foreground: #eef6dc;
+  --secondary: #194c3a;
+  --secondary-foreground: #c4ded0;
+  --muted: #194c3a;
+  --muted-foreground: #a7c4b8;
+  --accent: #194c3a;
+  --accent-foreground: #eef6dc;
+  --border: rgba(255,255,255,.12);
+  --input: rgba(255,255,255,.18);
+  --ring: #d8f36a;
+  --sidebar: #0a251d;
+  --sidebar-foreground: #eef6dc;
+  --sidebar-accent: #123d30;
+  --sidebar-accent-foreground: #eef6dc;
+  --sidebar-border: rgba(255,255,255,.12);
+  --sidebar-ring: #d8f36a;
+}
+
+@layer base {
+  * { @apply border-border outline-ring/50; }
+  html { font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif; background: #fbfbf6; font-size: 17px; }
+  body { @apply bg-background text-foreground; margin: 0; }
+  button, [role="button"], a { -webkit-tap-highlight-color: transparent; }
+  button:not(:disabled), [role="button"]:not([aria-disabled="true"]), a[href] { @apply cursor-pointer; }
+  button:active:not(:disabled) { transform: scale(.985); }
+}
+
+@layer components {
+  .font-display { font-family: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif; }
+  .container { width: 100%; margin-left: auto; margin-right: auto; padding-left: 1rem; padding-right: 1rem; }
+  .flex { min-height: 0; min-width: 0; }
+  @media (min-width: 640px) { .container { padding-left: 1.5rem; padding-right: 1.5rem; } }
+  @media (min-width: 1024px) { .container { padding-left: 2rem; padding-right: 2rem; max-width: 1280px; } }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  button, a, [role="button"] { transition: transform 160ms cubic-bezier(.23,1,.32,1), background-color 160ms ease, color 160ms ease, box-shadow 160ms ease, border-color 160ms ease; }
+}

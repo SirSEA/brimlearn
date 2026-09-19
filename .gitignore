@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Production build output
+dist/
+
+# Environment & secrets — never commit these
+.env
+.env.*
+!.env.example
+*firebase-adminsdk*.json
+*.service-account.json
+
+# Editor / OS
+.DS_Store
+*.log
+*.tsbuildinfo

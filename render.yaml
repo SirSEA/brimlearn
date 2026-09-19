@@ -1,0 +1,36 @@
+# Render blueprint: persistent Node web-service for BrimLearn.
+#
+# Deploys the full app (Express + tRPC + Google OAuth + Firestore) and serves
+# the built client from dist/public. `sync: false` values must be pasted in
+# the Render dashboard under Environment (they won't be read from the git repo).
+#
+# After the deploy, add this exact URL to the Google Cloud "Authorized redirect
+# URIs" for your OAuth client:
+#   https://<your-service>.onrender.com/api/oauth/google/callback
+
+services:
+  - type: web
+    name: brimlearn
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/oauth/google/config
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PORT
+        value: 10000
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_CLIENT_EMAIL
+        sync: false
+      - key: FIREBASE_PRIVATE_KEY
+        sync: false
