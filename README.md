@@ -69,7 +69,7 @@ A ready-made blueprint is included:
    put the private key on one line with `\n` escapes).
 4. As soon as the service has a URL, register `https://<service>.onrender.com/api/oauth/google/callback` as an authorized redirect URI in Google Cloud, then test "Sign in with Google".
 
-Or manually: add a new **Web Service**, build command `npm ci && npm run build`, start command `npm start`, health check path `/api/oauth/google/config`, and set the env vars above.
+Or manually: add a new **Web Service**, build command `npm ci --include=dev && npm run build` (the `--include=dev` matters: most hosts set `NODE_ENV=production`, which tells npm to skip devDependencies like `@tailwindcss/vite` and break the vite build), start command `npm start`, health check path `/api/oauth/google/config`, and set the env vars above.
 
 ### Railway / Fly.io / any Node host
 

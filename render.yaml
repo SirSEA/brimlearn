@@ -4,6 +4,10 @@
 # the built client from dist/public. `sync: false` values must be pasted in
 # the Render dashboard under Environment (they won't be read from the git repo).
 #
+# NOTE: buildCommand passes --include=dev because Render sets NODE_ENV=production,
+# which otherwise tells npm to OMIT devDependencies (@tailwindcss/vite,
+# @vitejs/plugin-react, esbuild, tsx ...), breaking the vite build.
+#
 # After the deploy, add this exact URL to the Google Cloud "Authorized redirect
 # URIs" for your OAuth client:
 #   https://<your-service>.onrender.com/api/oauth/google/callback
@@ -13,7 +17,7 @@ services:
     name: brimlearn
     runtime: node
     plan: free
-    buildCommand: npm cache clean --force && npm ci --prefer-online && node -e "console.log('PLUGIN_INSTALLED', require.resolve('@tailwindcss/vite'))" && npm run build
+    buildCommand: npm ci --include=dev && node -e "console.log('PLUGIN_INSTALLED', require.resolve('@tailwindcss/vite'))" && npm run build
     startCommand: npm start
     healthCheckPath: /api/oauth/google/config
     autoDeploy: true
