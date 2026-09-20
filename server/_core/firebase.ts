@@ -12,6 +12,48 @@ type ServiceAccount = {
   privateKey?: string;
 };
 
+/**
+ * Normalizes a FIREBASE_PRIVATE_KEY value so it survives the many ways it gets
+ * mangled when pasted into a host's env dashboard. Retries to gracefully handle:
+ *  - the whole service-account JSON accidentally pasted as the key,
+ *  - a JSON string literal (quoted, with \n escapes),
+ *  - a single-line value with literal backslash-n escapes,
+ *  - or an already-valid PEM with real newlines.
+ */
+export function normalizePrivateKey(raw: string | undefined): string | undefined {
+  if (!raw) return undefined;
+  const trimmed = raw.trim();
+  if (!trimmed) return undefined;
+
+  // Whole service-account JSON object came through as the key.
+  if (trimmed.startsWith("{")) {
+    try {
+      const parsed = JSON.parse(trimmed) as Record<string, unknown>;
+      const key = parsed.private_key ?? parsed.privateKey;
+      if (typeof key === "string" && key.includes("PRIVATE KEY")) return key;
+    } catch {
+      /* fall through */
+    }
+  }
+
+  // Quoted JSON string literal (e.g. copied from the service-account JSON).
+  if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+    try {
+      const parsed: unknown = JSON.parse(trimmed);
+      if (typeof parsed === "string") return parsed;
+    } catch {
+      /* fall through */
+    }
+  }
+
+  // Single line with literal backslash-n escapes (unwrapped by dotenv/Render).
+  if (trimmed.includes("\\n")) {
+    return trimmed.replace(/\\n/g, "\n");
+  }
+
+  return trimmed;
+}
+
 function resolveServiceAccount(): ServiceAccount | undefined {
   if (ENV.firebaseServiceAccountPath) {
     const raw = readFileSync(ENV.firebaseServiceAccountPath, "utf8");
@@ -26,7 +68,7 @@ function resolveServiceAccount(): ServiceAccount | undefined {
     return {
       projectId: ENV.firebaseProjectId || undefined,
       clientEmail: ENV.firebaseClientEmail,
-      privateKey: ENV.firebasePrivateKey,
+      privateKey: normalizePrivateKey(ENV.firebasePrivateKey),
     };
   }
   return undefined;
