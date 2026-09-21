@@ -16,7 +16,7 @@ function ProgressRing({ value, color = "#d8f36a" }: { value: number; color?: str
   );
 }
 
-export function LearnerDashboard({ setLocation, onViewGrades }: { setLocation: (path: string) => void; onViewGrades?: () => void }) {
+export function LearnerDashboard({ setLocation, onViewGrades, onViewFullMap }: { setLocation: (path: string) => void; onViewGrades?: () => void; onViewFullMap?: () => void }) {
   const [completed, setCompleted] = useState<string[]>([]);
   const [interventionDone, setInterventionDone] = useState(false);
   const [scoreImproved, setScoreImproved] = useState(false);
@@ -27,7 +27,11 @@ export function LearnerDashboard({ setLocation, onViewGrades }: { setLocation: (
   ];
   const completeMission = (id: string, title: string) => {
     if (id === "lesson") { setLocation("/lesson"); return; }
-    setCompleted((items) => items.includes(id) ? items : [...items, id]);
+    setCompleted((items) => {
+      const next = items.includes(id) ? items : [...items, id];
+      if (next.length === 3) toast.success("All missions done — Streak keeper badge earned. Keep it up tomorrow!");
+      return next;
+    });
     toast.success(`${title} added to your completed practice.`);
   };
 
@@ -54,7 +58,7 @@ export function LearnerDashboard({ setLocation, onViewGrades }: { setLocation: (
       </section>
 
       <section className="mt-8">
-        <div className="mb-4 flex items-end justify-between"><div><div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8aa096]">Your path</div><h2 className="mt-1 font-display text-2xl font-semibold tracking-[-0.05em] text-[#183c31]">Small steps, big jumps.</h2></div><button onClick={() => toast("Full learning map coming soon.")} className="hidden text-xs font-semibold text-[#34775e] sm:block">See full map <ArrowUpRight className="ml-1 inline" size={13} /></button></div>
+        <div className="mb-4 flex items-end justify-between"><div><div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8aa096]">Your path</div><h2 className="mt-1 font-display text-2xl font-semibold tracking-[-0.05em] text-[#183c31]">Small steps, big jumps.</h2></div><button onClick={() => onViewFullMap?.()} className="hidden text-xs font-semibold text-[#34775e] sm:block">See full map <ArrowUpRight className="ml-1 inline" size={13} /></button></div>
         <div className="grid gap-3 md:grid-cols-3">
           {[
             { label: "Fractions & decimals", sub: "6 of 8 concepts", value: 72, tone: "bg-[#e7f2ff]", accent: "#4e91c6", icon: "⅜" },

@@ -18,7 +18,7 @@ export default function Home() {
       mode="learner"
       onNavigate={navigate}
       tabs={navForMode("learner")}
-      renderBody={(active, go) => {
+      renderBody={(active, go, openModal) => {
         switch (active) {
           case "grades":
             return <GradeBook />;
@@ -31,7 +31,7 @@ export default function Home() {
           case "messages":
             return <Messages variant="learner" />;
           default:
-            return <LearnerDashboard setLocation={setLocation} onViewGrades={() => go("grades")} />;
+            return <LearnerDashboard setLocation={setLocation} onViewGrades={() => go("grades")} onViewFullMap={() => openModal("curriculum")} />;
         }
       }}
     />

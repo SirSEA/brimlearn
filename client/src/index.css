@@ -107,8 +107,10 @@
 
 @layer base {
   * { @apply border-border outline-ring/50; }
-  html { font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif; background: #fbfbf6; font-size: 17px; }
+  html { font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif; background: #fbfbf6; font-size: 18px; }
+  html body { font-size: 1rem; line-height: 1.6; }
   body { @apply bg-background text-foreground; margin: 0; }
+  p, li, td, th, label, input, select, textarea, button, span { letter-spacing: 0.003em; }
   button, [role="button"], a { -webkit-tap-highlight-color: transparent; }
   button:not(:disabled), [role="button"]:not([aria-disabled="true"]), a[href] { @apply cursor-pointer; }
   button:active:not(:disabled) { transform: scale(.985); }

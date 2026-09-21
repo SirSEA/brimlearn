@@ -1,5 +1,6 @@
-import { Award, BookOpenCheck, TrendingUp } from "lucide-react";
+import { Award, BookOpenCheck, FileDown, TrendingUp, X } from "lucide-react";
 import { toast } from "sonner";
+import { useState } from "react";
 
 const subjects = [
   { name: "English Studies", score: 84, grade: "A", tone: "#4e91c6", trend: [62, 70, 74, 80, 78, 84], note: "Strong comprehension; keep reading aloud" },
@@ -11,7 +12,16 @@ const subjects = [
 
 const gradeFor = (score: number) => score >= 75 ? "bg-[#e5f5ed] text-[#34775e]" : score >= 60 ? "bg-[#fff1d7] text-[#916d22]" : "bg-[#fff0ec] text-[#a25142]";
 
+const reportRows = [
+  { name: "Week 1 check-in", score: 62, date: "Sep 3", tone: "#9a6dc1" },
+  { name: "Week 4 check-in", score: 68, date: "Sep 10", tone: "#c58e3d" },
+  { name: "Mid-term examination", score: 72, date: "Sep 20", tone: "#d46a5a" },
+  { name: "Week 8 check-in", score: 75, date: "Oct 1", tone: "#3b926f" },
+  { name: "Week 11 practice set", score: 78, date: "Oct 8", tone: "#4e91c6" },
+];
+
 export function GradeBook() {
+  const [report, setReport] = useState<(typeof subjects)[number] | null>(null);
   const overall = 76;
   return (
     <>
@@ -44,13 +54,53 @@ export function GradeBook() {
                 <div className="flex items-center gap-5">
                   <div className="flex h-8 items-end gap-1">{subject.trend.map((value, index) => <div key={index} className="w-1.5 rounded-full" style={{ height: `${value / 2}px`, backgroundColor: index === subject.trend.length - 1 ? subject.tone : "#dce5dc" }} />)}</div>
                   <div className="text-right"><div className="font-display text-2xl font-semibold tracking-[-0.04em]" style={{ color: subject.tone }}>{subject.score}%</div><div className="text-[10px] text-[#8aa096]">current score</div></div>
-                  <button onClick={() => toast(`${subject.name} report card downloading…`)} className="rounded-full border border-[#dce5dc] px-3 py-2 text-xs font-semibold text-[#34775e] hover:bg-[#eef4ea]">View</button>
+                  <button onClick={() => setReport(subject)} className="rounded-full border border-[#dce5dc] px-4 py-2 text-xs font-semibold text-[#34775e] hover:bg-[#eef4ea]">View</button>
                 </div>
               </div>
             </div>
           ))}
         </div>
       </section>
+
+      {report && (
+        <div className="fixed inset-0 z-[60] grid place-items-center bg-[#0e2b22]/45 p-4" onClick={() => setReport(null)}>
+          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[28px] bg-white p-7 shadow-2xl sm:p-8" onClick={(event) => event.stopPropagation()}>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8aa096]">Term 1 · {report.name} report</div>
+                <h2 className="mt-2 font-display text-3xl font-semibold tracking-[-0.06em] text-[#183c31]">Here’s the detail behind the grade.</h2>
+                <p className="mt-2 text-sm leading-6 text-[#648075]">{report.note}</p>
+              </div>
+              <button onClick={() => setReport(null)} className="rounded-xl p-2 text-[#8aa096] hover:bg-[#f4f7ef]" aria-label="Close report"><X size={18} /></button>
+            </div>
+
+            <div className="mt-6 flex items-center gap-5 rounded-2xl bg-[#f6f8f3] p-4">
+              <div className="text-center">
+                <div className="font-display text-4xl font-semibold tracking-[-0.06em]" style={{ color: report.tone }}>{report.score}%</div>
+                <div className="text-[10px] uppercase tracking-[0.16em] text-[#527064]">term score</div>
+              </div>
+              <div className="flex-1">
+                <div className="h-2 overflow-hidden rounded-full bg-[#e3eadf]"><div className="h-full rounded-full" style={{ width: `${report.score}%`, backgroundColor: report.tone }} /></div>
+                <div className="mt-2 flex justify-between text-[10px] text-[#8aa096]"><span>{report.grade}</span><span>{report.score >= 75 ? "Achieving well" : report.score >= 60 ? "On track" : "Needs attention"}</span></div>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <div className="text-xs font-semibold text-[#527064]">Assessment breakdown</div>
+              <div className="mt-3 space-y-2">
+                {reportRows.map((row) => (
+                  <div key={row.name} className="flex items-center justify-between rounded-xl border border-[#e9eee5] px-3.5 py-2.5">
+                    <div className="min-w-0"><div className="truncate text-sm font-semibold text-[#25483c]">{row.name}</div><div className="text-[10px] text-[#8aa096]">{row.date}</div></div>
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${row.score >= 75 ? "bg-[#e5f5ed] text-[#34775e]" : row.score >= 60 ? "bg-[#fff1d7] text-[#916d22]" : "bg-[#fff0ec] text-[#a25142]"}`}>{row.score}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <button onClick={() => toast(`${report.name} report downloading…`)} className="mt-7 flex w-full items-center justify-center gap-2 rounded-full bg-[#173f31] px-4 py-3 text-sm font-semibold text-white hover:bg-[#286b51]"><FileDown size={15} /> Download report</button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

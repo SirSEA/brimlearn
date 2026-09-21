@@ -1,13 +1,16 @@
-import { COOKIE_NAME, EMAIL_LOGIN_METHOD, NOT_ADMIN_ERR_MSG, ONE_YEAR_MS, SIGNUP_ROLES, UNAUTHED_ERR_MSG } from "@shared/const";
+import { COOKIE_NAME, EMAIL_LOGIN_METHOD, NOT_ADMIN_ERR_MSG, ONE_YEAR_MS, RESOURCE_MAX_BASE64_CHARS, SCHEME_MAX_BASE64_CHARS, SCHEME_TOO_LARGE_MSG, RESOURCE_TOO_LARGE_MSG, SIGNUP_ROLES, UNAUTHED_ERR_MSG } from "@shared/const";
 import { nanoid } from "nanoid";
 import { TRPCError } from "@trpc/server";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, router } from "./_core/trpc";
+import { publicProcedure, protectedProcedure, router, tutorProcedure, adminProcedure } from "./_core/trpc";
 import { hashPassword, verifyPassword } from "./_core/password";
 import { sdk } from "./_core/sdk";
 import * as db from "./db";
 import { invokeLLM } from "./_core/llm";
+import { RESOURCE_CATEGORIES, RESOURCE_KINDS } from "@shared/resource";
+import { LIVE_PLATFORMS } from "@shared/session";
+import { parseSchemePdf } from "./_core/schemeParser";
 import type { User } from "@shared/user";
 import { z } from "zod";
 import type { TrpcContext } from "./_core/context";
@@ -198,12 +201,243 @@ export const appRouter = router({
       }),
   }),
 
-  // TODO: add feature routers here, e.g.
-  // todo: router({
-  //   list: protectedProcedure.query(({ ctx }) =>
-  //     db.getUserTodos(ctx.user.id)
-  //   ),
-  // }),
+  liveSessions: router({
+    list: protectedProcedure.query(async () => {
+      try {
+        return await db.listLiveSessions();
+      } catch (error) {
+        console.error("[LiveSessions] list failed", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Could not load live sessions right now.",
+        });
+      }
+    }),
+
+    get: protectedProcedure
+      .input(z.object({ id: z.string().trim().min(1) }))
+      .query(async ({ input }) => {
+        const session = await db.getLiveSession(input.id);
+        if (!session) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Live session not found." });
+        }
+        return session;
+      }),
+
+    create: tutorProcedure
+      .input(
+        z
+          .object({
+            title: z.string().trim().min(1, "Give the session a title").max(120, "Title is too long"),
+            description: z.string().trim().max(500, "Description is too long").default(""),
+            grade: z.string().trim().max(80).optional().nullable(),
+            subjectId: z.string().trim().max(80).optional().nullable(),
+            subject: z.string().trim().max(80).optional().nullable(),
+            term: z.string().trim().max(80).optional().nullable(),
+            week: z.string().trim().max(80).optional().nullable(),
+            platform: z.enum(LIVE_PLATFORMS),
+            meetingUrl: z.string().trim().url("The meeting link must be a valid URL").optional().nullable(),
+            meetingId: z.string().trim().max(80).optional().nullable(),
+            passcode: z.string().trim().max(40).optional().nullable(),
+            startsAt: z.string().min(1, "A start time is required"),
+            endsAt: z.string().min(1, "An end time is required"),
+          })
+          .superRefine((data, ctx) => {
+            const start = new Date(data.startsAt).getTime();
+            const end = new Date(data.endsAt).getTime();
+            if (Number.isNaN(start) || Number.isNaN(end)) {
+              ctx.addIssue({ code: "custom", path: ["startsAt"], message: "Times must be valid dates." });
+            } else if (end <= start) {
+              ctx.addIssue({ code: "custom", path: ["endsAt"], message: "The session must end after it starts." });
+            }
+          })
+      )
+      .mutation(async ({ input, ctx }) =>
+        db.createLiveSession({
+          ...input,
+          hostBy: ctx.user.openId,
+          hostName: ctx.user.name ?? null,
+        })
+      ),
+
+    update: tutorProcedure
+      .input(
+        z.object({
+          id: z.string().trim().min(1),
+          title: z.string().trim().min(1, "Give the session a title").max(120, "Title is too long").optional(),
+          description: z.string().trim().max(500, "Description is too long").optional(),
+          grade: z.string().trim().max(80).optional().nullable(),
+          subjectId: z.string().trim().max(80).optional().nullable(),
+          subject: z.string().trim().max(80).optional().nullable(),
+          term: z.string().trim().max(80).optional().nullable(),
+          week: z.string().trim().max(80).optional().nullable(),
+          platform: z.enum(LIVE_PLATFORMS).optional(),
+          meetingUrl: z.string().trim().url("The meeting link must be a valid URL").optional().nullable(),
+          meetingId: z.string().trim().max(80).optional().nullable(),
+          passcode: z.string().trim().max(40).optional().nullable(),
+          startsAt: z.string().optional(),
+          endsAt: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const { id, ...updates } = input;
+        const session = await db.updateLiveSession(id, {
+          ...updates,
+          hostBy: ctx.user.openId,
+          hostName: ctx.user.name ?? null,
+        });
+        if (!session) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Live session not found." });
+        }
+        return session;
+      }),
+
+    remove: tutorProcedure
+      .input(z.object({ id: z.string().trim().min(1) }))
+      .mutation(async ({ input }) => {
+        await db.deleteLiveSession(input.id);
+        return { success: true } as const;
+      }),
+  }),
+
+  schemes: router({
+    list: protectedProcedure.query(async () => {
+      try {
+        return await db.listSchemes();
+      } catch (error) {
+        console.error("[Schemes] list failed", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Could not load schemes of work right now.",
+        });
+      }
+    }),
+
+    get: protectedProcedure
+      .input(z.object({ id: z.string().trim().min(1) }))
+      .query(async ({ input }) => {
+        const scheme = await db.getScheme(input.id);
+        if (!scheme) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Scheme not found." });
+        }
+        return scheme;
+      }),
+
+    import: adminProcedure
+      .input(
+        z.object({
+          fileName: z.string().trim().min(1, "Give the PDF a file name").max(160, "File name is too long"),
+          mimeType: z.string().trim().max(100),
+          dataBase64: z.string().max(SCHEME_MAX_BASE64_CHARS, SCHEME_TOO_LARGE_MSG),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const parsed = await parseSchemePdf(input.dataBase64, input.fileName);
+        if (parsed.length === 0) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "No scheme of work could be read from that PDF. Make sure it is a NERDC-style weekly plan.",
+          });
+        }
+        return db.createSchemes(parsed);
+      }),
+
+    setCurrentWeek: tutorProcedure
+      .input(z.object({ id: z.string().trim().min(1), week: z.string().trim().min(1, "Pick a week") }))
+      .mutation(async ({ input }) => {
+        const scheme = await db.updateSchemeCurrentWeek(input.id, input.week);
+        if (!scheme) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Scheme not found." });
+        }
+        return scheme;
+      }),
+
+    remove: adminProcedure
+      .input(z.object({ id: z.string().trim().min(1) }))
+      .mutation(async ({ input }) => {
+        await db.deleteScheme(input.id);
+        return { success: true } as const;
+      }),
+  }),
+
+  resources: router({
+    list: protectedProcedure.query(async () => {
+      try {
+        return await db.listResources();
+      } catch (error) {
+        console.error("[Resources] list failed", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Could not load resources right now.",
+        });
+      }
+    }),
+
+    get: protectedProcedure
+      .input(z.object({ id: z.string().trim().min(1) }))
+      .query(async ({ input }) => {
+        const resource = await db.getResource(input.id);
+        if (!resource) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Resource not found." });
+        }
+        return resource;
+      }),
+
+    create: tutorProcedure
+      .input(
+        z
+          .object({
+            kind: z.enum(RESOURCE_KINDS),
+            category: z.enum(RESOURCE_CATEGORIES),
+            title: z.string().trim().min(1, "Give the resource a title").max(120, "Title is too long"),
+            description: z.string().trim().max(500, "Description is too long").default(""),
+            youtubeId: z
+              .string()
+              .trim()
+              .regex(/^[A-Za-z0-9_-]{6,20}$/, "This YouTube link does not look valid")
+              .optional()
+              .nullable(),
+            fileName: z.string().trim().max(160, "File name is too long").optional().nullable(),
+            mimeType: z.string().trim().max(100).optional().nullable(),
+            grade: z.string().trim().max(80).optional().nullable(),
+            subjectId: z.string().trim().max(80).optional().nullable(),
+            subject: z.string().trim().max(80).optional().nullable(),
+            term: z.string().trim().max(80).optional().nullable(),
+            week: z.string().trim().max(80).optional().nullable(),
+            dataBase64: z
+              .string()
+              .max(RESOURCE_MAX_BASE64_CHARS, RESOURCE_TOO_LARGE_MSG)
+              .optional()
+              .nullable(),
+          })
+          .superRefine((data, ctx) => {
+            if (data.kind === "video") {
+              if (!data.youtubeId) {
+                ctx.addIssue({ code: "custom", path: ["youtubeId"], message: "A YouTube link is required for videos." });
+              }
+              if (data.dataBase64) {
+                ctx.addIssue({ code: "custom", path: ["dataBase64"], message: "Videos are shared as YouTube links; remove the file payload." });
+              }
+            } else if (!data.dataBase64 || !data.fileName) {
+              ctx.addIssue({ code: "custom", path: ["dataBase64"], message: "Select a file to publish." });
+            }
+          })
+      )
+      .mutation(async ({ input, ctx }) =>
+        db.createResource({
+          ...input,
+          createdBy: ctx.user.openId,
+          createdByName: ctx.user.name ?? null,
+        })
+      ),
+
+    remove: tutorProcedure
+      .input(z.object({ id: z.string().trim().min(1) }))
+      .mutation(async ({ input }) => {
+        await db.deleteResource(input.id);
+        return { success: true } as const;
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

@@ -1,4 +1,4 @@
-import { NOT_ADMIN_ERR_MSG, UNAUTHED_ERR_MSG } from '@shared/const';
+import { NOT_ADMIN_ERR_MSG, NOT_TUTOR_ERR_MSG, UNAUTHED_ERR_MSG } from '@shared/const';
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import type { TrpcContext } from "./context";
@@ -20,7 +20,8 @@ const requireUser = t.middleware(async opts => {
   return next({
     ctx: {
       ...ctx,
-      user: ctx.user,
+      // Guarded above: downstream procedures can rely on a non-null user.
+      user: ctx.user as NonNullable<TrpcContext["user"]>,
     },
   });
 });
@@ -38,7 +39,24 @@ export const adminProcedure = t.procedure.use(
     return next({
       ctx: {
         ...ctx,
-        user: ctx.user,
+        user: ctx.user as NonNullable<TrpcContext["user"]>,
+      },
+    });
+  }),
+);
+
+export const tutorProcedure = t.procedure.use(
+  t.middleware(async opts => {
+    const { ctx, next } = opts;
+
+    if (!ctx.user || (ctx.user.role !== 'tutor' && ctx.user.role !== 'admin')) {
+      throw new TRPCError({ code: "FORBIDDEN", message: NOT_TUTOR_ERR_MSG });
+    }
+
+    return next({
+      ctx: {
+        ...ctx,
+        user: ctx.user as NonNullable<TrpcContext["user"]>,
       },
     });
   }),

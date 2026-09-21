@@ -3,6 +3,19 @@ export const ONE_YEAR_MS = 1000 * 60 * 60 * 24 * 365;
 export const AXIOS_TIMEOUT_MS = 30_000;
 export const UNAUTHED_ERR_MSG = 'Please login (10001)';
 export const NOT_ADMIN_ERR_MSG = 'You do not have required permission (10002)';
+export const NOT_TUTOR_ERR_MSG = 'Only tutors can publish resources (10003)';
+
+// Resource files (PDFs, recorded clips) are stored inline as base64 in the
+// Firestore document, so they must stay well under the 1 MiB document limit.
+export const RESOURCE_MAX_BYTES = 512 * 1024;
+export const RESOURCE_MAX_BASE64_CHARS = Math.ceil((RESOURCE_MAX_BYTES * 4) / 3) + 8;
+export const RESOURCE_TOO_LARGE_MSG = 'Files must be 512 KB or smaller. For bigger videos or longer recordings, paste a YouTube link instead.';
+
+// Scheme-of-work PDFs (NERDC weekly plans) parsed server-side. Generous cap:
+// a full class/subject/term PDF is typically a few hundred KB.
+export const SCHEME_MAX_BYTES = 12 * 1024 * 1024;
+export const SCHEME_MAX_BASE64_CHARS = Math.ceil((SCHEME_MAX_BYTES * 4) / 3) + 8;
+export const SCHEME_TOO_LARGE_MSG = 'Scheme-of-work PDFs must be 12 MB or smaller.';
 
 /** Every product role the auth flow can assign. Shared by the DB schema and the client. */
 export const USER_ROLES = ["user", "student", "parent", "tutor", "admin"] as const;

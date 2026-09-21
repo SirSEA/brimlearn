@@ -3,6 +3,7 @@ import { navForMode, type Mode } from "@/components/layout/shell";
 import { Messages } from "@/features/chat/Messages";
 import { TutorAssignments } from "@/features/tutor/TutorAssignments";
 import { TutorCalendar } from "@/features/tutor/TutorCalendar";
+import { TutorResources } from "@/features/tutor/TutorResources";
 import { TutorRoster } from "@/features/tutor/TutorRoster";
 import { TutorVirtualTool } from "@/features/tutor/TutorVirtualTool";
 import { pathForMode } from "@/lib/roles";
@@ -23,6 +24,8 @@ export default function Tutor() {
             return <TutorCalendar />;
           case "assignments":
             return <TutorAssignments />;
+          case "resources":
+            return <TutorResources />;
           case "virtual":
             return <TutorVirtualTool />;
           case "messages":

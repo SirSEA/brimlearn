@@ -50,23 +50,32 @@ const ROLES: Role[] = [
 function Field({
   label,
   icon: Icon,
+  error,
   ...props
-}: React.InputHTMLAttributes<HTMLInputElement> & { label: string; icon?: typeof Mail }) {
+}: React.InputHTMLAttributes<HTMLInputElement> & { label: string; icon?: typeof Mail; error?: string }) {
   return (
     <label className="block">
-      <span className="text-xs font-semibold text-[#527064]">{label}</span>
+      <span className="text-xs font-semibold text-[#527064]">
+        {label}
+        {props.required && <span className="ml-0.5 text-[#d9533f]" title="Required">*</span>}
+      </span>
       <div className="relative mt-2">
-        {Icon && <Icon size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9aaca2]" />}
+        {Icon && <Icon size={16} className={cn("pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2", error ? "text-[#d9533f]" : "text-[#9aaca2]")} />}
         <input
           {...props}
+          aria-invalid={Boolean(error)}
           className={cn(
-            "w-full rounded-xl border border-[#e1e8df] bg-white px-3.5 py-3 text-sm font-semibold text-[#25483c] outline-none transition",
+            "w-full rounded-xl border bg-white px-3.5 py-3 text-sm font-semibold text-[#25483c] outline-none transition",
             "placeholder:font-medium placeholder:text-[#a7b5ad]",
-            "focus:border-[#6b9f88] focus:ring-2 focus:ring-[#d8f36a]/40",
-            Icon && "pl-10"
+            "focus:ring-2",
+            Icon && "pl-10",
+            error
+              ? "border-[#e4a9a1] bg-[#fff8f6] focus:border-[#d9533f] focus:ring-[#fbe1dc]/60"
+              : "border-[#e1e8df] focus:border-[#6b9f88] focus:ring-[#d8f36a]/40"
           )}
         />
       </div>
+      {error && <span className="mt-1.5 block text-xs font-medium text-[#d9533f]">{error}</span>}
     </label>
   );
 }
@@ -98,7 +107,7 @@ function AuthLayout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
         <div className="relative z-10 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.2em] text-[#82a79a]">
-          <span>BrimLearn · NERDC-aligned practice</span>
+          <span>BrimLearn · An online school aligned with BECE | WAEC | NECO | JAMB Curriculum</span>
           <span>JSS1 – SS3</span>
         </div>
         <div className="absolute -right-16 -top-20 h-72 w-72 rounded-full border-[26px] border-[#c9e95b]/20" />
@@ -123,6 +132,7 @@ export default function AuthPage({ initialMode = "login" }: { initialMode?: "log
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const activeRole = ROLES.find((item) => item.id === role) ?? ROLES[0];
 
   useEffect(() => {
@@ -139,14 +149,19 @@ export default function AuthPage({ initialMode = "login" }: { initialMode?: "log
   const run = (action: () => Promise<AuthUser>) => async (event: FormEvent) => {
     event.preventDefault();
 
-    if (mode === "signup" && password !== confirm) {
-      toast.error("Passwords do not match.");
-      return;
+    const errors: Record<string, string> = {};
+    if (mode === "signup" && !name.trim()) errors.name = "Please enter your full name.";
+    if (!email.trim()) errors.email = "Please enter your email address.";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) errors.email = "Enter a valid email address.";
+    if (!password) errors.password = mode === "signup" ? "Choose a password of at least 6 characters." : "Please enter your password.";
+    else if (mode === "signup" && password.length < 6) errors.password = "Password must be at least 6 characters.";
+    if (mode === "signup") {
+      if (!confirm) errors.confirm = "Please repeat your password.";
+      else if (confirm !== password) errors.confirm = "Passwords do not match.";
     }
-    if (mode === "signup" && password.length < 6) {
-      toast.error("Password must be at least 6 characters.");
-      return;
-    }
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+    if (mode === "signup" && password !== confirm) return;
 
     setSubmitting(true);
     try {
@@ -241,7 +256,8 @@ export default function AuthPage({ initialMode = "login" }: { initialMode?: "log
               type="text"
               placeholder="Amira Okafor"
               value={name}
-              onChange={(event) => setName(event.target.value)}
+              onChange={(event) => { setName(event.target.value); if (fieldErrors.name) setFieldErrors((current) => ({ ...current, name: "" })); }}
+              error={fieldErrors.name}
               required
               autoComplete="name"
             />
@@ -252,7 +268,8 @@ export default function AuthPage({ initialMode = "login" }: { initialMode?: "log
             type="email"
             placeholder="you@example.com"
             value={email}
-            onChange={(event) => setEmail(event.target.value)}
+            onChange={(event) => { setEmail(event.target.value); if (fieldErrors.email) setFieldErrors((current) => ({ ...current, email: "" })); }}
+            error={fieldErrors.email}
             required
             autoComplete="email"
           />
@@ -262,7 +279,8 @@ export default function AuthPage({ initialMode = "login" }: { initialMode?: "log
             type="password"
             placeholder={mode === "signup" ? "At least 6 characters" : "Your password"}
             value={password}
-            onChange={(event) => setPassword(event.target.value)}
+            onChange={(event) => { setPassword(event.target.value); if (fieldErrors.password) setFieldErrors((current) => ({ ...current, password: "" })); }}
+            error={fieldErrors.password}
             required
             minLength={mode === "signup" ? 6 : undefined}
             autoComplete={mode === "signup" ? "new-password" : "current-password"}
@@ -274,7 +292,8 @@ export default function AuthPage({ initialMode = "login" }: { initialMode?: "log
               type="password"
               placeholder="Repeat your password"
               value={confirm}
-              onChange={(event) => setConfirm(event.target.value)}
+              onChange={(event) => { setConfirm(event.target.value); if (fieldErrors.confirm) setFieldErrors((current) => ({ ...current, confirm: "" })); }}
+              error={fieldErrors.confirm}
               required
               autoComplete="new-password"
             />

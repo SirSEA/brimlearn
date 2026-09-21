@@ -1,9 +1,9 @@
-import { ArrowLeft, Paperclip, Send } from "lucide-react";
+import { ArrowLeft, Bell, BellOff, Paperclip, Send } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 
 type ChatMessage = { from: "me" | "them"; text: string; time: string };
-type Thread = { id: string; name: string; initials: string; tone: string; lastSeen: string; messages: ChatMessage[] };
+type Thread = { id: string; name: string; initials: string; tone: string; lastSeen: string; following?: boolean; messages: ChatMessage[] };
 
 const learnerThreads: Thread[] = [
   {
@@ -39,6 +39,7 @@ const tutorThreads: Thread[] = [
     initials: "AO",
     tone: "bg-[#d8f36a] text-[#31583f]",
     lastSeen: "online now",
+    following: true,
     messages: [
       { from: "them", text: "Hi Ms. Sola, I tried the fraction blocks again. I think I get it now!", time: "09:02" },
       { from: "me", text: "That’s great, Amara — explain it back to me in your own words?", time: "09:10" },
@@ -52,6 +53,7 @@ const tutorThreads: Thread[] = [
     initials: "LM",
     tone: "bg-[#ff9a87] text-[#63382d]",
     lastSeen: "active 1h ago",
+    following: false,
     messages: [
       { from: "them", text: "Sir, the word-problem pack is confusing me. Which operation do I start with?", time: "07:20" },
       { from: "me", text: "Good question. Underline the key numbers, then ask: is the answer bigger or smaller?", time: "07:28" },
@@ -97,7 +99,7 @@ export function Messages({ variant }: { variant: "learner" | "tutor" }) {
             <div className="flex items-center gap-3">
               <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-full text-xs font-bold ${thread.tone}`}>{thread.initials}</div>
               <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-2"><span className="truncate text-sm font-semibold text-[#25483c]">{thread.name}</span><span className="shrink-0 text-[10px] text-[#8aa096]">{last.time}</span></div>
+                <div className="flex items-center justify-between gap-2"><span className="truncate text-sm font-semibold text-[#25483c]">{thread.name}</span><span className="flex items-center gap-1.5 shrink-0 text-[10px] text-[#8aa096]">{variant === "tutor" && thread.following && <span className="flex items-center gap-0.5 rounded-full bg-[#e5f5ed] px-1.5 py-0.5 font-bold text-[#34775e]"><Bell size={9} />Following</span>}{last.time}</span></div>
                 <div className="mt-0.5 truncate text-xs text-[#7d958b]">{last.from === "me" ? "You: " : ""}{last.text}</div>
               </div>
             </div>
@@ -113,6 +115,20 @@ export function Messages({ variant }: { variant: "learner" | "tutor" }) {
         <button onClick={() => setMobileThreadOpen(false)} className="rounded-lg p-1.5 text-[#527064] hover:bg-[#edf1e9] md:hidden"><ArrowLeft size={16} /></button>
         <div className={`grid h-10 w-10 place-items-center rounded-full text-xs font-bold ${active.tone}`}>{active.initials}</div>
         <div><div className="text-sm font-semibold text-[#25483c]">{active.name}</div><div className="mt-0.5 text-[11px] text-[#7d958b]">{active.lastSeen}</div></div>
+        {variant === "tutor" && (
+          <button
+            onClick={() => {
+              const next = !active.following;
+              setThreads((current) => current.map((thread) => thread.id === active.id ? { ...thread, following: next } : thread));
+              toast.success(next ? `You’re now following ${active.name.split(" ")[0]}'s progress.` : `You’ve stopped following ${active.name.split(" ")[0]}.`);
+            }}
+            className={`ml-auto flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition ${active.following ? "bg-[#e5f5ed] text-[#34775e]" : "border border-[#dce5dc] text-[#527064] hover:bg-[#f4f7ef]"}`}
+            title={active.following ? "Stop following updates" : "Follow updates from this learner"}
+          >
+            {active.following ? <Bell size={13} /> : <BellOff size={13} />}
+            {active.following ? "Following" : "Follow"}
+          </button>
+        )}
       </div>
       <div className="flex-1 space-y-3 overflow-y-auto p-4">
         {active.messages.map((message, index) => (
@@ -132,7 +148,7 @@ export function Messages({ variant }: { variant: "learner" | "tutor" }) {
   return (
     <section className="grid gap-5 xl:grid-cols-[300px_1fr]">
       <div className="rounded-[27px] border border-[#e3e8df] bg-white p-4">
-        <div className="px-2 pb-3 pt-1"><div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8aa096]">Messages</div><h2 className="mt-1 font-display text-xl font-semibold tracking-[-0.05em] text-[#183c31]">{variant === "tutor" ? "Inbox" : "Your conversations"}</h2></div>
+        <div className="px-2 pb-3 pt-1"><div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8aa096]">Messages</div><h2 className="mt-1 font-display text-xl font-semibold tracking-[-0.05em] text-[#183c31]">{variant === "tutor" ? "Inbox" : "Your conversations"}</h2><p className="mt-1.5 text-[11px] leading-5 text-[#8aa096]">{variant === "learner" ? "You chat with your teachers and class group only." : "Follow a learner to keep receiving their progress updates."}</p></div>
         {threadList}
       </div>
       <div className={`rounded-[27px] border border-[#e3e8df] bg-white shadow-[0_12px_30px_rgba(26,53,40,.05)] md:h-[620px] ${mobileThreadOpen ? "block" : "hidden md:block"}`}>{threadView}</div>

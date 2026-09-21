@@ -1,6 +1,7 @@
 import { AlarmClock, CalendarClock, Check, CheckCheck, Flag } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
+import { publishedAssignments } from "@/lib/assignmentStore";
 
 type Task = { id: string; title: string; subject: string; due: string; status: "overdue" | "today" | "upcoming" | "done" };
 
@@ -13,8 +14,16 @@ const initialTasks: Task[] = [
   { id: "t6", title: "Weekend quiz · Medium", subject: "Mathematics", due: "Sun · 6pm", status: "upcoming" },
 ];
 
+const teacherTasks: Task[] = publishedAssignments().map((assignment, index) => ({
+  id: assignment.id,
+  title: assignment.title,
+  subject: `${assignment.subject} · from your teacher`,
+  due: assignment.due ? `Due ${assignment.due}` : "Practice — no due date",
+  status: index === 0 ? "today" : "upcoming",
+}));
+
 export function Tracker() {
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const [tasks, setTasks] = useState<Task[]>([...initialTasks, ...teacherTasks]);
   const done = tasks.filter((task) => task.status === "done").length;
   const total = tasks.length;
 
@@ -65,7 +74,7 @@ export function Tracker() {
                     <button onClick={() => toggle(task.id)} className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full border transition ${task.status === "done" ? "border-[#3b926f] bg-[#e5f5ed] text-[#3b926f]" : "border-[#ccd9ce] text-transparent hover:border-[#3b926f]"}`}><Check size={13} strokeWidth={3} /></button>
                     <div className="min-w-0 flex-1">
                       <div className={`text-sm font-semibold ${task.status === "done" ? "text-[#8aa096] line-through" : "text-[#25483c]"}`}>{task.title}</div>
-                      <div className="mt-0.5 text-xs text-[#8aa096]">{task.subject} · <span className={task.status === "overdue" ? "font-semibold text-[#a25142]" : ""}>{task.due}</span></div>
+                      <div className="mt-0.5 text-xs text-[#8aa096]">{task.subject}{task.id.startsWith("pub-") && <span className="ml-1.5 rounded bg-[#eef4ea] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#34775e]">new from teacher</span>} · <span className={task.status === "overdue" ? "font-semibold text-[#a25142]" : ""}>{task.due}</span></div>
                     </div>
                   </div>
                 </div>

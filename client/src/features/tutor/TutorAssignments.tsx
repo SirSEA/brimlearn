@@ -1,9 +1,11 @@
-import { CheckCircle2, ClipboardList, FileText, GraduationCap, Sparkles, User, Users, Users2 } from "lucide-react";
+import { CheckCircle2, ClipboardList, FileText, GraduationCap, Sparkles, Target, User, Users, Users2 } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
+import { publishAssignment } from "@/lib/assignmentStore";
 
 type Audience = "class" | "group" | "individual";
 type Difficulty = "Easy" | "Medium" | "Hard" | "Advanced";
+type TeacherType = "Worksheet" | "Quiz" | "Lesson" | "Practice";
 type Assignment = { id: string; type: string; title: string; subject: string; audience: string; difficulty: Difficulty; due: string; status: "Scheduled" | "In review" };
 
 const levels: Difficulty[] = ["Easy", "Medium", "Hard", "Advanced"];
@@ -23,7 +25,7 @@ const allToNames = (audience: Audience, selected: string[]) => {
 };
 
 export function TutorAssignments() {
-  const [type, setType] = useState("Worksheet");
+  const [type, setType] = useState<TeacherType>("Worksheet");
   const [title, setTitle] = useState("");
   const [subject, setSubject] = useState("Mathematics");
   const [audience, setAudience] = useState<Audience>("class");
@@ -43,9 +45,14 @@ export function TutorAssignments() {
       return;
     }
     const audienceLabel = audience === "class" ? "Whole class" : audience === "group" ? `Group (${previewLearners.length})` : selected.join(", ");
-    setAssignments((current) => [{ id: `a${Date.now()}`, type, title: title.trim(), subject, audience: audienceLabel, difficulty, due, status: "Scheduled" }, ...current]);
+    const isPractice = type === "Practice";
+    const assignedDue = isPractice ? "No due date" : due;
+    setAssignments((current) => [{ id: `a${Date.now()}`, type, title: title.trim(), subject, audience: audienceLabel, difficulty, due: assignedDue, status: "Scheduled" }, ...current]);
+    publishAssignment({ title: title.trim(), subject, audience: audienceLabel, difficulty, due: isPractice ? null : due });
     setTitle("");
-    toast.success(`${type} assigned to ${audienceLabel} — differentiated across learners.`);
+    toast.success(isPractice
+      ? `${type} pushed to learners — practice, no deadline. It will appear in their Tracker.`
+      : `${type} assigned to ${audienceLabel} — differentiated across learners.`);
   };
 
   return (
@@ -63,11 +70,12 @@ export function TutorAssignments() {
           <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8aa096]">Create assignment</div>
           <h2 className="mt-1 font-display text-2xl font-semibold tracking-[-0.05em] text-[#183c31]">What are you assigning?</h2>
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-3">
-            {["Worksheet", "Quiz", "Lesson"].map((item) => {
-              const Icon = item === "Worksheet" ? FileText : item === "Quiz" ? Sparkles : GraduationCap;
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {(["Worksheet", "Quiz", "Lesson", "Practice"] as TeacherType[]).map((item) => {
+              const Icon = item === "Worksheet" ? FileText : item === "Quiz" ? Sparkles : item === "Lesson" ? GraduationCap : Target;
+              const isPractice = item === "Practice";
               return (
-                <button key={item} onClick={() => setType(item)} className={`flex items-center gap-3 rounded-2xl border p-4 text-left transition ${type === item ? "border-[#3b926f] bg-[#e5f5ed]" : "border-[#e9eee5] bg-[#fbfcf9] hover:border-[#c9d8cc]"}`}><Icon size={18} className={type === item ? "text-[#34775e]" : "text-[#7d958b]"} /><span className="text-sm font-semibold text-[#25483c]">{item}</span></button>
+                <button key={item} onClick={() => { setType(item); if (isPractice) setDue(""); else if (!due) setDue("Sun, Sep 27"); }} className={`flex items-center gap-3 rounded-2xl border p-4 text-left transition ${type === item ? "border-[#3b926f] bg-[#e5f5ed]" : "border-[#e9eee5] bg-[#fbfcf9] hover:border-[#c9d8cc]"}`}><Icon size={18} className={type === item ? "text-[#34775e]" : "text-[#7d958b]"} /><span className="text-sm font-semibold text-[#25483c]">{item}</span></button>
               );
             })}
           </div>
@@ -75,7 +83,7 @@ export function TutorAssignments() {
           <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <label className="text-xs font-semibold text-[#527064]">Title<span className="mt-1.5 block"><input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="e.g. Multiplying by 10s" className="w-full rounded-xl border border-[#e1e8df] bg-white px-3 py-2.5 text-xs font-semibold text-[#25483c] outline-none focus:border-[#5d9c7d]" /></span></label>
             <label className="text-xs font-semibold text-[#527064]">Subject<select value={subject} onChange={(event) => setSubject(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#e1e8df] bg-white px-3 py-2.5 text-xs font-semibold text-[#25483c]"><option>Mathematics</option><option>English Studies</option><option>Basic Science</option><option>Social Studies</option></select></label>
-            <label className="text-xs font-semibold text-[#527064]">Due date<input value={due} onChange={(event) => setDue(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#e1e8df] bg-white px-3 py-2.5 text-xs font-semibold text-[#25483c] outline-none focus:border-[#5d9c7d]" /></label>
+            <label className="text-xs font-semibold text-[#527064]">Due date{type === "Practice" && <span className="ml-1.5 rounded bg-[#f3e6ff] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#8053a9]">practice · no deadline</span>}<input value={due} disabled={type === "Practice"} onChange={(event) => setDue(event.target.value)} placeholder={type === "Practice" ? "No due date" : "Sun, Sep 27"} className={`mt-1.5 w-full rounded-xl border border-[#e1e8df] bg-white px-3 py-2.5 text-xs font-semibold text-[#25483c] outline-none focus:border-[#5d9c7d] ${type === "Practice" ? "opacity-50" : ""}`} /></label>
           </div>
 
           <div className="mt-6">
@@ -113,7 +121,7 @@ export function TutorAssignments() {
           </div>
           <div className="rounded-[27px] border border-[#e3e8df] bg-white p-6 sm:p-7">
             <div className="flex items-center justify-between"><div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8aa096]">Recent assignments</div><span className="rounded-full bg-[#f4f7ef] px-3 py-1.5 text-xs font-semibold text-[#527064]">{assignments.length}</span></div>
-            <div className="mt-4 space-y-3">{assignments.map((assignment) => <div key={assignment.id} className="rounded-2xl border border-[#e9eee5] p-3.5"><div className="flex items-center justify-between gap-2"><div className="min-w-0"><div className="truncate text-sm font-semibold text-[#25483c]">{assignment.title}</div><div className="mt-0.5 truncate text-xs text-[#8aa096]">{assignment.type} · {assignment.subject} · {assignment.audience}</div></div><span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${assignment.status === "Scheduled" ? "bg-[#e5f5ed] text-[#34775e]" : "bg-[#fff1d7] text-[#916d22]"}`}>{assignment.status}</span></div><div className="mt-2.5 flex items-center gap-2 text-[10px] text-[#8aa096]"><CheckCircle2 size={12} className="text-[#3b926f]" /> {assignment.difficulty} cap · due {assignment.due}</div></div>)}</div>
+            <div className="mt-4 space-y-3">{assignments.map((assignment) => <div key={assignment.id} className="rounded-2xl border border-[#e9eee5] p-3.5"><div className="flex items-center justify-between gap-2"><div className="min-w-0"><div className="truncate text-sm font-semibold text-[#25483c]">{assignment.title}</div><div className="mt-0.5 truncate text-xs text-[#8aa096]">{assignment.type} · {assignment.subject} · {assignment.audience}</div></div><span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${assignment.status === "Scheduled" ? "bg-[#e5f5ed] text-[#34775e]" : "bg-[#fff1d7] text-[#916d22]"}`}>{assignment.status}</span></div><div className="mt-2.5 flex items-center gap-2 text-[10px] text-[#8aa096]"><CheckCircle2 size={12} className="text-[#3b926f]" /> {assignment.difficulty} cap{assignment.due === "No due date" ? <span className="rounded bg-[#f3e6ff] px-1.5 py-0.5 font-bold text-[#8053a9]">no due date</span> : <span>due {assignment.due}</span>}</div></div>)}</div>
           </div>
         </div>
       </section>

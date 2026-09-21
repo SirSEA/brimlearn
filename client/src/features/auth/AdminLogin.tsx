@@ -13,9 +13,16 @@ export default function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
+    const errors: Record<string, string> = {};
+    if (!email.trim()) errors.email = "Please enter your admin email.";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) errors.email = "Enter a valid email address.";
+    if (!password) errors.password = "Please enter your password.";
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
     setSubmitting(true);
     try {
       const user = await adminLogin({ email, password });
@@ -62,34 +69,38 @@ export default function AdminLogin() {
 
             <form className="mt-7 space-y-4" onSubmit={handleSubmit}>
               <label className="block">
-                <span className="text-xs font-semibold text-[#527064]">Admin email</span>
+                <span className="text-xs font-semibold text-[#527064]">Admin email<span className="ml-0.5 text-[#d9533f]" title="Required">*</span></span>
                 <div className="relative mt-2">
-                  <Mail size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9aaca2]" />
+                  <Mail size={16} className={`pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 ${fieldErrors.email ? "text-[#d9533f]" : "text-[#9aaca2]"}`} />
                   <input
                     type="email"
                     placeholder="admin@brimlearn.com"
                     value={email}
-                    onChange={(event) => setEmail(event.target.value)}
+                    onChange={(event) => { setEmail(event.target.value); if (fieldErrors.email) setFieldErrors((current) => ({ ...current, email: "" })); }}
+                    aria-invalid={Boolean(fieldErrors.email)}
                     required
                     autoComplete="email"
-                    className="w-full rounded-xl border border-[#e1e8df] bg-white py-3 pl-10 pr-3.5 text-sm font-semibold text-[#25483c] outline-none transition placeholder:font-medium placeholder:text-[#a7b5ad] focus:border-[#6b9f88] focus:ring-2 focus:ring-[#d8f36a]/40"
+                    className={`w-full rounded-xl border bg-white py-3 pl-10 pr-3.5 text-sm font-semibold text-[#25483c] outline-none transition placeholder:font-medium placeholder:text-[#a7b5ad] focus:ring-2 ${fieldErrors.email ? "border-[#e4a9a1] bg-[#fff8f6] focus:border-[#d9533f] focus:ring-[#fbe1dc]/60" : "border-[#e1e8df] focus:border-[#6b9f88] focus:ring-[#d8f36a]/40"}`}
                   />
                 </div>
+                {fieldErrors.email && <span className="mt-1.5 block text-xs font-medium text-[#d9533f]">{fieldErrors.email}</span>}
               </label>
               <label className="block">
-                <span className="text-xs font-semibold text-[#527064]">Password</span>
+                <span className="text-xs font-semibold text-[#527064]">Password<span className="ml-0.5 text-[#d9533f]" title="Required">*</span></span>
                 <div className="relative mt-2">
-                  <Lock size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9aaca2]" />
+                  <Lock size={16} className={`pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 ${fieldErrors.password ? "text-[#d9533f]" : "text-[#9aaca2]"}`} />
                   <input
                     type="password"
                     placeholder="Your admin password"
                     value={password}
-                    onChange={(event) => setPassword(event.target.value)}
+                    onChange={(event) => { setPassword(event.target.value); if (fieldErrors.password) setFieldErrors((current) => ({ ...current, password: "" })); }}
+                    aria-invalid={Boolean(fieldErrors.password)}
                     required
                     autoComplete="current-password"
-                    className="w-full rounded-xl border border-[#e1e8df] bg-white py-3 pl-10 pr-3.5 text-sm font-semibold text-[#25483c] outline-none transition placeholder:font-medium placeholder:text-[#a7b5ad] focus:border-[#6b9f88] focus:ring-2 focus:ring-[#d8f36a]/40"
+                    className={`w-full rounded-xl border bg-white py-3 pl-10 pr-3.5 text-sm font-semibold text-[#25483c] outline-none transition placeholder:font-medium placeholder:text-[#a7b5ad] focus:ring-2 ${fieldErrors.password ? "border-[#e4a9a1] bg-[#fff8f6] focus:border-[#d9533f] focus:ring-[#fbe1dc]/60" : "border-[#e1e8df] focus:border-[#6b9f88] focus:ring-[#d8f36a]/40"}`}
                   />
                 </div>
+                {fieldErrors.password && <span className="mt-1.5 block text-xs font-medium text-[#d9533f]">{fieldErrors.password}</span>}
               </label>
 
               <button

@@ -1,10 +1,10 @@
-import { CalendarDays, CheckCircle2, Clock3, Users2, Video } from "lucide-react";
+import { CalendarDays, CheckCircle2, Clock3, Plus, Users2, Video, X } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 
 type CalendarEvent = { id: string; dateOffset: number; time: string; kind: "live" | "deadline" | "meeting"; title: string; meta: string; tone: string };
 
-const events: CalendarEvent[] = [
+const seedEvents: CalendarEvent[] = [
   { id: "e1", dateOffset: 0, time: "03:00 PM", kind: "live", title: "Live class · Multiplication in the market", meta: "JSS1 · Google Meet", tone: "bg-[#eaf2ff] text-[#3975aa]" },
   { id: "e2", dateOffset: 0, time: "06:00 PM", kind: "deadline", title: "Fractions worksheet due", meta: "Whole class · auto-marked", tone: "bg-[#fff1d7] text-[#916d22]" },
   { id: "e3", dateOffset: 1, time: "04:00 PM", kind: "meeting", title: "Parent check-in · Amara Okafor", meta: "Video call · 30 min", tone: "bg-[#e5f5ed] text-[#34775e]" },
@@ -22,15 +22,51 @@ const kinds: Array<{ key: "all" | CalendarEvent["kind"]; label: string }> = [
 ];
 
 const kindIcon = { live: Video, deadline: CheckCircle2, meeting: Users2 };
+const kindTone: Record<CalendarEvent["kind"], string> = { live: "bg-[#eaf2ff] text-[#3975aa]", deadline: "bg-[#fff1d7] text-[#916d22]", meeting: "bg-[#e5f5ed] text-[#34775e]" };
 
 export function TutorCalendar() {
+  const [events, setEvents] = useState<CalendarEvent[]>(seedEvents);
   const [filter, setFilter] = useState<"all" | CalendarEvent["kind"]>("all");
+  const [scheduling, setScheduling] = useState(false);
+  const [kind, setKind] = useState<CalendarEvent["kind"]>("live");
+  const [title, setTitle] = useState("");
+  const [time, setTime] = useState("03:00 PM");
+  const [dateOffset, setDateOffset] = useState(0);
+  const [meta, setMeta] = useState("");
   const days = Array.from({ length: 7 }, (_, index) => {
     const date = new Date();
     date.setDate(date.getDate() + index);
     return date;
   });
   const visible = events.filter((event) => filter === "all" || event.kind === filter);
+
+  const save = () => {
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) {
+      toast("Give the new slot a title first.");
+      return;
+    }
+    if (!time.trim()) {
+      toast("Pick a time for the slot.");
+      return;
+    }
+    setEvents((current) => [...current, {
+      id: `new-${Date.now()}`,
+      dateOffset,
+      time: time.trim(),
+      kind,
+      title: trimmedTitle,
+      meta: meta.trim() || (kind === "live" ? "JSS1 · Google Meet" : kind === "meeting" ? "Video call · 30 min" : "Whole class · auto-marked"),
+      tone: kindTone[kind],
+    }]);
+    setScheduling(false);
+    setTitle("");
+    setMeta("");
+    setTime("03:00 PM");
+    setDateOffset(0);
+    setKind("live");
+    toast.success("Slot scheduled — it’s now on the class calendar.");
+  };
 
   return (
     <>
@@ -41,7 +77,7 @@ export function TutorCalendar() {
             <h1 className="font-display text-[34px] font-semibold leading-[1.04] tracking-[-0.06em] sm:text-[40px]">Sessions, deadlines, and catch-ups.</h1>
             <p className="mt-3 text-sm leading-6 text-[#c4ded0]">Book live classes, keep deadlines visible, and set parent meetings without the back-and-forth.</p>
           </div>
-          <button onClick={() => toast("Booking a new slot — you can pick a time from the next 7 days.")} className="rounded-full bg-[#d8f36a] px-5 py-3 text-sm font-semibold text-[#173c2e] hover:bg-[#e4fb8b]">Schedule new</button>
+          <button onClick={() => setScheduling(true)} className="rounded-full bg-[#d8f36a] px-5 py-3 text-sm font-semibold text-[#173c2e] hover:bg-[#e4fb8b]"><Plus className="mr-1.5 inline" size={15} /> Schedule new</button>
         </div>
       </section>
 
@@ -77,6 +113,42 @@ export function TutorCalendar() {
           {days.length === 0 && <div className="rounded-2xl bg-[#f6f8f3] p-8 text-center text-sm text-[#7d958b]">Nothing scheduled in this window.</div>}
         </div>
       </section>
+
+      {scheduling && (
+        <div className="fixed inset-0 z-[60] grid place-items-center bg-[#0e2b22]/45 p-4" onClick={() => setScheduling(false)}>
+          <div className="w-full max-w-lg rounded-[28px] bg-white p-7 shadow-2xl sm:p-8" onClick={(event) => event.stopPropagation()}>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8aa096]">Class calendar</div>
+                <h2 className="mt-2 font-display text-3xl font-semibold tracking-[-0.06em] text-[#183c31]">Schedule a new slot.</h2>
+                <p className="mt-2 text-sm leading-6 text-[#648075]">Pick a kind, a day in the next week, and a time. It will appear instantly on the calendar.</p>
+              </div>
+              <button onClick={() => setScheduling(false)} className="rounded-xl p-2 text-[#8aa096] hover:bg-[#f4f7ef]" aria-label="Close scheduling"><X size={18} /></button>
+            </div>
+
+            <div className="mt-5">
+              <div className="text-xs font-semibold text-[#527064]">What kind of slot?</div>
+              <div className="mt-2 grid grid-cols-3 gap-2">
+                {([["live", "Live session", Video], ["deadline", "Deadline", CheckCircle2], ["meeting", "Parent meeting", Users2]] as Array<[CalendarEvent["kind"], string, typeof Video]>).map(([key, label, Icon]) => (
+                  <button key={key} onClick={() => setKind(key)} className={`flex flex-col items-center gap-2 rounded-2xl border p-3.5 text-xs font-semibold transition ${kind === key ? "border-[#3b926f] bg-[#e5f5ed] text-[#34775e]" : "border-[#e3e8df] bg-[#fbfcf9] text-[#527064] hover:border-[#99bda8]"}`}><Icon size={17} />{label}</button>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <label className="block text-xs font-semibold text-[#527064]">Title<span className="mt-1.5 block"><input value={title} onChange={(event) => setTitle(event.target.value)} placeholder={kind === "live" ? "e.g. Live class · Ratios intro" : kind === "deadline" ? "e.g. Worksheet due" : "e.g. Parent check-in · name"} className="w-full rounded-xl border border-[#e1e8df] bg-white px-3 py-2.5 text-xs font-semibold text-[#25483c] outline-none placeholder:font-medium placeholder:text-[#a7b5ad] focus:border-[#5d9c7d]" /></span></label>
+              <label className="block text-xs font-semibold text-[#527064]">Day<span className="mt-1.5 block"><select value={dateOffset} onChange={(event) => setDateOffset(Number(event.target.value))} className="w-full rounded-xl border border-[#e1e8df] bg-white px-3 py-2.5 text-xs font-semibold text-[#25483c]">{days.map((day, index) => <option key={index} value={index}>{day.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}</option>)}</select></span></label>
+              <label className="block text-xs font-semibold text-[#527064]">Time<span className="mt-1.5 block"><input type="time" list="calendar-times" value={time} onChange={(event) => setTime(event.target.value)} className="w-full rounded-xl border border-[#e1e8df] bg-white px-3 py-2.5 text-xs font-semibold text-[#25483c] outline-none focus:border-[#5d9c7d]" /></span><datalist id="calendar-times"><option value="09:00 AM" /><option value="10:00 AM" /><option value="11:00 AM" /><option value="01:00 PM" /><option value="02:00 PM" /><option value="03:00 PM" /><option value="04:00 PM" /><option value="05:00 PM" /></datalist></label>
+              <label className="block text-xs font-semibold text-[#527064]">Details (optional)<span className="mt-1.5 block"><input value={meta} onChange={(event) => setMeta(event.target.value)} placeholder={kind === "live" ? "JSS1 · Google Meet" : kind === "meeting" ? "Video call · 30 min" : "Whole class · auto-marked"} className="w-full rounded-xl border border-[#e1e8df] bg-white px-3 py-2.5 text-xs font-semibold text-[#25483c] outline-none placeholder:font-medium placeholder:text-[#a7b5ad] focus:border-[#5d9c7d]" /></span></label>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button onClick={() => setScheduling(false)} className="rounded-full px-4 py-3 text-sm font-semibold text-[#7d958b] hover:bg-[#f4f7ef]">Cancel</button>
+              <button onClick={save} className="rounded-full bg-[#173f31] px-5 py-3 text-sm font-semibold text-white hover:bg-[#286b51]">Schedule slot</button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -9,7 +9,7 @@ type AppShellProps = {
   mode: Mode;
   onNavigate: (mode: Mode) => void;
   tabs: NavItem[];
-  renderBody: (active: string, go: (key: string) => void) => ReactNode;
+  renderBody: (active: string, go: (key: string) => void, openModal: (which: "curriculum" | "quiz") => void) => ReactNode;
 };
 
 export default function AppShell({ mode, onNavigate, tabs, renderBody }: AppShellProps) {
@@ -23,6 +23,7 @@ export default function AppShell({ mode, onNavigate, tabs, renderBody }: AppShel
   }, [mode]);
 
   const go = (key: string) => setActive(key);
+  const openModal = (which: "curriculum" | "quiz") => (which === "curriculum" ? setCurriculumOpen(true) : setQuizOpen(true));
   const sidebarProps = {
     mode,
     onNavigate,
@@ -49,7 +50,7 @@ export default function AppShell({ mode, onNavigate, tabs, renderBody }: AppShel
         )}
         <div className="min-w-0 flex-1">
           <Header mode={mode} setMobileOpen={setMobileOpen} />
-          <main className="mx-auto max-w-[1420px] px-5 py-7 lg:px-10 lg:py-9">{renderBody(active, go)}</main>
+          <main className="mx-auto max-w-[1420px] px-5 py-7 lg:px-10 lg:py-9">{renderBody(active, go, openModal)}</main>
         </div>
       </div>
       {curriculumOpen && <CurriculumPrompt onClose={() => setCurriculumOpen(false)} />}

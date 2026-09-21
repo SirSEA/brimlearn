@@ -11,6 +11,8 @@
 //   - mutations: POST {path} body: superjson.serialize(input)
 //   - data is superjson-serialized; only JSON-safe values are read here.
 import superjson from "superjson";
+import type { LiveSession, CreateLiveSessionInput, UpdateLiveSessionInput } from "@shared/session";
+import type { Scheme, ImportSchemeInput } from "@shared/scheme";
 
 export type AuthUser = {
   id: string;
@@ -59,6 +61,49 @@ export type QuizInput = {
   difficulty: QuizDifficulty;
 };
 
+export type ResourceCategory = "recording" | "reading" | "material" | "worksheet";
+export type ResourceKind = "video" | "file";
+
+export type Resource = {
+  id: string;
+  kind: ResourceKind;
+  category: ResourceCategory;
+  title: string;
+  description: string;
+  youtubeId: string | null;
+  fileName: string | null;
+  mimeType: string | null;
+  size: number;
+  createdBy: string;
+  createdByName: string | null;
+  createdAt: string;
+  grade: string | null;
+  subjectId: string | null;
+  subject: string | null;
+  term: string | null;
+  week: string | null;
+};
+
+export type ResourceWithContent = Resource & {
+  dataBase64: string | null;
+};
+
+export type CreateResourceInput = {
+  kind: ResourceKind;
+  category: ResourceCategory;
+  title: string;
+  description?: string;
+  youtubeId?: string | null;
+  fileName?: string | null;
+  mimeType?: string | null;
+  dataBase64?: string | null;
+  grade?: string | null;
+  subjectId?: string | null;
+  subject?: string | null;
+  term?: string | null;
+  week?: string | null;
+};
+
 /** Thrown when there is no backend to call (Netlify) or it errored. */
 export class ApiUnavailableError extends Error {
   constructor(message = "BrimLearn API is unavailable (offline demo mode)") {
@@ -85,6 +130,20 @@ const ENDPOINTS = {
   adminLogin: "/api/trpc/auth.adminLogin",
   logout: "/api/trpc/auth.logout",
   generateQuiz: "/api/trpc/quiz.generate",
+  listResources: "/api/trpc/resources.list",
+  getResource: "/api/trpc/resources.get",
+  createResource: "/api/trpc/resources.create",
+  removeResource: "/api/trpc/resources.remove",
+  listLiveSessions: "/api/trpc/liveSessions.list",
+  getLiveSession: "/api/trpc/liveSessions.get",
+  createLiveSession: "/api/trpc/liveSessions.create",
+  updateLiveSession: "/api/trpc/liveSessions.update",
+  removeLiveSession: "/api/trpc/liveSessions.remove",
+  listSchemes: "/api/trpc/schemes.list",
+  getScheme: "/api/trpc/schemes.get",
+  importSchemes: "/api/trpc/schemes.import",
+  setCurrentWeek: "/api/trpc/schemes.setCurrentWeek",
+  removeScheme: "/api/trpc/schemes.remove",
 } as const;
 
 type Availability = "unknown" | "online" | "offline";
@@ -212,6 +271,131 @@ async function postMutation<T>(endpoint: string, input: unknown): Promise<T> {
   return value as unknown as T;
 }
 
+/** Runs a tRPC query (GET) and returns its JSON payload. */
+async function getQuery<T>(endpoint: string, input: unknown): Promise<T> {
+  if (!(await probeApi()) || availability === "offline") {
+    throw new ApiUnavailableError();
+  }
+
+  const param = encodeURIComponent(wrapInput(input));
+  const res = await fetch(`${endpoint}?input=${param}`, { headers: requestOptions() });
+
+  if (!res.ok) {
+    const payload = await res.json().catch(() => null);
+    throw new AuthError(
+      extractErrorMessage(payload, `Request failed (${res.status})`),
+      res.status
+    );
+  }
+
+  return unwrapData(await res.json()) as T;
+}
+
+/** Runs a tRPC mutation and returns its JSON payload (any shape). */
+async function postApi<T>(endpoint: string, input: unknown): Promise<T> {
+  if (!(await probeApi()) || availability === "offline") {
+    throw new ApiUnavailableError();
+  }
+
+  const res = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      ...requestOptions(),
+    },
+    body: wrapInput(input),
+  });
+
+  if (!res.ok) {
+    const payload = await res.json().catch(() => null);
+    throw new AuthError(
+      extractErrorMessage(payload, `Request failed (${res.status})`),
+      res.status
+    );
+  }
+
+  return unwrapData(await res.json()) as T;
+}
+
+async function listResources(): Promise<Resource[]> {
+  const resources = await getQuery<Resource[]>(ENDPOINTS.listResources, {});
+  return Array.isArray(resources) ? resources : [];
+}
+
+async function getResource(id: string): Promise<ResourceWithContent> {
+  const resource = await getQuery<ResourceWithContent>(ENDPOINTS.getResource, { id });
+  if (!resource || typeof resource.id !== "string") {
+    throw new ApiUnavailableError("Malformed resource response");
+  }
+  return resource;
+}
+
+async function createResource(input: CreateResourceInput): Promise<Resource> {
+  const resource = await postApi<Resource>(ENDPOINTS.createResource, input);
+  if (!resource || typeof resource.id !== "string") {
+    throw new ApiUnavailableError("Malformed resource response");
+  }
+  return resource;
+}
+
+function removeResource(id: string): Promise<{ success: boolean }> {
+  return postApi<{ success: boolean }>(ENDPOINTS.removeResource, { id });
+}
+
+async function listLiveSessions(): Promise<LiveSession[]> {
+  const sessions = await getQuery<LiveSession[]>(ENDPOINTS.listLiveSessions, {});
+  return Array.isArray(sessions) ? sessions : [];
+}
+
+async function getLiveSession(id: string): Promise<LiveSession> {
+  const session = await getQuery<LiveSession>(ENDPOINTS.getLiveSession, { id });
+  if (!session || typeof session.id !== "string") {
+    throw new ApiUnavailableError("Malformed live session response");
+  }
+  return session;
+}
+
+async function createLiveSession(input: CreateLiveSessionInput): Promise<LiveSession> {
+  const session = await postApi<LiveSession>(ENDPOINTS.createLiveSession, input);
+  if (!session || typeof session.id !== "string") {
+    throw new ApiUnavailableError("Malformed live session response");
+  }
+  return session;
+}
+
+function updateLiveSession(id: string, input: UpdateLiveSessionInput): Promise<LiveSession> {
+  return postApi<LiveSession>(ENDPOINTS.updateLiveSession, { id, ...input });
+}
+
+function removeLiveSession(id: string): Promise<{ success: boolean }> {
+  return postApi<{ success: boolean }>(ENDPOINTS.removeLiveSession, { id });
+}
+
+async function listSchemes(): Promise<Scheme[]> {
+  const schemes = await getQuery<Scheme[]>(ENDPOINTS.listSchemes, {});
+  return Array.isArray(schemes) ? schemes : [];
+}
+
+async function getScheme(id: string): Promise<Scheme> {
+  const scheme = await getQuery<Scheme>(ENDPOINTS.getScheme, { id });
+  if (!scheme || typeof scheme.id !== "string") {
+    throw new ApiUnavailableError("Malformed scheme response");
+  }
+  return scheme;
+}
+
+function importSchemes(input: ImportSchemeInput): Promise<Scheme[]> {
+  return postApi<Scheme[]>(ENDPOINTS.importSchemes, input);
+}
+
+function setCurrentWeek(id: string, week: string): Promise<Scheme> {
+  return postApi<Scheme>(ENDPOINTS.setCurrentWeek, { id, week });
+}
+
+function removeScheme(id: string): Promise<{ success: boolean }> {
+  return postApi<{ success: boolean }>(ENDPOINTS.removeScheme, { id });
+}
+
 async function generateQuiz(input: QuizInput): Promise<GeneratedQuiz> {
   if (!(await probeApi()) || availability === "offline") {
     throw new ApiUnavailableError();
@@ -259,4 +443,18 @@ export const api = {
   adminLogin: (input: LoginInput) => postMutation<AuthUser>(ENDPOINTS.adminLogin, input),
   logout: postLogout,
   generateQuiz,
+  listResources,
+  getResource,
+  createResource,
+  removeResource,
+  listLiveSessions,
+  getLiveSession,
+  createLiveSession,
+  updateLiveSession,
+  removeLiveSession,
+  listSchemes,
+  getScheme,
+  importSchemes,
+  setCurrentWeek,
+  removeScheme,
 };

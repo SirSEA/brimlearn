@@ -46,6 +46,7 @@ export const navForMode = (mode: Mode): NavItem[] => {
         { key: "tracker", label: "Tracker", icon: ClipboardCheck },
         { key: "classroom", label: "Classroom", icon: Video },
         { key: "library", label: "Resource library", icon: Library },
+        { key: "curriculum", label: "Curriculum", icon: Layers3, modal: "curriculum" },
         { key: "messages", label: "Messages", icon: MessagesSquare },
         { key: "practice", label: "Practice", icon: Target, modal: "quiz" },
       ];
@@ -54,6 +55,7 @@ export const navForMode = (mode: Mode): NavItem[] => {
         { key: "roster", label: "Student roster", icon: Users },
         { key: "calendar", label: "Class calendar", icon: CalendarDays },
         { key: "assignments", label: "Assignments", icon: ClipboardList },
+        { key: "resources", label: "Resources", icon: Library },
         { key: "virtual", label: "Virtual tool", icon: Presentation },
         { key: "messages", label: "Messages", icon: MessagesSquare },
         { key: "practice", label: "Practice", icon: Target, modal: "quiz" },

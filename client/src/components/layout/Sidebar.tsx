@@ -3,11 +3,13 @@ import { toast } from "sonner";
 import { useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { BrimMark } from "./BrimMark";
+import { modesForRole } from "@/lib/roles";
 import { Mode, modeMeta, type NavItem } from "./shell";
 
 export function Sidebar({ mode, onNavigate, tabs, active, setActive, onClose, onCurriculumOpen, onQuizOpen }: { mode: Mode; onNavigate: (mode: Mode) => void; tabs: NavItem[]; active: string; setActive: (item: string) => void; onClose?: () => void; onCurriculumOpen?: () => void; onQuizOpen?: () => void }) {
   const [, setLocation] = useLocation();
-  const { logout, isAuthenticated } = useAuth();
+  const { user, logout, isAuthenticated } = useAuth();
+  const allowedModes = modesForRole(user?.role ?? null);
 
   const handleLogout = async () => {
     try {
@@ -40,7 +42,7 @@ export function Sidebar({ mode, onNavigate, tabs, active, setActive, onClose, on
       <div className="mt-9 rounded-2xl border border-white/10 bg-white/[0.06] p-2">
         <div className="px-3 pb-2 pt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#82a79a]">Viewing as</div>
         <div className="grid grid-cols-2 gap-1">
-          {(Object.keys(modeMeta) as Mode[]).map((item) => {
+          {allowedModes.map((item) => {
             const Icon = modeMeta[item].icon;
             const selected = item === mode;
             return (

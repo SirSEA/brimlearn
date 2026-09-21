@@ -1,6 +1,8 @@
-import { ArrowLeft, Lightbulb, Medal, Search, Sparkles, TrendingUp, Users } from "lucide-react";
+import { ArrowLeft, Lightbulb, Mail, Medal, Search, Sparkles, TrendingUp, UserPlus, Users } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
+
+type ParentLink = { name: string; email: string };
 
 type Student = {
   id: string;
@@ -14,6 +16,7 @@ type Student = {
   needs: string[];
   difficulty: "Easy" | "Medium" | "Hard" | "Advanced";
   recent: Array<{ title: string; score: number; date: string }>;
+  parent: ParentLink | null;
 };
 
 const students: Student[] = [
@@ -37,6 +40,7 @@ const students: Student[] = [
       { title: "Visual reset · fractions", score: 82, date: "Sep 12" },
       { title: "Multiplication practice", score: 71, date: "Sep 5" },
     ],
+    parent: { name: "Aminat Okafor", email: "aminat.okafor@gmail.com" },
   },
   {
     id: "leo",
@@ -58,6 +62,7 @@ const students: Student[] = [
       { title: "Market challenge", score: 78, date: "Sep 10" },
       { title: "Number facts drill", score: 90, date: "Sep 3" },
     ],
+    parent: { name: "Kwame Mensah", email: "kwame.mensah@gmail.com" },
   },
   {
     id: "zuri",
@@ -79,6 +84,7 @@ const students: Student[] = [
       { title: "Shape vocabulary", score: 88, date: "Sep 8" },
       { title: "Area lab", score: 73, date: "Sep 1" },
     ],
+    parent: { name: "Ngozi Campbell", email: "ngozi.campbell@gmail.com" },
   },
   {
     id: "tunde",
@@ -100,6 +106,7 @@ const students: Student[] = [
       { title: "Fractions mastery", score: 88, date: "Sep 9" },
       { title: "Geometry challenge", score: 86, date: "Sep 2" },
     ],
+    parent: null,
   },
   {
     id: "nneka",
@@ -121,6 +128,7 @@ const students: Student[] = [
       { title: "Grammar check-in", score: 74, date: "Sep 7" },
       { title: "Writing prompt", score: 68, date: "Sep 1" },
     ],
+    parent: { name: "Adaeze Eze", email: "adaeze.eze@gmail.com" },
   },
 ];
 
@@ -129,10 +137,24 @@ const scoreTone = (score: number) => score >= 80 ? "bg-[#e5f5ed] text-[#34775e]"
 export function TutorRoster() {
   const [selected, setSelected] = useState<Student | null>(null);
   const [query, setQuery] = useState("");
+  const [links, setLinks] = useState<Record<string, ParentLink>>({});
+  const [linkOpen, setLinkOpen] = useState(false);
+  const [linkName, setLinkName] = useState("");
+  const [linkEmail, setLinkEmail] = useState("");
+  const [shared, setShared] = useState(false);
   const visible = students.filter((student) => student.name.toLowerCase().includes(query.toLowerCase()));
+
+  const openProfile = (student: Student) => {
+    setShared(false);
+    setLinkOpen(false);
+    setLinkName("");
+    setLinkEmail("");
+    setSelected(student);
+  };
 
   if (selected) {
     const top = [...selected.topics].sort((a, b) => a.score - b.score)[0];
+    const parent = selected.parent ?? links[selected.id] ?? null;
     return (
       <>
         <section className="rounded-[27px] border border-[#e3e8df] bg-white p-6 sm:p-8">
@@ -143,8 +165,53 @@ export function TutorRoster() {
               <h1 className="font-display text-3xl font-semibold tracking-[-0.06em] text-[#183c31]">{selected.name}</h1>
               <p className="mt-1 text-sm text-[#7d958b]">JSS1 · focus: {selected.focus} · differentiated difficulty: <span className="font-semibold text-[#34775e]">{selected.difficulty}</span></p>
             </div>
-            <div className="flex gap-2"><button onClick={() => toast(`Assigning a ${selected.difficulty.toLowerCase()} reset lesson to ${selected.name.split(" ")[0]}.`)} className="rounded-full bg-[#173f31] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#286b51]">Assign intervention</button><button onClick={() => toast("Sending profile summary to this learner's parent.")} className="rounded-full border border-[#dce5dc] px-4 py-2.5 text-xs font-semibold text-[#34775e] hover:bg-[#eef4ea]">Share</button></div>
+            <div className="flex gap-2">
+              <button onClick={() => toast(`Assigning a ${selected.difficulty.toLowerCase()} reset lesson to ${selected.name.split(" ")[0]}.`)} className="rounded-full bg-[#173f31] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#286b51]">Assign intervention</button>
+              {parent ? (
+                <button
+                  onClick={() => {
+                    setShared(true);
+                    toast.success(`Profile summary sent to ${parent.name} (${parent.email}).`);
+                  }}
+                  disabled={shared}
+                  className={`rounded-full border px-4 py-2.5 text-xs font-semibold transition ${shared ? "border-[#cde5d6] bg-[#e5f5ed] text-[#34775e]" : "border-[#dce5dc] text-[#34775e] hover:bg-[#eef4ea]"}`}
+                >
+                  {shared ? "Shared with parent ✓" : <><Mail size={13} className="mr-1 inline" /> Share with {parent.name.split(" ")[0]}</>}
+                </button>
+              ) : linkOpen ? (
+                <button onClick={() => setLinkOpen(false)} className="rounded-full border border-[#dce5dc] px-4 py-2.5 text-xs font-semibold text-[#7d958b] hover:bg-[#f4f7ef]">Cancel linking</button>
+              ) : (
+                <button onClick={() => setLinkOpen(true)} className="rounded-full border border-[#e0d4f2] px-4 py-2.5 text-xs font-semibold text-[#8053a9] hover:bg-[#f6f0fb]"><UserPlus size={13} className="mr-1 inline" /> Link a parent</button>
+              )}
+            </div>
           </div>
+          {!parent && linkOpen && (
+            <div className="mt-5 rounded-2xl border border-[#e7dcf4] bg-[#faf7fe] p-4">
+              <div className="text-xs font-semibold text-[#4c3a63]">No parent is linked for {selected.name.split(" ")[0]} yet — add one so progress can be shared privately.</div>
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                <input value={linkName} onChange={(event) => setLinkName(event.target.value)} placeholder="Parent name (e.g. Dapo Bakare)" aria-label="Parent name" className="min-w-0 flex-1 rounded-xl border border-[#e1e8df] bg-white px-3 py-2.5 text-sm text-[#25483c] outline-none placeholder:text-[#a7b5ad] focus:border-[#9a6dc1] focus:ring-2 focus:ring-[#efe4fb]/60" />
+                <input value={linkEmail} onChange={(event) => setLinkEmail(event.target.value)} placeholder="Parent email" aria-label="Parent email" className="min-w-0 flex-1 rounded-xl border border-[#e1e8df] bg-white px-3 py-2.5 text-sm text-[#25483c] outline-none placeholder:text-[#a7b5ad] focus:border-[#9a6dc1] focus:ring-2 focus:ring-[#efe4fb]/60" />
+                <button
+                  onClick={() => {
+                    if (!linkName.trim() || !linkEmail.trim()) {
+                      toast.error("Enter both the parent's name and email.");
+                      return;
+                    }
+                    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(linkEmail.trim())) {
+                      toast.error("Enter a valid email address.");
+                      return;
+                    }
+                    setLinks((current) => ({ ...current, [selected.id]: { name: linkName.trim(), email: linkEmail.trim() } }));
+                    setLinkOpen(false);
+                    toast.success(`${linkName.trim()} is now linked to ${selected.name.split(" ")[0]}.`);
+                  }}
+                  className="rounded-full bg-[#6d4f96] px-4 py-2.5 text-xs font-semibold text-white hover:bg-[#8053a9]"
+                >
+                  Link parent
+                </button>
+              </div>
+            </div>
+          )}
         </section>
 
         <section className="mt-7 grid gap-5 lg:grid-cols-2">
@@ -176,8 +243,8 @@ export function TutorRoster() {
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-xl">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-[11px] font-semibold text-[#d8f36a]"><Users size={13} /> Student roster</div>
-            <h1 className="font-display text-[34px] font-semibold leading-[1.04] tracking-[-0.06em] sm:text-[40px]">One pulse for every learner.</h1>
-            <p className="mt-3 text-sm leading-6 text-[#c4ded0]">Tap a learner to see their learning overview, unique needs, recent scores, and differentiated difficulty level.</p>
+            <h1 className="font-display text-[34px] font-semibold leading-[1.04] tracking-[-0.06em] sm:text-[40px]">Personalize learning at a glance.</h1>
+            <p className="mt-3 text-sm leading-6 text-[#c4ded0]">Understand every learners progress, needs, strength and next steps from a single view.</p>
           </div>
           <div className="relative"><Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7d958b]" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search learners…" className="w-full rounded-full border border-white/15 bg-white/10 py-3 pl-10 pr-4 text-sm text-white placeholder:text-[#a7c4b8] outline-none focus:border-[#d8f36a] lg:w-72" /></div>
         </div>
@@ -187,14 +254,24 @@ export function TutorRoster() {
       <section className="mt-7 rounded-[27px] border border-[#e3e8df] bg-white p-6 sm:p-7">
         <div className="flex items-center justify-between"><div><div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8aa096]">JSS1 · {visible.length} learners</div><h2 className="mt-1 font-display text-2xl font-semibold tracking-[-0.05em] text-[#183c31]">Select a learner to view the profile.</h2></div></div>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {visible.map((student) => (
-            <button key={student.id} onClick={() => setSelected(student)} className="rounded-[22px] border border-[#e9eee5] p-5 text-left transition hover:-translate-y-0.5 hover:border-[#c9d8cc] hover:shadow-[0_14px_25px_rgba(26,53,40,.08)]">
-              <div className="flex items-start justify-between"><div className={`grid h-11 w-11 place-items-center rounded-full text-xs font-bold ${student.tone}`}>{student.initials}</div><span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${scoreTone(student.score)}`}>{student.score}%</span></div>
-              <div className="mt-4 text-sm font-semibold text-[#25483c]">{student.name}</div>
-              <div className="mt-1 text-xs text-[#8aa096]">Focus: {student.focus}</div>
-              <div className="mt-4 flex items-center justify-between"><span className="rounded-full bg-[#f4f7ef] px-2.5 py-1 text-[10px] font-semibold text-[#527064]"><Medal size={11} className="mr-1 inline" />{student.difficulty}</span><span className="flex items-end gap-1">{student.trend.slice(-4).map((value, index) => <span key={index} className="w-1.5 rounded-full" style={{ height: `${value / 3}px`, backgroundColor: index === 3 ? "#3b926f" : "#c9d8cc" }} />)}</span></div>
-            </button>
-          ))}
+          {visible.map((student) => {
+            const linkedParent = student.parent ?? links[student.id] ?? null;
+            return (
+              <button key={student.id} onClick={() => openProfile(student)} className="rounded-[22px] border border-[#e9eee5] p-5 text-left transition hover:-translate-y-0.5 hover:border-[#c9d8cc] hover:shadow-[0_14px_25px_rgba(26,53,40,.08)]">
+                <div className="flex items-start justify-between"><div className={`grid h-11 w-11 place-items-center rounded-full text-xs font-bold ${student.tone}`}>{student.initials}</div><span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${scoreTone(student.score)}`}>{student.score}%</span></div>
+                <div className="mt-4 text-sm font-semibold text-[#25483c]">{student.name}</div>
+                <div className="mt-1 text-xs text-[#8aa096]">Focus: {student.focus}</div>
+                <div className="mt-4 flex items-center justify-between"><span className="rounded-full bg-[#f4f7ef] px-2.5 py-1 text-[10px] font-semibold text-[#527064]"><Medal size={11} className="mr-1 inline" />{student.difficulty}</span><span className="flex items-end gap-1">{student.trend.slice(-4).map((value, index) => <span key={index} className="w-1.5 rounded-full" style={{ height: `${value / 3}px`, backgroundColor: index === 3 ? "#3b926f" : "#c9d8cc" }} />)}</span></div>
+                <div className="mt-3 border-t border-[#edf1e9] pt-2.5">
+                  {linkedParent ? (
+                    <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-[#34775e]"><Mail size={11} /> Linked: {linkedParent.name}</span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-[#a7b5ad]"><UserPlus size={11} /> No parent linked</span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
         </div>
       </section>
     </>

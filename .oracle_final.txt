@@ -1,0 +1,4 @@
+client/src/components/layout/Header.tsx(85,1): error TS1128: Declaration or statement expected.
+client/src/components/layout/Header.tsx(85,11): error TS1109: Expression expected.
+client/src/pages/Lesson.tsx(77,62): error TS1005: ',' expected.
+client/src/pages/Lesson.tsx(77,65): error TS1005: ')' expected.

@@ -1,0 +1,14 @@
+client/src/features/tutor/TutorResources.tsx(19,36): error TS2307: Cannot find module '@/shared/const' or its corresponding type declarations.
+client/src/features/tutor/TutorResources.tsx(20,72): error TS2307: Cannot find module '@/shared/resource' or its corresponding type declarations.
+client/src/features/tutor/TutorResources.tsx(117,9): error TS2353: Object literal may only specify known properties, and 'grade' does not exist in type 'CreateResourceInput'.
+client/src/features/tutor/TutorResources.tsx(117,22): error TS2339: Property 'grade' does not exist on type 'Omit<CreateResourceInput, "title" | "description" | "category" | "kind"> & { kind: ResourceKind; }'.
+client/src/features/tutor/TutorResources.tsx(118,26): error TS2339: Property 'subjectId' does not exist on type 'Omit<CreateResourceInput, "title" | "description" | "category" | "kind"> & { kind: ResourceKind; }'.
+client/src/features/tutor/TutorResources.tsx(119,24): error TS2339: Property 'subject' does not exist on type 'Omit<CreateResourceInput, "title" | "description" | "category" | "kind"> & { kind: ResourceKind; }'.
+client/src/features/tutor/TutorResources.tsx(120,21): error TS2339: Property 'term' does not exist on type 'Omit<CreateResourceInput, "title" | "description" | "category" | "kind"> & { kind: ResourceKind; }'.
+client/src/features/tutor/TutorResources.tsx(121,21): error TS2339: Property 'week' does not exist on type 'Omit<CreateResourceInput, "title" | "description" | "category" | "kind"> & { kind: ResourceKind; }'.
+server/_core/schemeParser.ts(123,22): error TS2802: Type 'Set<number>' can only be iterated through when using the '--downlevelIteration' flag or with a '--target' of 'es2015' or higher.
+server/db.ts(180,3): error TS2322: Type '{ id: string; kind: Resource["kind"]; category: Resource["category"]; title: string; description: string; youtubeId: string | null; fileName: string | null; mimeType: string | null; ... 4 more ...; dataBase64: string | null; }' is not assignable to type 'ResourceWithContent'.
+  Type '{ id: string; kind: "video" | "file"; category: "recording" | "reading" | "material" | "worksheet"; title: string; description: string; youtubeId: string | null; fileName: string | null; ... 5 more ...; dataBase64: string | null; }' is missing the following properties from type 'Resource': grade, subjectId, subject, term, week
+server/routers.ts(210,11): error TS2304: Cannot find name 'protectedProcedure'.
+server/routers.ts(222,10): error TS2304: Cannot find name 'protectedProcedure'.
+server/routers.ts(224,23): error TS7031: Binding element 'input' implicitly has an 'any' type.
