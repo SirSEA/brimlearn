@@ -28,4 +28,18 @@ export const ENV = {
         process.env.GOOGLE_APPLICATION_CREDENTIALS
     );
   },
+  // Transactional email (password resets, notifications). Until SMTP is
+  // configured, the app runs in "demo" mode and returns reset links directly to
+  // the browser so the flow can be tested without a mail server.
+  mailHost: process.env.SMTP_HOST ?? "",
+  mailPort: Number(process.env.SMTP_PORT ?? "587"),
+  mailSecure: process.env.SMTP_SECURE === "true",
+  mailUser: process.env.SMTP_USER ?? "",
+  mailPass: process.env.SMTP_PASS ?? "",
+  mailFrom: process.env.SMTP_FROM ?? "",
+  get mailConfigured(): boolean {
+    return Boolean(this.mailHost && this.mailPort && this.mailUser && this.mailPass && this.mailFrom);
+  },
+  // How long a password-reset link stays valid.
+  passwordResetTtlMinutes: Number(process.env.PASSWORD_RESET_TTL_MINUTES ?? "30"),
 };

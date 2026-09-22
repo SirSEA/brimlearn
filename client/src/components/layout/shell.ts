@@ -9,6 +9,8 @@ import {
   Layers3,
   LayoutDashboard,
   Library,
+  ListChecks,
+  Globe,
   MessagesSquare,
   Presentation,
   Target,
@@ -58,15 +60,22 @@ export const navForMode = (mode: Mode): NavItem[] => {
         { key: "resources", label: "Resources", icon: Library },
         { key: "virtual", label: "Virtual tool", icon: Presentation },
         { key: "messages", label: "Messages", icon: MessagesSquare },
+        { key: "quizstudio", label: "Quiz studio", icon: ListChecks },
         { key: "practice", label: "Practice", icon: Target, modal: "quiz" },
         { key: "curriculum", label: "Curriculum", icon: Layers3, modal: "curriculum" },
       ];
     case "family":
+      return [
+        { key: "today", label: "Today", icon: LayoutDashboard },
+        { key: "messages", label: "Messages", icon: MessagesSquare },
+        { key: "curriculum", label: "Curriculum", icon: Layers3, modal: "curriculum" },
+      ];
     case "school":
       return [
         { key: "today", label: "Today", icon: LayoutDashboard },
         { key: "messages", label: "Messages", icon: MessagesSquare },
         { key: "curriculum", label: "Curriculum", icon: Layers3, modal: "curriculum" },
+        { key: "website", label: "Website", icon: Globe, },
       ];
   }
 };

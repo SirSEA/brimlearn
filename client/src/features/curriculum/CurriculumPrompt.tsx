@@ -1,9 +1,25 @@
 import { ArrowUpRight, CheckCircle2, ChevronRight, ClipboardList, Info, Upload, X } from "lucide-react";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { api, type Scheme } from "@/_core/api";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { canManageCurriculum } from "@/lib/roles";
+import { SCHEME_MAX_BASE64_CHARS, SCHEME_TOO_LARGE_MSG } from "@shared/const";
 import { curriculumSource, curriculumSourceNote, curriculumSubjects, nerdcUnits } from "@/lib/curriculum";
+
+function readFileAsBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result ?? "");
+      const marker = ";base64,";
+      const index = result.indexOf(marker);
+      resolve(index >= 0 ? result.slice(index + marker.length) : result);
+    };
+    reader.onerror = () => reject(reader.error ?? new Error("Could not read the file"));
+    reader.readAsDataURL(blob);
+  });
+}
 
 export function CurriculumPrompt({ onClose }: { onClose: () => void }) {
   const { user } = useAuth();
@@ -15,10 +31,60 @@ export function CurriculumPrompt({ onClose }: { onClose: () => void }) {
   const [curriculum, setCurriculum] = useState("");
   const [fileName, setFileName] = useState("");
   const [received, setReceived] = useState(false);
+  const [schemes, setSchemes] = useState<Scheme[]>([]);
+  const [importing, setImporting] = useState(false);
+  const fileRef = useRef<File | null>(null);
   const selectedSubject = curriculumSubjects.find((item) => item.id === subject) || curriculumSubjects[0];
   const visibleUnits = nerdcUnits.filter((unit) => unit.subject === subject && unit.grade === grade && unit.term === term);
   const currentUnits = visibleUnits[0]?.weeks || [];
   const grades = ["JSS1", "JSS2", "JSS3", "SS1", "SS2", "SS3"];
+
+  const refreshSchemes = useCallback(() => {
+    api
+      .listSchemes()
+      .then((list) => setSchemes(Array.isArray(list) ? list : []))
+      .catch(() => setSchemes([]));
+  }, []);
+
+  useEffect(() => {
+    refreshSchemes();
+  }, [refreshSchemes]);
+
+  const submit = async () => {
+    const file = fileRef.current;
+    if (file) {
+      if (!/\.pdf$/i.test(file.name)) {
+        toast.info("Only PDF files are parsed right now — paste the curriculum instead, or export it to PDF.");
+        return;
+      }
+      setImporting(true);
+      try {
+        const dataBase64 = await readFileAsBase64(file);
+        if (dataBase64.length > SCHEME_MAX_BASE64_CHARS) {
+          toast.error(SCHEME_TOO_LARGE_MSG);
+          return;
+        }
+        const imported = await api.importSchemes({
+          fileName: file.name,
+          mimeType: file.type || "application/pdf",
+          dataBase64,
+        });
+        if (!imported.length) {
+          toast.error("No scheme of work could be read from that file. Check the subject/class heading and the week rows.");
+          return;
+        }
+        setReceived(true);
+        refreshSchemes();
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Could not import that curriculum file right now.");
+      } finally {
+        setImporting(false);
+      }
+      return;
+    }
+    if (curriculum.trim()) setReceived(true);
+    else toast.info("Paste the curriculum or upload a PDF file first.");
+  };
 
   if (received) {
     return (
@@ -77,9 +143,28 @@ export function CurriculumPrompt({ onClose }: { onClose: () => void }) {
                   </div>
                   <div className="mt-4 text-sm font-semibold text-[#25483c]">{item.name}</div>
                   <div className="mt-1 text-xs leading-5 text-[#8aa096]">{item.description}</div>
-                </button>
-              ))}
-            </div>
+</button>
+                ))}
+              </div>
+
+              <div className="mt-6 rounded-2xl border border-[#e9eee5] bg-[#fbfcf9] p-4">
+                <div className="flex items-center justify-between">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#34775e]">Imported scheme of work</div>
+                  <span className="rounded-full bg-[#e5f5ed] px-3 py-1.5 text-xs font-semibold text-[#34775e]">{schemes.length} in the school library</span>
+                </div>
+                <div className="mt-3 space-y-2">
+                  {schemes.length === 0 && <div className="rounded-2xl bg-[#f6f8f3] p-4 text-xs text-[#8aa096]">Nothing imported yet. Admin or teachers can upload a NERDC scheme-of-work PDF in the “Add upcoming subject” tab.</div>}
+                  {schemes.map((scheme) => (
+                    <div key={scheme.id} className="flex items-center justify-between gap-3 rounded-xl bg-white p-3">
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-semibold text-[#25483c]">{scheme.subject} · {scheme.grade}</div>
+                        <div className="mt-0.5 text-xs text-[#8aa096]">{scheme.term} · {scheme.weeks.length} weeks{scheme.sourceFile ? ` · ${scheme.sourceFile}` : ""}</div>
+                      </div>
+                      <span className="shrink-0 rounded-full bg-[#f4f7ef] px-2.5 py-1 text-[10px] font-bold text-[#527064]">Week {scheme.currentWeek ? scheme.currentWeek.replace(/\D+/g, "") : "—"}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
             <div className="mt-6 rounded-2xl border border-[#e3e8df] bg-[#fbfcf9] p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -123,18 +208,18 @@ export function CurriculumPrompt({ onClose }: { onClose: () => void }) {
                 <li>Use rows or headings marked <span className="font-semibold text-[#25483c]">Week 1, Week 2 … Week 13</span> so topics map to the right week.</li>
                 <li>List the <span className="font-semibold text-[#25483c]">topic</span> and the <span className="font-semibold text-[#25483c]">learning objective / content</span> under each week.</li>
                 <li>Keep the NERDC rhythm: <span className="font-semibold text-[#25483c]">Week 5 = Mid-term exam</span>, <span className="font-semibold text-[#25483c]">Week 7 = Mid-term break</span>, <span className="font-semibold text-[#25483c]">Week 12 = Exams</span>.</li>
-                <li>PDF or Excel (.xlsx) both work — we extract the table automatically and load it here.</li>
+                <li>PDF works best — we extract the table automatically and load it here. Pasting the curriculum text directly also works.</li>
               </ul>
             </div>
 
             <textarea value={curriculum} onChange={(event) => setCurriculum(event.target.value)} placeholder="Paste the next supplied curriculum here…" className="mt-5 min-h-[150px] w-full resize-y rounded-2xl border border-[#e1e8df] bg-[#fbfcf9] p-4 text-sm leading-6 text-[#25483c] outline-none placeholder:text-[#9aaca2] focus:border-[#78a98d] focus:ring-2 focus:ring-[#dff0e5]" />
             <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <label className="flex cursor-pointer items-center gap-2 rounded-full border border-[#e1e8df] px-4 py-2.5 text-xs font-semibold text-[#527064] hover:bg-[#f4f7ef]"><Upload size={14} /> {fileName || "Upload a subject curriculum (PDF / Excel)"}<input type="file" accept=".pdf,.xls,.xlsx,.doc,.docx,.txt,.csv" className="hidden" onChange={(event) => setFileName(event.target.files?.[0]?.name || "")} /></label>
-              <span className="text-xs text-[#8aa096]">PDF, Excel, DOCX, TXT, or CSV</span>
+              <label className="flex cursor-pointer items-center gap-2 rounded-full border border-[#e1e8df] px-4 py-2.5 text-xs font-semibold text-[#527064] hover:bg-[#f4f7ef]"><Upload size={14} /> {fileName || "Upload a subject curriculum (PDF)"}<input type="file" accept=".pdf,application/pdf" className="hidden" onChange={(event) => { fileRef.current = event.target.files?.[0] || null; setFileName(event.target.files?.[0]?.name || ""); }} /></label>
+              <span className="text-xs text-[#8aa096]">PDF only — we extract the scheme table automatically</span>
             </div>
             <div className="mt-7 flex justify-end gap-3">
               <button onClick={() => setTab("library")} className="rounded-full px-4 py-3 text-sm font-semibold text-[#7d958b] hover:bg-[#f4f7ef]">Back to library</button>
-              <button disabled={!curriculum.trim() && !fileName} onClick={() => setReceived(true)} className="rounded-full bg-[#173f31] px-5 py-3 text-sm font-semibold text-white hover:bg-[#286b51] disabled:cursor-not-allowed disabled:opacity-40">Add subject curriculum <ChevronRight className="ml-1 inline" size={15} /></button>
+              <button disabled={(!curriculum.trim() && !fileName) || importing} onClick={submit} className="rounded-full bg-[#173f31] px-5 py-3 text-sm font-semibold text-white hover:bg-[#286b51] disabled:cursor-not-allowed disabled:opacity-40">{importing ? "Reading curriculum…" : "Add subject curriculum"} <ChevronRight className="ml-1 inline" size={15} /></button>
             </div>
           </div>
         )}

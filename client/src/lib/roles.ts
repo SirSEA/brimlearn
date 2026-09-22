@@ -2,7 +2,7 @@ import type { Mode } from "@/components/layout/shell";
 
 /** Maps the app shell's design "view" modes to their index route. */
 export const MODE_PATH: Record<Mode, string> = {
-  learner: "/",
+  learner: "/learn",
   family: "/parent",
   classroom: "/tutor",
   school: "/admin",

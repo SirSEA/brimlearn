@@ -1,16 +1,25 @@
 import { CheckCircle2, ClipboardList, FileText, GraduationCap, Sparkles, Target, User, Users, Users2 } from "lucide-react";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { api, type Assignment, type AssignmentDifficulty, type AssignmentType, type CreateAssignmentInput } from "@/_core/api";
 import { publishAssignment } from "@/lib/assignmentStore";
 
 type Audience = "class" | "group" | "individual";
-type Difficulty = "Easy" | "Medium" | "Hard" | "Advanced";
-type TeacherType = "Worksheet" | "Quiz" | "Lesson" | "Practice";
-type Assignment = { id: string; type: string; title: string; subject: string; audience: string; difficulty: Difficulty; due: string; status: "Scheduled" | "In review" };
+type TeacherType = AssignmentType;
+type AssignmentItem = {
+  id: string;
+  type: TeacherType;
+  title: string;
+  subject: string;
+  audience: string;
+  difficulty: AssignmentDifficulty;
+  due: string;
+  status: "Scheduled" | "In review";
+};
 
-const levels: Difficulty[] = ["Easy", "Medium", "Hard", "Advanced"];
+const levels: AssignmentDifficulty[] = ["Easy", "Medium", "Hard", "Advanced"];
 
-const learnerDefaults: Record<string, Difficulty> = {
+const learnerDefaults: Record<string, AssignmentDifficulty> = {
   "Amara Okafor": "Easy",
   "Leo Mensah": "Medium",
   "Zuri Campbell": "Advanced",
@@ -18,11 +27,29 @@ const learnerDefaults: Record<string, Difficulty> = {
   "Nneka Eze": "Medium",
 };
 
+const defaultAssignments: AssignmentItem[] = [
+  { id: "a1", type: "Quiz", title: "Fractions check-in", subject: "Mathematics", audience: "Whole class", difficulty: "Easy", due: "Wed · 6pm", status: "Scheduled" },
+  { id: "a2", type: "Lesson", title: "Perimeter vs area · visual lab", subject: "Mathematics", audience: "Zuri + 2 more", difficulty: "Medium", due: "Thu · 9am", status: "In review" },
+];
+
 const allToNames = (audience: Audience, selected: string[]) => {
   if (audience === "class") return Object.keys(learnerDefaults);
   if (audience === "group") return ["Amara Okafor", "Leo Mensah", "Nneka Eze"];
   return selected;
 };
+
+function toItem(assignment: Assignment): AssignmentItem {
+  return {
+    id: assignment.id,
+    type: assignment.type,
+    title: assignment.title,
+    subject: assignment.subject,
+    audience: assignment.audience,
+    difficulty: assignment.difficulty,
+    due: assignment.due && assignment.due.trim().length > 0 ? assignment.due.replace(/^Due\s+/i, "") : "No due date",
+    status: assignment.status,
+  };
+}
 
 export function TutorAssignments() {
   const [type, setType] = useState<TeacherType>("Worksheet");
@@ -30,16 +57,31 @@ export function TutorAssignments() {
   const [subject, setSubject] = useState("Mathematics");
   const [audience, setAudience] = useState<Audience>("class");
   const [selected, setSelected] = useState<string[]>([]);
-  const [difficulty, setDifficulty] = useState<Difficulty>("Medium");
+  const [difficulty, setDifficulty] = useState<AssignmentDifficulty>("Medium");
   const [due, setDue] = useState("Sun, Sep 27");
-  const [assignments, setAssignments] = useState<Assignment[]>([
-    { id: "a1", type: "Quiz", title: "Fractions check-in", subject: "Mathematics", audience: "Whole class", difficulty: "Easy", due: "Wed · 6pm", status: "Scheduled" },
-    { id: "a2", type: "Lesson", title: "Perimeter vs area · visual lab", subject: "Mathematics", audience: "Zuri + 2 more", difficulty: "Medium", due: "Thu · 9am", status: "In review" },
-  ]);
+  const [assignments, setAssignments] = useState<AssignmentItem[]>(defaultAssignments);
+  const [loading, setLoading] = useState(true);
+
+  const refresh = useCallback(() => {
+    setLoading(true);
+    api
+      .listAssignments()
+      .then((list) => {
+        if (list.length > 0) setAssignments(list.map(toItem));
+      })
+      .catch(() => {
+        // Offline demo — keep the local defaults.
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
 
   const previewLearners = allToNames(audience, selected);
 
-  const assign = () => {
+  const assign = async () => {
     if (!title.trim()) {
       toast("Give the assignment a title first.");
       return;
@@ -47,12 +89,32 @@ export function TutorAssignments() {
     const audienceLabel = audience === "class" ? "Whole class" : audience === "group" ? `Group (${previewLearners.length})` : selected.join(", ");
     const isPractice = type === "Practice";
     const assignedDue = isPractice ? "No due date" : due;
-    setAssignments((current) => [{ id: `a${Date.now()}`, type, title: title.trim(), subject, audience: audienceLabel, difficulty, due: assignedDue, status: "Scheduled" }, ...current]);
-    publishAssignment({ title: title.trim(), subject, audience: audienceLabel, difficulty, due: isPractice ? null : due });
+
+    const input: CreateAssignmentInput = {
+      type,
+      title: title.trim(),
+      subject,
+      audience: audienceLabel,
+      audienceKey: audience,
+      learnerIds: audience === "individual" ? selected : [],
+      difficulty,
+      due: isPractice ? null : due,
+    };
+
+    try {
+      const created = await api.createAssignment(input);
+      setAssignments((current) => [toItem(created), ...current.filter((item) => !item.id.startsWith("a"))]);
+      toast.success(isPractice
+        ? `${type} pushed to learners — practice, no deadline. It now appears in their Tracker.`
+        : `${type} assigned to ${audienceLabel} — saved to the class, learners see it in their Tracker.`);
+    } catch {
+      publishAssignment({ title: input.title, subject, audience: audienceLabel, difficulty, due: isPractice ? null : due });
+      setAssignments((current) => [{ id: `pub-${Date.now()}`, type, title: input.title, subject, audience: audienceLabel, difficulty, due: assignedDue, status: "Scheduled" }, ...current]);
+      toast.success(isPractice
+        ? `${type} pushed locally (offline demo) — it will sync when the backend is reachable.`
+        : `${type} saved locally (offline demo) — it will sync when the backend is reachable.`);
+    }
     setTitle("");
-    toast.success(isPractice
-      ? `${type} pushed to learners — practice, no deadline. It will appear in their Tracker.`
-      : `${type} assigned to ${audienceLabel} — differentiated across learners.`);
   };
 
   return (
@@ -120,8 +182,9 @@ export function TutorAssignments() {
             </div>
           </div>
           <div className="rounded-[27px] border border-[#e3e8df] bg-white p-6 sm:p-7">
-            <div className="flex items-center justify-between"><div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8aa096]">Recent assignments</div><span className="rounded-full bg-[#f4f7ef] px-3 py-1.5 text-xs font-semibold text-[#527064]">{assignments.length}</span></div>
+            <div className="flex items-center justify-between"><div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8aa096]">Recent assignments</div><span className="rounded-full bg-[#f4f7ef] px-3 py-1.5 text-xs font-semibold text-[#527064]">{loading ? "…" : assignments.length}</span></div>
             <div className="mt-4 space-y-3">{assignments.map((assignment) => <div key={assignment.id} className="rounded-2xl border border-[#e9eee5] p-3.5"><div className="flex items-center justify-between gap-2"><div className="min-w-0"><div className="truncate text-sm font-semibold text-[#25483c]">{assignment.title}</div><div className="mt-0.5 truncate text-xs text-[#8aa096]">{assignment.type} · {assignment.subject} · {assignment.audience}</div></div><span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${assignment.status === "Scheduled" ? "bg-[#e5f5ed] text-[#34775e]" : "bg-[#fff1d7] text-[#916d22]"}`}>{assignment.status}</span></div><div className="mt-2.5 flex items-center gap-2 text-[10px] text-[#8aa096]"><CheckCircle2 size={12} className="text-[#3b926f]" /> {assignment.difficulty} cap{assignment.due === "No due date" ? <span className="rounded bg-[#f3e6ff] px-1.5 py-0.5 font-bold text-[#8053a9]">no due date</span> : <span>due {assignment.due}</span>}</div></div>)}</div>
+            {!loading && assignments.length === 0 && <div className="mt-3 rounded-2xl bg-[#f6f8f3] p-5 text-center text-sm text-[#7d958b]">No assignments yet. Create one above and it will show up here and on every learner’s Tracker.</div>}
           </div>
         </div>
       </section>

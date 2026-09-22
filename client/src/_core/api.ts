@@ -13,6 +13,15 @@
 import superjson from "superjson";
 import type { LiveSession, CreateLiveSessionInput, UpdateLiveSessionInput } from "@shared/session";
 import type { Scheme, ImportSchemeInput } from "@shared/scheme";
+import type {
+  Assignment,
+  AssignmentAudience,
+  AssignmentDifficulty,
+  AssignmentType,
+  AssessmentQuestion,
+  CreateAssignmentInput,
+} from "@shared/assignment";
+import type { LandingContent, SiteContentDoc } from "@shared/site";
 
 export type AuthUser = {
   id: string;
@@ -61,6 +70,30 @@ export type QuizInput = {
   difficulty: QuizDifficulty;
 };
 
+export type ObjectivesAssessmentInput = {
+  schemeId: string;
+  week?: string | null;
+  assessmentType: "quiz" | "assessment";
+  count: number;
+  difficulty: QuizDifficulty;
+};
+
+export type ObjectivesAssessment = {
+  title: string;
+  questions: AssessmentQuestion[];
+  suggestions: string[];
+  /** True when the AI service was unavailable and a local scheme fallback was used. */
+  fallback?: boolean;
+};
+
+export type PasswordResetRequestResult = {
+  ok: boolean;
+  /** True when no mail server is configured and the reset link is returned
+   *  directly so the flow can be tested for free. */
+  demoMode: boolean;
+  resetUrl: string | null;
+};
+
 export type ResourceCategory = "recording" | "reading" | "material" | "worksheet";
 export type ResourceKind = "video" | "file";
 
@@ -104,6 +137,14 @@ export type CreateResourceInput = {
   week?: string | null;
 };
 
+export type { Assignment, AssignmentAudience, AssignmentDifficulty, AssignmentType, AssessmentQuestion, CreateAssignmentInput };
+
+export type { LiveSession, CreateLiveSessionInput, UpdateLiveSessionInput };
+
+export type { Scheme, ImportSchemeInput };
+
+export type { LandingContent, SiteContentDoc };
+
 /** Thrown when there is no backend to call (Netlify) or it errored. */
 export class ApiUnavailableError extends Error {
   constructor(message = "BrimLearn API is unavailable (offline demo mode)") {
@@ -144,6 +185,16 @@ const ENDPOINTS = {
   importSchemes: "/api/trpc/schemes.import",
   setCurrentWeek: "/api/trpc/schemes.setCurrentWeek",
   removeScheme: "/api/trpc/schemes.remove",
+  listAssignments: "/api/trpc/assignments.list",
+  createAssignment: "/api/trpc/assignments.create",
+  removeAssignment: "/api/trpc/assignments.remove",
+  requestPasswordReset: "/api/trpc/auth.requestPasswordReset",
+  resetPassword: "/api/trpc/auth.resetPassword",
+  getSiteContent: "/api/trpc/site.get",
+  updateSiteContent: "/api/trpc/site.update",
+  publishSiteContent: "/api/trpc/site.publish",
+  revertSiteContent: "/api/trpc/site.revert",
+  generateFromObjectives: "/api/trpc/quiz.generateFromObjectives",
 } as const;
 
 type Availability = "unknown" | "online" | "offline";
@@ -396,6 +447,76 @@ function removeScheme(id: string): Promise<{ success: boolean }> {
   return postApi<{ success: boolean }>(ENDPOINTS.removeScheme, { id });
 }
 
+async function listAssignments(): Promise<Assignment[]> {
+  const assignments = await getQuery<Assignment[]>(ENDPOINTS.listAssignments, {});
+  return Array.isArray(assignments) ? assignments : [];
+}
+
+async function createAssignment(input: CreateAssignmentInput): Promise<Assignment> {
+  const assignment = await postApi<Assignment>(ENDPOINTS.createAssignment, input);
+  if (!assignment || typeof assignment.id !== "string") {
+    throw new ApiUnavailableError("Malformed assignment response");
+  }
+  return assignment;
+}
+
+function removeAssignment(id: string): Promise<{ success: boolean }> {
+  return postApi<{ success: boolean }>(ENDPOINTS.removeAssignment, { id });
+}
+
+async function requestPasswordReset(email: string): Promise<PasswordResetRequestResult> {
+  const result = await postApi<PasswordResetRequestResult>(ENDPOINTS.requestPasswordReset, { email });
+  if (!result || typeof result.ok !== "boolean") {
+    throw new ApiUnavailableError("Malformed password-reset response");
+  }
+  return result;
+}
+
+function resetPassword(token: string, password: string): Promise<{ ok: boolean }> {
+  return postApi<{ ok: boolean }>(ENDPOINTS.resetPassword, { token, password });
+}
+
+/** Public landing-page content with offline defaults fallback. */
+async function getSiteContent(): Promise<SiteContentDoc | null> {
+  if (!(await probeApi()) || availability === "offline") return null;
+  try {
+    const doc = await getQuery<SiteContentDoc>(ENDPOINTS.getSiteContent, {});
+    return doc && typeof doc.id === "string" && doc.content ? doc : null;
+  } catch {
+    return null;
+  }
+}
+
+function updateSiteContent(content: LandingContent): Promise<SiteContentDoc> {
+  return postApi<SiteContentDoc>(ENDPOINTS.updateSiteContent, content);
+}
+
+function publishSiteContent(): Promise<SiteContentDoc> {
+  return postApi<SiteContentDoc>(ENDPOINTS.publishSiteContent, {});
+}
+
+function revertSiteContent(): Promise<SiteContentDoc> {
+  return postApi<SiteContentDoc>(ENDPOINTS.revertSiteContent, {});
+}
+
+async function generateFromObjectives(input: ObjectivesAssessmentInput): Promise<ObjectivesAssessment> {
+  const assessment = await postApi<ObjectivesAssessment>(ENDPOINTS.generateFromObjectives, input);
+  if (!assessment || typeof assessment.title !== "string" || !Array.isArray(assessment.questions)) {
+    throw new ApiUnavailableError("Malformed assessment response");
+  }
+  return {
+    title: assessment.title,
+    questions: assessment.questions.map((q) => ({
+      question: String(q.question ?? ""),
+      options: Array.isArray(q.options) && q.options.length === 4 ? q.options.map(String) : ["A", "B", "C", "D"],
+      answer: typeof q.answer === "number" && q.answer >= 0 && q.answer <= 3 ? q.answer : 0,
+      explanation: String(q.explanation ?? ""),
+    })),
+    suggestions: Array.isArray(assessment.suggestions) ? assessment.suggestions.map(String) : [],
+    fallback: assessment.fallback === true,
+  };
+}
+
 async function generateQuiz(input: QuizInput): Promise<GeneratedQuiz> {
   if (!(await probeApi()) || availability === "offline") {
     throw new ApiUnavailableError();
@@ -457,4 +578,14 @@ export const api = {
   importSchemes,
   setCurrentWeek,
   removeScheme,
+  listAssignments,
+  createAssignment,
+  removeAssignment,
+  requestPasswordReset,
+  resetPassword,
+  getSiteContent,
+  updateSiteContent,
+  publishSiteContent,
+  revertSiteContent,
+  generateFromObjectives,
 };

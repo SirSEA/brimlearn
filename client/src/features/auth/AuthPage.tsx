@@ -47,7 +47,7 @@ const ROLES: Role[] = [
   { id: "tutor", label: "Tutor", icon: GraduationCap, blurb: "Run a classroom and respond to gaps before they grow." },
 ];
 
-function Field({
+export function Field({
   label,
   icon: Icon,
   error,
@@ -80,7 +80,7 @@ function Field({
   );
 }
 
-function AuthLayout({ children }: { children: React.ReactNode }) {
+export function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-[#fbfbf6] text-[#183c31] lg:grid lg:grid-cols-[440px_1fr]">
       <aside className="relative hidden flex-col justify-between overflow-hidden bg-[#123d30] p-10 text-white lg:flex">
@@ -303,7 +303,7 @@ export default function AuthPage({ initialMode = "login" }: { initialMode?: "log
             <div className="flex items-center justify-end">
               <button
                 type="button"
-                onClick={() => toast("Password reset will be available soon.")}
+                onClick={() => setLocation("/forgot-password")}
                 className="text-xs font-semibold text-[#34775e] hover:text-[#286b51]"
               >
                 Forgot password?

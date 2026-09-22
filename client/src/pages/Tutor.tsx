@@ -6,6 +6,7 @@ import { TutorCalendar } from "@/features/tutor/TutorCalendar";
 import { TutorResources } from "@/features/tutor/TutorResources";
 import { TutorRoster } from "@/features/tutor/TutorRoster";
 import { TutorVirtualTool } from "@/features/tutor/TutorVirtualTool";
+import { TutorQuizStudio } from "@/features/tutor/TutorQuizStudio";
 import { pathForMode } from "@/lib/roles";
 import { useLocation } from "wouter";
 
@@ -28,6 +29,8 @@ export default function Tutor() {
             return <TutorResources />;
           case "virtual":
             return <TutorVirtualTool />;
+          case "quizstudio":
+            return <TutorQuizStudio />;
           case "messages":
             return <Messages variant="tutor" />;
           default:

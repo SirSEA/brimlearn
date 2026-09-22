@@ -15,10 +15,12 @@ import {
   Trophy,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
+import { api } from "@/_core/api";
 
-/** The fixed 15–20 minute teaching video in the lesson player. */
+/** The fixed 15–20 minute teaching video in the lesson player. Superseded by
+ *  the first video resource from the backend once one is published. */
 const LESSON_VIDEO = {
   youtubeId: "d0V_w6PBM9A",
   title: "Multiply by 10, 100 and 1,000",
@@ -76,6 +78,26 @@ export default function Lesson() {
   const [level, setLevel] = useState<WorksheetLevel>("core");
   const [objectivesDone, setObjectivesDone] = useState(false);
   const [videoWatched, setVideoWatched] = useState(false);
+  const [video, setVideo] = useState(LESSON_VIDEO);
+
+  useEffect(() => {
+    let mounted = true;
+    api
+      .listResources()
+      .then((resources) => {
+        if (!mounted) return;
+        const sampleVideo = resources.find((resource) => resource.kind === "video" && resource.youtubeId);
+        if (sampleVideo?.youtubeId) {
+          setVideo({ youtubeId: sampleVideo.youtubeId, title: sampleVideo.title, duration: "Lesson video" });
+        }
+      })
+      .catch(() => {
+        // Offline demo — keep the placeholder clip.
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const startObjective = () => {
     setObjectivesDone(true);
@@ -86,7 +108,7 @@ export default function Lesson() {
     <div className="min-h-screen bg-[#fbfbf6] text-[#183c31]">
       <header className="flex h-[76px] items-center justify-between border-b border-[#dfe5d9] bg-[#fbfbf6] px-5 lg:px-10">
         <button
-          onClick={() => setLocation("/learner")}
+          onClick={() => setLocation("/learn")}
           className="flex items-center gap-2 rounded-full px-2 py-2 text-sm font-semibold text-[#527064] hover:bg-[#edf1e9]"
         >
           <ArrowLeft size={17} /> Exit lesson
@@ -186,7 +208,7 @@ export default function Lesson() {
           <div className="rounded-[27px] border border-[#e3e8df] bg-white p-6 sm:p-7">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8aa096]">
-                <MonitorPlay size={13} /> Lesson video · {LESSON_VIDEO.duration}
+                <MonitorPlay size={13} /> Lesson video · {video.duration}
               </div>
               <span className="rounded-full bg-[#fff1d7] px-3 py-1.5 text-xs font-semibold text-[#916d22]">
                 One pass is enough
@@ -194,15 +216,15 @@ export default function Lesson() {
             </div>
             <div className="mt-4 aspect-video overflow-hidden rounded-2xl bg-[#0e2b22]">
               <iframe
-                title={LESSON_VIDEO.title}
+                title={video.title}
                 className="h-full w-full"
-                src={`https://www.youtube-nocookie.com/embed/${LESSON_VIDEO.youtubeId}`}
+                src={`https://www.youtube-nocookie.com/embed/${video.youtubeId}`}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               />
             </div>
             <div className="mt-3 flex items-center justify-between gap-3 text-sm">
-              <div className="font-semibold text-[#183c31]">{LESSON_VIDEO.title}</div>
+              <div className="font-semibold text-[#183c31]">{video.title}</div>
               <button
                 onClick={() => setVideoWatched(true)}
                 className={`flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition ${

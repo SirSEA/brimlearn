@@ -1,31 +1,74 @@
-import { AlarmClock, CalendarClock, Check, CheckCheck, Flag } from "lucide-react";
+import { AlarmClock, CalendarClock, Check, CheckCheck, Flag, PlayCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
+import { api, type Assignment } from "@/_core/api";
 import { publishedAssignments } from "@/lib/assignmentStore";
+import { QuizTakeOverlay } from "@/features/tracker/QuizTakeOverlay";
 
 type Task = { id: string; title: string; subject: string; due: string; status: "overdue" | "today" | "upcoming" | "done" };
 
 const initialTasks: Task[] = [
   { id: "t1", title: "Fractions worksheet (page 2)", subject: "Mathematics", due: "Due yesterday, 6pm", status: "overdue" },
   { id: "t2", title: "10s practice set · Easy", subject: "Mathematics", due: "Due today, 4pm", status: "today" },
-  { id: "t3", title: "Read ‘The Market Story’ chapter", subject: "English Studies", due: "Due today, 7pm", status: "today" },
+  { id: "t3", title: "Read 'The Market Story' chapter", subject: "English Studies", due: "Due today, 7pm", status: "today" },
   { id: "t4", title: "States of matter lab prep", subject: "Basic Science", due: "Tue · 9am", status: "upcoming" },
   { id: "t5", title: "Map-reading homework", subject: "Social Studies", due: "Thu · 5pm", status: "upcoming" },
   { id: "t6", title: "Weekend quiz · Medium", subject: "Mathematics", due: "Sun · 6pm", status: "upcoming" },
 ];
 
-const teacherTasks: Task[] = publishedAssignments().map((assignment, index) => ({
-  id: assignment.id,
-  title: assignment.title,
-  subject: `${assignment.subject} · from your teacher`,
-  due: assignment.due ? `Due ${assignment.due}` : "Practice — no due date",
-  status: index === 0 ? "today" : "upcoming",
-}));
+function toTeacherTask(assignment: { id: string; title: string; subject: string; due: string | null }, index: number): Task {
+  return {
+    id: assignment.id,
+    title: assignment.title,
+    subject: `${assignment.subject} · from your teacher`,
+    due: assignment.due && assignment.due.trim().length > 0 ? `Due ${assignment.due.replace(/^Due\s+/i, "")}` : "Practice — no due date",
+    status: index === 0 ? "today" : "upcoming",
+  };
+}
+
+const localTeacherTasks: Task[] = publishedAssignments().map((assignment, index) =>
+  toTeacherTask(assignment, index)
+);
 
 export function Tracker() {
-  const [tasks, setTasks] = useState<Task[]>([...initialTasks, ...teacherTasks]);
+  const [teacherTasks, setTeacherTasks] = useState<Task[]>(localTeacherTasks);
+  const [tasks, setTasks] = useState<Task[]>([...initialTasks, ...localTeacherTasks]);
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [activeQuiz, setActiveQuiz] = useState<Assignment | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    api
+      .listAssignments()
+      .then((all) => {
+        if (!mounted) return;
+        setAssignments(all);
+        const fromBackend = all.map((assignment, index) => toTeacherTask(assignment, index));
+        const fallbackIds = new Set(localTeacherTasks.map((task) => task.id));
+        setTeacherTasks(fromBackend);
+        setTasks([...initialTasks, ...fromBackend.filter((task) => !fallbackIds.has(task.id)), ...localTeacherTasks]);
+      })
+      .catch(() => {
+        // Offline demo — localStorage assignments and placeholders still show.
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const done = tasks.filter((task) => task.status === "done").length;
   const total = tasks.length;
+  const isTeacherTask = (id: string) => teacherTasks.some((task) => task.id === id);
+  const quizFor = (id: string) => {
+    const assignment = assignments.find((item) => item.id === id);
+    return assignment && (assignment.questions?.length ?? 0) > 0 ? assignment : null;
+  };
+
+  const finishQuiz = (assignment: Assignment, score: number, questionCount: number) => {
+    setActiveQuiz(null);
+    setTasks((current) => current.map((task) => (task.id === assignment.id ? { ...task, status: "done" } : task)));
+    toast.success(`${assignment.title} completed · ${score}/${questionCount} correct`, { description: score === questionCount ? "+20 XP · perfect score" : "+20 XP · review the explanations above" });
+  };
 
   useEffect(() => {
     tasks.filter((task) => task.status === "overdue").forEach((task) => toast.warning(`${task.title} is overdue.`, { description: task.subject }));
@@ -74,7 +117,15 @@ export function Tracker() {
                     <button onClick={() => toggle(task.id)} className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full border transition ${task.status === "done" ? "border-[#3b926f] bg-[#e5f5ed] text-[#3b926f]" : "border-[#ccd9ce] text-transparent hover:border-[#3b926f]"}`}><Check size={13} strokeWidth={3} /></button>
                     <div className="min-w-0 flex-1">
                       <div className={`text-sm font-semibold ${task.status === "done" ? "text-[#8aa096] line-through" : "text-[#25483c]"}`}>{task.title}</div>
-                      <div className="mt-0.5 text-xs text-[#8aa096]">{task.subject}{task.id.startsWith("pub-") && <span className="ml-1.5 rounded bg-[#eef4ea] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#34775e]">new from teacher</span>} · <span className={task.status === "overdue" ? "font-semibold text-[#a25142]" : ""}>{task.due}</span></div>
+                      <div className="mt-0.5 text-xs text-[#8aa096]">{task.subject}{isTeacherTask(task.id) && <span className="ml-1.5 rounded bg-[#eef4ea] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#34775e]">new from teacher</span>} · <span className={task.status === "overdue" ? "font-semibold text-[#a25142]" : ""}>{task.due}</span></div>
+                      {task.status !== "done" && quizFor(task.id) && (
+                        <button
+                          onClick={() => setActiveQuiz(quizFor(task.id))}
+                          className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#d8f36a] px-3 py-1.5 text-[11px] font-bold text-[#133d2f] transition hover:bg-[#e1fa8c]"
+                        >
+                          <PlayCircle size={13} /> Start quiz in-app
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -84,6 +135,14 @@ export function Tracker() {
           );
         })}
       </section>
+
+      {activeQuiz && (
+        <QuizTakeOverlay
+          assignment={activeQuiz}
+          onClose={() => setActiveQuiz(null)}
+          onFinish={(score, questionCount) => finishQuiz(activeQuiz, score, questionCount)}
+        />
+      )}
     </>
   );
 }

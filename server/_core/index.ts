@@ -8,6 +8,7 @@ import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { seedSampleContent } from "../seed-content";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -61,6 +62,14 @@ async function startServer() {
 
   if (port !== preferredPort) {
     console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
+  }
+
+  // Idempotent: only fills empty collections so a fresh checkout demos well,
+  // and never touches content a teacher/admin has already published.
+  try {
+    await seedSampleContent();
+  } catch (error) {
+    console.warn("[Seed] Sample content seeding skipped:", error instanceof Error ? error.message : error);
   }
 
   server.listen(port, () => {

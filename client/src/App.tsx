@@ -1,14 +1,18 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
+import ServiceUnavailable from "@/pages/ServiceUnavailable";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { AuthGate } from "./components/auth/AuthGate";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import AuthPage from "./features/auth/AuthPage";
 import AdminLogin from "./features/auth/AdminLogin";
+import ForgotPassword from "./features/auth/ForgotPassword";
+import ResetPassword from "./features/auth/ResetPassword";
 import Admin from "./pages/Admin";
 import Home from "./pages/Home";
+import Landing from "./pages/Landing";
 import Lesson from "./pages/Lesson";
 import Parent from "./pages/Parent";
 import Tutor from "./pages/Tutor";
@@ -24,6 +28,15 @@ function Router() {
       </Route>
       <Route path="/admin/login">
         <AdminLogin />
+      </Route>
+      <Route path="/forgot-password">
+        <ForgotPassword />
+      </Route>
+      <Route path="/reset-password">
+        <ResetPassword />
+      </Route>
+      <Route path="/">
+        <Landing />
       </Route>
       <Route path="/admin">
         <AuthGate requireAdmin>
@@ -45,13 +58,16 @@ function Router() {
           <Lesson />
         </AuthGate>
       </Route>
-      <Route path="/">
+      <Route path="/learn">
         <AuthGate>
           <Home />
         </AuthGate>
       </Route>
       <Route path="/404">
         <NotFound />
+      </Route>
+      <Route path="/503">
+        <ServiceUnavailable />
       </Route>
       <Route>
         <NotFound />

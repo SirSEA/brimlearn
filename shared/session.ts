@@ -2,7 +2,7 @@
 // integrations. Teachers schedule a session and students join from the
 // classroom tab. Pure module (no node deps) so client and server both import it.
 
-export const LIVE_PLATFORMS = ["zoom", "google-meet", "teams", "other"] as const;
+export const LIVE_PLATFORMS = ["zoom", "google-meet", "teams", "other", "jitsi"] as const;
 export type LivePlatform = (typeof LIVE_PLATFORMS)[number];
 
 export const LIVE_PLATFORM_LABELS: Record<LivePlatform, string> = {
@@ -10,6 +10,7 @@ export const LIVE_PLATFORM_LABELS: Record<LivePlatform, string> = {
   "google-meet": "Google Meet",
   teams: "Microsoft Teams",
   other: "Other link",
+  jitsi: "BrimLearn Live",
 };
 
 /** JSON-safe live session document. */
@@ -71,4 +72,25 @@ export function sessionStatus(session: LiveSession, now = Date.now()): LiveSessi
 export function sessionJoinUrl(session: LiveSession): string | null {
   if (session.meetingUrl && /^https?:\/\//i.test(session.meetingUrl)) return session.meetingUrl;
   return null;
+}
+
+/**
+ * Stable Jitsi room name for a session. Pure and deterministic so the server
+ * (when scheduling) and every client (when joining) resolve to the same room
+ * from the session id alone.
+ */
+export function jitsiRoomName(sessionId: string): string {
+  const slug = sessionId.replace(/[^A-Za-z0-9_-]/g, "").slice(0, 40);
+  return `brimlearn-${slug || Math.floor(Math.random() * 1_000_000_000)}`;
+}
+
+/** Full URL embedded by the in-app room (meet.jit.si public service). */
+export function jitsiRoomUrl(sessionId: string): string {
+  return `https://meet.jit.si/${jitsiRoomName(sessionId)}`;
+}
+
+/** True when the session runs inside the app's embedded room (Jitsi). */
+export function isEmbeddedRoom(session: Pick<LiveSession, "platform" | "meetingUrl">): boolean {
+  if (session.platform === "jitsi") return true;
+  return Boolean(session.meetingUrl && /meet\.jit\.si\//i.test(session.meetingUrl));
 }

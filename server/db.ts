@@ -12,6 +12,17 @@ import type {
   LiveSession,
   UpdateLiveSessionInput,
 } from "@shared/session";
+import type {
+  Assignment,
+  AssignmentAudience,
+  AssignmentDifficulty,
+  AssignmentStatus,
+  AssignmentType,
+  AssessmentQuestion,
+  CreateAssignmentInput,
+} from "@shared/assignment";
+import type { LandingContent, SiteContentDoc, SiteContentStatus } from "@shared/site";
+import { defaultLandingContent, SITE_CONTENT_DOC_ID } from "@shared/site";
 import { ENV } from "./_core/env";
 import { getFirestoreDb } from "./_core/firebase";
 
@@ -19,6 +30,9 @@ const USERS_COLLECTION = "users";
 const RESOURCES_COLLECTION = "resources";
 const LIVE_SESSIONS_COLLECTION = "liveSessions";
 const SCHEMES_COLLECTION = "schemes";
+const ASSIGNMENTS_COLLECTION = "assignments";
+const SITE_CONTENT_COLLECTION = "siteContent";
+const PASSWORD_RESETS_COLLECTION = "passwordResets";
 
 function toDate(value: unknown): Date {
   if (value instanceof Timestamp) return value.toDate();
@@ -340,7 +354,8 @@ export async function getLiveSession(id: string): Promise<LiveSession | undefine
 }
 
 export async function createLiveSession(
-  input: CreateLiveSessionInput & { hostBy: string; hostName: string | null }
+  input: CreateLiveSessionInput & { hostBy: string; hostName: string | null },
+  id?: string
 ): Promise<LiveSession> {
   if (!ENV.firebaseConfigured) {
     throw new Error("Firestore is not configured. Set FIREBASE_* credentials in .env first.");
@@ -367,7 +382,7 @@ export async function createLiveSession(
     updatedAt: now,
   };
 
-  const doc = getFirestoreDb().collection(LIVE_SESSIONS_COLLECTION).doc(nanoid(18));
+  const doc = getFirestoreDb().collection(LIVE_SESSIONS_COLLECTION).doc(id ?? nanoid(18));
   await doc.set(store);
   const created = await doc.get();
   const session = mapLiveSession(created);
@@ -502,4 +517,291 @@ export async function updateSchemeCurrentWeek(
 export async function deleteScheme(id: string): Promise<void> {
   if (!ENV.firebaseConfigured) return;
   await getFirestoreDb().collection(SCHEMES_COLLECTION).doc(id).delete();
+}
+
+/* ---------------------------------------------------------------------------
+ * Assignments (tutor-created work that lands on learner trackers).
+ * ------------------------------------------------------------------------- */
+
+type StoredAssignment = {
+  type?: AssignmentType;
+  title?: string;
+  subject?: string;
+  audience?: string;
+  audienceKey?: AssignmentAudience;
+  learnerIds?: string[];
+  difficulty?: AssignmentDifficulty;
+  due?: string | null;
+  createdBy?: string;
+  createdByName?: string | null;
+  createdAt?: Date;
+  status?: AssignmentStatus;
+  questions?: AssessmentQuestion[];
+};
+
+function mapAssignment(doc: DocumentSnapshot): Assignment | undefined {
+  if (!doc.exists) return undefined;
+  const data = doc.data() ?? {};
+  return {
+    id: doc.id,
+    type: (data.type ?? "Practice") as AssignmentType,
+    title: String(data.title ?? "Untitled assignment"),
+    subject: String(data.subject ?? ""),
+    audience: String(data.audience ?? "Whole class"),
+    audienceKey: (data.audienceKey ?? "class") as AssignmentAudience,
+    learnerIds: Array.isArray(data.learnerIds)
+      ? data.learnerIds.map((item: unknown) => String(item))
+      : [],
+    difficulty: (data.difficulty ?? "Medium") as AssignmentDifficulty,
+    due: typeof data.due === "string" && data.due.length > 0 ? data.due : null,
+    createdBy: String(data.createdBy ?? ""),
+    createdByName: typeof data.createdByName === "string" ? data.createdByName : null,
+    createdAt: toDate(data.createdAt).toISOString(),
+    status: (data.status ?? "Scheduled") as AssignmentStatus,
+    questions: Array.isArray(data.questions) ? (data.questions as AssessmentQuestion[]) : [],
+  };
+}
+
+export async function listAssignments(): Promise<Assignment[]> {
+  if (!ENV.firebaseConfigured) return [];
+  const snap = await getFirestoreDb()
+    .collection(ASSIGNMENTS_COLLECTION)
+    .orderBy("createdAt", "desc")
+    .limit(200)
+    .get();
+  return snap.docs
+    .map((doc) => mapAssignment(doc))
+    .filter((assignment): assignment is Assignment => Boolean(assignment));
+}
+
+export async function createAssignment(
+  input: CreateAssignmentInput & { createdBy: string; createdByName: string | null }
+): Promise<Assignment> {
+  if (!ENV.firebaseConfigured) {
+    throw new Error("Firestore is not configured. Set FIREBASE_* credentials in .env first.");
+  }
+
+  const now = new Date();
+  const store: StoredAssignment = {
+    type: input.type,
+    title: input.title.trim(),
+    subject: input.subject.trim(),
+    audience: input.audience.trim(),
+    audienceKey: input.audienceKey,
+    learnerIds: input.learnerIds ?? [],
+    difficulty: input.difficulty,
+    due: input.due && input.due.trim().length > 0 ? input.due.trim() : null,
+    createdBy: input.createdBy,
+    createdByName: input.createdByName,
+    createdAt: now,
+    status: "Scheduled",
+    questions: input.questions ?? [],
+  };
+
+  const doc = getFirestoreDb().collection(ASSIGNMENTS_COLLECTION).doc(nanoid(18));
+  await doc.set(store);
+  const created = await doc.get();
+  const assignment = mapAssignment(created);
+  if (!assignment) throw new Error("Failed to read back the created assignment");
+  return assignment;
+}
+
+export async function deleteAssignment(id: string): Promise<void> {
+  if (!ENV.firebaseConfigured) return;
+  await getFirestoreDb().collection(ASSIGNMENTS_COLLECTION).doc(id).delete();
+}
+
+/* ---------------------------------------------------------------------------
+ * Site content (public landing page, editable by admins).
+ * A single doc holds the working draft (`content`), a snapshot of the previous
+ * published version (`previous`) for one-click revert, and publish metadata.
+ * ------------------------------------------------------------------------- */
+
+type StoredSiteContent = {
+  status?: SiteContentStatus;
+  content?: LandingContent;
+  previous?: LandingContent | null;
+  version?: number;
+  updatedAt?: Date;
+  publishedAt?: Date | null;
+  updatedBy?: string | null;
+  updatedByName?: string | null;
+};
+
+function mapSiteContent(doc: DocumentSnapshot): SiteContentDoc | undefined {
+  if (!doc.exists) return undefined;
+  const data = doc.data() ?? {};
+  return {
+    id: doc.id,
+    status: (data.status ?? "draft") as SiteContentStatus,
+    content: (data.content as LandingContent | undefined) ?? defaultLandingContent(),
+    previous: (data.previous as LandingContent | null | undefined) ?? null,
+    version: typeof data.version === "number" ? data.version : 1,
+    updatedAt: toDate(data.updatedAt).toISOString(),
+    publishedAt: data.publishedAt ? toDate(data.publishedAt).toISOString() : null,
+    updatedByName: typeof data.updatedByName === "string" ? data.updatedByName : null,
+  };
+}
+
+/** Returns the landing site content, creating the default seed doc on first read. */
+export async function getSiteContent(): Promise<SiteContentDoc> {
+  if (!ENV.firebaseConfigured) {
+    return { ...defaultsFrom(SITE_CONTENT_DOC_ID), id: SITE_CONTENT_DOC_ID };
+  }
+  const col = getFirestoreDb().collection(SITE_CONTENT_COLLECTION);
+  const doc = col.doc(SITE_CONTENT_DOC_ID);
+  const snap = await doc.get();
+  if (!snap.exists) {
+    const now = new Date();
+    const store: StoredSiteContent = {
+      status: "published",
+      content: defaultLandingContent(),
+      previous: null,
+      version: 1,
+      updatedAt: now,
+      publishedAt: now,
+      updatedByName: null,
+    };
+    await doc.set(store);
+    return { ...store, id: SITE_CONTENT_DOC_ID, publishedAt: now.toISOString(), updatedAt: now.toISOString() } as SiteContentDoc;
+  }
+  return mapSiteContent(snap) ?? { ...defaultsFrom(doc.id), id: doc.id } as SiteContentDoc;
+}
+
+function defaultsFrom(id: string): Omit<SiteContentDoc, "id"> {
+  const now = new Date().toISOString();
+  return {
+    status: "published",
+    content: defaultLandingContent(),
+    previous: null,
+    version: 1,
+    updatedAt: now,
+    publishedAt: now,
+    updatedByName: null,
+  };
+}
+
+export async function updateSiteContent(
+  content: LandingContent,
+  byName: string | null
+): Promise<SiteContentDoc> {
+  if (!ENV.firebaseConfigured) {
+    return {
+      ...defaultsFrom(SITE_CONTENT_DOC_ID),
+      id: SITE_CONTENT_DOC_ID,
+      status: "draft",
+      content,
+      updatedByName: byName,
+    };
+  }
+  const doc = getFirestoreDb().collection(SITE_CONTENT_COLLECTION).doc(SITE_CONTENT_DOC_ID);
+  await doc.set(
+    {
+      status: "draft",
+      content,
+      updatedAt: new Date(),
+      updatedByName: byName,
+    } satisfies StoredSiteContent,
+    { merge: true }
+  );
+  const updated = await doc.get();
+  return mapSiteContent(updated) ?? ({ ...defaultsFrom(doc.id), id: doc.id, content } as SiteContentDoc);
+}
+
+export async function publishSiteContent(byName: string | null): Promise<SiteContentDoc> {
+  if (!ENV.firebaseConfigured) {
+    return { ...defaultsFrom(SITE_CONTENT_DOC_ID), id: SITE_CONTENT_DOC_ID, updatedByName: byName };
+  }
+  const doc = getFirestoreDb().collection(SITE_CONTENT_COLLECTION).doc(SITE_CONTENT_DOC_ID);
+  const snap = await doc.get();
+  const current = mapSiteContent(snap) ?? ({ ...defaultsFrom(doc.id), id: doc.id } as SiteContentDoc);
+  await doc.update({
+    status: "published",
+    previous: current.content,
+    version: (current.version ?? 0) + 1,
+    publishedAt: new Date(),
+    updatedAt: new Date(),
+    updatedByName: byName,
+  } satisfies StoredSiteContent);
+  const updated = await doc.get();
+  return mapSiteContent(updated) ?? current;
+}
+
+/** Rolls the working draft back to the last published version. */
+export async function revertSiteContent(byName: string | null): Promise<SiteContentDoc> {
+  if (!ENV.firebaseConfigured) {
+    return { ...defaultsFrom(SITE_CONTENT_DOC_ID), id: SITE_CONTENT_DOC_ID, updatedByName: byName };
+  }
+  const doc = getFirestoreDb().collection(SITE_CONTENT_COLLECTION).doc(SITE_CONTENT_DOC_ID);
+  const snap = await doc.get();
+  const current = mapSiteContent(snap) ?? ({ ...defaultsFrom(doc.id), id: doc.id } as SiteContentDoc);
+  if (!current.previous) return current;
+  await doc.update({
+    status: "draft",
+    content: current.previous,
+    previous: null,
+    updatedAt: new Date(),
+    updatedByName: byName,
+  } satisfies StoredSiteContent);
+  const updated = await doc.get();
+  return mapSiteContent(updated) ?? current;
+}
+
+/* ---------------------------------------------------------------------------
+ * Password resets (forgot / reset password flow).
+ * A reset row is created with a random token and expiry; the token doubles as
+ * the document id so lookups are O(1). Rows are single-use.
+ * ------------------------------------------------------------------------- */
+
+export type PasswordResetRow = {
+  token: string;
+  email: string;
+  userId: string;
+  expiresAt: Date;
+  createdAt: Date;
+  used: boolean;
+};
+
+function mapPasswordReset(doc: DocumentSnapshot): PasswordResetRow | undefined {
+  if (!doc.exists) return undefined;
+  const data = doc.data() ?? {};
+  return {
+    token: doc.id,
+    email: String(data.email ?? ""),
+    userId: String(data.userId ?? ""),
+    expiresAt: toDate(data.expiresAt),
+    createdAt: toDate(data.createdAt),
+    used: data.used === true,
+  };
+}
+
+/** Creates a single-use reset row. Returns the token (empty string if offline). */
+export async function createPasswordReset(
+  userId: string,
+  email: string,
+  ttlMs: number
+): Promise<string> {
+  const token = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+  if (!ENV.firebaseConfigured) return "";
+  const now = new Date();
+  await getFirestoreDb().collection(PASSWORD_RESETS_COLLECTION).doc(token).set({
+    email,
+    userId,
+    expiresAt: new Date(now.getTime() + ttlMs),
+    createdAt: now,
+    used: false,
+  });
+  return token;
+}
+
+export async function findPasswordReset(token: string): Promise<PasswordResetRow | undefined> {
+  if (!ENV.firebaseConfigured) return undefined;
+  const doc = await getFirestoreDb().collection(PASSWORD_RESETS_COLLECTION).doc(token).get();
+  return mapPasswordReset(doc);
+}
+
+/** Marks a reset row used and removes it once consumed. */
+export async function consumePasswordReset(token: string): Promise<void> {
+  if (!ENV.firebaseConfigured) return;
+  await getFirestoreDb().collection(PASSWORD_RESETS_COLLECTION).doc(token).delete();
 }
