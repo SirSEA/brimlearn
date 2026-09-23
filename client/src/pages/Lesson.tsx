@@ -38,22 +38,22 @@ const worksheetMeta: Record<
   core: {
     label: "Core",
     blurb: "The standard worksheet. Enough to hit the objective solidly.",
-    tone: "bg-[#173f31] text-white",
-    chip: "bg-[#e5f5ed] text-[#2f7a57]",
+    tone: "bg-[#C65A2E] text-white",
+    chip: "bg-[#E9EED9] text-[#4B6B3C]",
   },
   support: {
     label: "Support",
     blurb:
       "Extra step-by-step guidance, worked examples and fewer numbers per row — for anyone who needs a lighter runway.",
-    tone: "bg-[#4e91c6] text-white",
-    chip: "bg-[#e7f2ff] text-[#3774ac]",
+    tone: "bg-[#33647A] text-white",
+    chip: "bg-[#E8EFF9] text-[#274852]",
   },
   challenge: {
     label: "Challenge",
     blurb:
       "Harder, multi-step and real-world questions — for learners ready to push beyond the standard.",
-    tone: "bg-[#a25142] text-white",
-    chip: "bg-[#fff0ec] text-[#a25142]",
+    tone: "bg-[#B84B3D] text-white",
+    chip: "bg-[#FBEBE5] text-[#B84B3D]",
   },
 };
 
@@ -105,45 +105,45 @@ export default function Lesson() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fbfbf6] text-[#183c31]">
-      <header className="flex h-[76px] items-center justify-between border-b border-[#dfe5d9] bg-[#fbfbf6] px-5 lg:px-10">
+    <div className="min-h-screen bg-[#F7F0E6] text-[#1A1512]">
+      <header className="flex h-[76px] items-center justify-between border-b border-[#E2CDB8] bg-[#F7F0E6] px-5 lg:px-10">
         <button
           onClick={() => setLocation("/learn")}
-          className="flex items-center gap-2 rounded-full px-2 py-2 text-sm font-semibold text-[#527064] hover:bg-[#edf1e9]"
+          className="flex items-center gap-2 rounded-full px-2 py-2 text-sm font-semibold text-[#765F4F] hover:bg-[#F3E9DE]"
         >
           <ArrowLeft size={17} /> Exit lesson
         </button>
         <div className="hidden items-center gap-2 sm:flex">
-          <span className="rounded-full bg-[#e5f5ed] px-3 py-1.5 text-xs font-semibold text-[#2f7a57]">
+          <span className="rounded-full bg-[#E9EED9] px-3 py-1.5 text-xs font-semibold text-[#4B6B3C]">
             Week 1 · Lesson 2
           </span>
-          <span className="text-[#8aa096]">/</span>
-          <span className="text-xs font-semibold text-[#8aa096]">Multiply by 10s</span>
+          <span className="text-[#A08A75]">/</span>
+          <span className="text-xs font-semibold text-[#A08A75]">Multiply by 10s</span>
         </div>
         </header>
 
       <main className="mx-auto grid max-w-6xl gap-7 px-5 py-8 lg:grid-cols-[1fr_330px] lg:px-10 lg:py-12">
         <section className="space-y-7">
           <div>
-            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8aa096]">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#A08A75]">
               Lesson topic
             </div>
-            <h1 className="mt-1 font-display text-[38px] font-semibold leading-[1.02] tracking-[-0.065em] text-[#183c31] sm:text-[46px]">
-              Multiplying by 10 <span className="text-[#3b926f]">is a scale-up.</span>
+            <h1 className="mt-1 font-display text-[38px] font-semibold leading-[1.02] tracking-[-0.065em] text-[#1A1512] sm:text-[46px]">
+              Multiplying by 10 <span className="text-[#4B6B3C]">is a scale-up.</span>
             </h1>
-            <p className="mt-4 max-w-xl text-sm leading-6 text-[#7d958b]">
+            <p className="mt-4 max-w-xl text-sm leading-6 text-[#8A7361]">
               We turn a number you already know into a ten-times-bigger number — the same
               move a market trader makes every day.
             </p>
           </div>
 
-          <div className="rounded-[27px] border border-[#e3e8df] bg-white p-6 sm:p-7">
+          <div className="rounded-[27px] border border-[#E2CDB8] bg-[#FFFDF8] p-6 sm:p-7">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8aa096]">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#A08A75]">
                   Learning objectives
                 </div>
-                <h2 className="mt-1 font-display text-xl font-semibold tracking-[-0.05em] text-[#183c31]">
+                <h2 className="mt-1 font-display text-xl font-semibold tracking-[-0.05em] text-[#1A1512]">
                   What you’ll be able to do
                 </h2>
               </div>
@@ -152,8 +152,8 @@ export default function Lesson() {
                 disabled={objectivesDone}
                 className={`flex items-center gap-2 rounded-full px-4 py-2.5 text-xs font-semibold transition ${
                   objectivesDone
-                    ? "bg-[#e5f5ed] text-[#2f7a57]"
-                    : "bg-[#173f31] text-white hover:bg-[#286b51]"
+                    ? "bg-[#E9EED9] text-[#4B6B3C]"
+                    : "bg-[#C65A2E] text-white hover:bg-[#A84A22]"
                 }`}
               >
                 {objectivesDone ? <Check size={13} /> : <Target size={13} />}
@@ -162,8 +162,8 @@ export default function Lesson() {
             </div>
             <ul className="mt-5 space-y-3">
               {OBJECTIVES.map((objective) => (
-                <li key={objective} className="flex items-start gap-3 text-sm leading-6 text-[#3d5a4f]">
-                  <span className="mt-1 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#e5f5ed] text-[#2f7a57]">
+                <li key={objective} className="flex items-start gap-3 text-sm leading-6 text-[#3B241A]">
+                  <span className="mt-1 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#E9EED9] text-[#4B6B3C]">
                     <Check size={11} strokeWidth={3} />
                   </span>
                   {objective}
@@ -172,15 +172,15 @@ export default function Lesson() {
             </ul>
           </div>
 
-          <div className="rounded-[27px] border border-[#e3e8df] bg-white p-6 sm:p-7">
-            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8aa096]">
+          <div className="rounded-[27px] border border-[#E2CDB8] bg-[#FFFDF8] p-6 sm:p-7">
+            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#A08A75]">
               <KeyRound size={13} /> Key words
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
               {KEY_WORDS.map((word) => (
                 <span
                   key={word}
-                  className="rounded-full border border-[#e3e8df] bg-[#f6f8f3] px-3 py-1.5 text-xs font-semibold text-[#527064]"
+                  className="rounded-full border border-[#E2CDB8] bg-[#F7EFE3] px-3 py-1.5 text-xs font-semibold text-[#765F4F]"
                 >
                   {word}
                 </span>
@@ -188,15 +188,15 @@ export default function Lesson() {
             </div>
           </div>
 
-          <div className="rounded-[27px] border border-[#e6e7dc] bg-[#fcf9ef] p-6 sm:p-7">
-            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8a7a43]">
+          <div className="rounded-[27px] border border-[#F3E9DE] bg-[#FFF1CD] p-6 sm:p-7">
+            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#9A6712]">
               <AlarmClockCheck size={14} /> Before you start — have ready
             </div>
             <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
               {REQUIREMENTS.map((item) => (
                 <div
                   key={item.label}
-                  className="flex items-center gap-3 rounded-2xl border border-[#eee7cf] bg-white/70 px-4 py-3 text-sm text-[#5a5237]"
+                  className="flex items-center gap-3 rounded-2xl border border-[#EFE1BF] bg-white/70 px-4 py-3 text-sm text-[#6B5638]"
                 >
                   <span className="text-lg">{item.icon}</span>
                   {item.label}
@@ -205,16 +205,16 @@ export default function Lesson() {
             </div>
           </div>
 
-          <div className="rounded-[27px] border border-[#e3e8df] bg-white p-6 sm:p-7">
+          <div className="rounded-[27px] border border-[#E2CDB8] bg-[#FFFDF8] p-6 sm:p-7">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8aa096]">
+              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#A08A75]">
                 <MonitorPlay size={13} /> Lesson video · {video.duration}
               </div>
-              <span className="rounded-full bg-[#fff1d7] px-3 py-1.5 text-xs font-semibold text-[#916d22]">
+              <span className="rounded-full bg-[#FFF1CD] px-3 py-1.5 text-xs font-semibold text-[#9A6712]">
                 One pass is enough
               </span>
             </div>
-            <div className="mt-4 aspect-video overflow-hidden rounded-2xl bg-[#0e2b22]">
+            <div className="mt-4 aspect-video overflow-hidden rounded-2xl bg-[#1A1512]">
               <iframe
                 title={video.title}
                 className="h-full w-full"
@@ -224,13 +224,13 @@ export default function Lesson() {
               />
             </div>
             <div className="mt-3 flex items-center justify-between gap-3 text-sm">
-              <div className="font-semibold text-[#183c31]">{video.title}</div>
+              <div className="font-semibold text-[#1A1512]">{video.title}</div>
               <button
                 onClick={() => setVideoWatched(true)}
                 className={`flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition ${
                   videoWatched
-                    ? "bg-[#e5f5ed] text-[#2f7a57]"
-                    : "bg-[#f6f8f3] text-[#527064] hover:bg-[#edf1e9]"
+                    ? "bg-[#E9EED9] text-[#4B6B3C]"
+                    : "bg-[#F7EFE3] text-[#765F4F] hover:bg-[#F3E9DE]"
                 }`}
               >
                 {videoWatched ? <Check size={12} /> : <Sparkles size={12} />}
@@ -241,11 +241,11 @@ export default function Lesson() {
         </section>
 
         <aside className="space-y-6">
-          <div className="rounded-[27px] border border-[#e3e8df] bg-white p-6">
-            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8aa096]">
+          <div className="rounded-[27px] border border-[#E2CDB8] bg-[#FFFDF8] p-6">
+            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#A08A75]">
               <ClipboardList size={13} /> Practice
             </div>
-            <p className="mt-3 text-sm leading-6 text-[#7d958b]">
+            <p className="mt-3 text-sm leading-6 text-[#8A7361]">
               One objective, three levels — pick the sheet that matches your confidence,
               then move up.
             </p>
@@ -262,17 +262,17 @@ export default function Lesson() {
                     }}
                     className={`rounded-2xl border p-4 text-left transition ${
                       active
-                        ? "border-[#173f31] bg-[#f3f8ef]"
-                        : "border-[#e3e8df] bg-white hover:border-[#bcd0c4]"
+                        ? "border-[#C65A2E] bg-[#F0F2E4]"
+                        : "border-[#E2CDB8] bg-[#FFFDF8] hover:border-[#C8B3A0]"
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${meta.chip}`}>
                         {meta.label}
                       </span>
-                      <ChevronRight size={15} className="text-[#8aa096]" />
+                      <ChevronRight size={15} className="text-[#A08A75]" />
                     </div>
-                    <p className="mt-2 text-xs leading-5 text-[#8aa096]">{meta.blurb}</p>
+                    <p className="mt-2 text-xs leading-5 text-[#A08A75]">{meta.blurb}</p>
                   </button>
                 );
               })}
@@ -281,31 +281,31 @@ export default function Lesson() {
             <div className="mt-5 space-y-2.5">
               <button
                 onClick={() => toast("Worksheet opens here once attached by your tutor.")}
-                className="flex w-full items-center justify-between rounded-2xl border border-[#e3e8df] bg-[#fbfcf9] px-4 py-3 text-left text-sm font-semibold text-[#527064] hover:border-[#bcd0c4]"
+                className="flex w-full items-center justify-between rounded-2xl border border-[#E2CDB8] bg-[#FFFDF8] px-4 py-3 text-left text-sm font-semibold text-[#765F4F] hover:border-[#C8B3A0]"
               >
                 <span className="flex items-center gap-2">
-                  <FileText size={15} className="text-[#3b926f]" />
+                  <FileText size={15} className="text-[#4B6B3C]" />
                   {worksheetMeta[level].label} worksheet PDF
                 </span>
-                <span className="text-xs text-[#8aa096]">attach</span>
+                <span className="text-xs text-[#A08A75]">attach</span>
               </button>
               <button
                 onClick={() => toast("PowerPoint opens here once attached by your tutor.")}
-                className="flex w-full items-center justify-between rounded-2xl border border-[#e3e8df] bg-[#fbfcf9] px-4 py-3 text-left text-sm font-semibold text-[#527064] hover:border-[#bcd0c4]"
+                className="flex w-full items-center justify-between rounded-2xl border border-[#E2CDB8] bg-[#FFFDF8] px-4 py-3 text-left text-sm font-semibold text-[#765F4F] hover:border-[#C8B3A0]"
               >
                 <span className="flex items-center gap-2">
-                  <Presentation size={15} className="text-[#c58e3d]" />
+                  <Presentation size={15} className="text-[#B67A17]" />
                   Lesson PowerPoint
                 </span>
-                <span className="text-xs text-[#8aa096]">attach</span>
+                <span className="text-xs text-[#A08A75]">attach</span>
               </button>
             </div>
 
-            <div className="mt-6 rounded-2xl bg-[#f4f7ef] p-4">
-              <div className="flex items-center gap-2 text-xs font-semibold text-[#527064]">
-                <Trophy size={14} className="text-[#c58e3d]" /> After you finish
+            <div className="mt-6 rounded-2xl bg-[#F7EFE3] p-4">
+              <div className="flex items-center gap-2 text-xs font-semibold text-[#765F4F]">
+                <Trophy size={14} className="text-[#B67A17]" /> After you finish
               </div>
-              <p className="mt-1.5 text-xs leading-5 text-[#8aa096]">
+              <p className="mt-1.5 text-xs leading-5 text-[#A08A75]">
                 Complete this lesson to unlock Week 1’s next lesson — and keep your streak
                 alive.
               </p>

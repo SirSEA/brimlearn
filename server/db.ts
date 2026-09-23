@@ -33,6 +33,7 @@ const SCHEMES_COLLECTION = "schemes";
 const ASSIGNMENTS_COLLECTION = "assignments";
 const SITE_CONTENT_COLLECTION = "siteContent";
 const PASSWORD_RESETS_COLLECTION = "passwordResets";
+const SITE_IMAGES_COLLECTION = "siteImages";
 
 function toDate(value: unknown): Date {
   if (value instanceof Timestamp) return value.toDate();
@@ -804,4 +805,123 @@ export async function findPasswordReset(token: string): Promise<PasswordResetRow
 export async function consumePasswordReset(token: string): Promise<void> {
   if (!ENV.firebaseConfigured) return;
   await getFirestoreDb().collection(PASSWORD_RESETS_COLLECTION).doc(token).delete();
+}
+
+/* ---------------------------------------------------------------------------
+ * Admin console (team & access, overview counts).
+ * JSON-safe summaries only — hashes and salts never leave the server.
+ * ------------------------------------------------------------------------- */
+
+export type AdminUserSummary = {
+  id: string;
+  name: string | null;
+  email: string | null;
+  loginMethod: string | null;
+  role: User["role"];
+  createdAt: string;
+  lastSignedIn: string;
+};
+
+function mapAdminUser(doc: DocumentSnapshot): AdminUserSummary | undefined {
+  const user = mapUser(doc);
+  if (!user) return undefined;
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    loginMethod: user.loginMethod,
+    role: user.role,
+    createdAt: user.createdAt.toISOString(),
+    lastSignedIn: user.lastSignedIn.toISOString(),
+  };
+}
+
+export async function listUsers(): Promise<AdminUserSummary[]> {
+  if (!ENV.firebaseConfigured) return [];
+  const snap = await getFirestoreDb()
+    .collection(USERS_COLLECTION)
+    .orderBy("createdAt", "desc")
+    .limit(500)
+    .get();
+  return snap.docs
+    .map((doc) => mapAdminUser(doc))
+    .filter((user): user is AdminUserSummary => Boolean(user));
+}
+
+export async function setUserRole(
+  openId: string,
+  role: NonNullable<User["role"]>
+): Promise<AdminUserSummary | undefined> {
+  if (!ENV.firebaseConfigured) return undefined;
+  await getFirestoreDb()
+    .collection(USERS_COLLECTION)
+    .doc(openId)
+    .set({ role, updatedAt: new Date() }, { merge: true });
+  const doc = await getFirestoreDb().collection(USERS_COLLECTION).doc(openId).get();
+  return mapAdminUser(doc);
+}
+
+export type AdminOverviewData = {
+  users: number;
+  resources: number;
+  liveSessions: number;
+  schemes: number;
+  assignments: number;
+  recentUsers: AdminUserSummary[];
+};
+
+export async function getAdminOverview(): Promise<AdminOverviewData> {
+  if (!ENV.firebaseConfigured) {
+    return { users: 0, resources: 0, liveSessions: 0, schemes: 0, assignments: 0, recentUsers: [] };
+  }
+  const db = getFirestoreDb();
+  const [users, resources, liveSessions, schemes, assignments, recentUsers] = await Promise.all([
+    db.collection(USERS_COLLECTION).count().get(),
+    db.collection(RESOURCES_COLLECTION).count().get(),
+    db.collection(LIVE_SESSIONS_COLLECTION).count().get(),
+    db.collection(SCHEMES_COLLECTION).count().get(),
+    db.collection(ASSIGNMENTS_COLLECTION).count().get(),
+    db.collection(USERS_COLLECTION).orderBy("createdAt", "desc").limit(5).get(),
+  ]);
+  return {
+    users: users.data().count,
+    resources: resources.data().count,
+    liveSessions: liveSessions.data().count,
+    schemes: schemes.data().count,
+    assignments: assignments.data().count,
+    recentUsers: recentUsers.docs
+      .map((doc) => mapAdminUser(doc))
+      .filter((user): user is AdminUserSummary => Boolean(user)),
+  };
+}
+
+/* ---------------------------------------------------------------------------
+ * Landing-page images.
+ * Stored as base64 in their own Firestore doc (one image per doc) so the
+ * landing content document itself stays small. Served via GET /site-images/:id.
+ * ------------------------------------------------------------------------- */
+
+export type StoredSiteImage = {
+  mimeType: string;
+  dataBase64: string;
+  createdAt?: Date;
+};
+
+export async function saveSiteImage(id: string, mimeType: string, dataBase64: string): Promise<void> {
+  if (!ENV.firebaseConfigured) {
+    throw new Error("Firestore is not configured — cannot store the image.");
+  }
+  await getFirestoreDb()
+    .collection(SITE_IMAGES_COLLECTION)
+    .doc(id)
+    .set({ mimeType, dataBase64, createdAt: new Date() } satisfies StoredSiteImage);
+}
+
+export async function getSiteImage(id: string): Promise<StoredSiteImage | null> {
+  if (!ENV.firebaseConfigured) return null;
+  const snap = await getFirestoreDb().collection(SITE_IMAGES_COLLECTION).doc(id).get();
+  if (!snap.exists) return null;
+  const data = snap.data() ?? {};
+  if (typeof data.dataBase64 !== "string") return null;
+  return { mimeType: typeof data.mimeType === "string" ? data.mimeType : "image/png", dataBase64: data.dataBase64 };
 }

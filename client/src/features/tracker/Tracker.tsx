@@ -82,23 +82,23 @@ export function Tracker() {
   };
 
   const lists: Array<{ title: string; tone: string; items: Task[] }> = [
-    { title: "Overdue", tone: "text-[#a25142]", items: tasks.filter((task) => task.status === "overdue") },
-    { title: "Due today", tone: "text-[#25483c]", items: tasks.filter((task) => task.status === "today") },
-    { title: "Upcoming", tone: "text-[#7d958b]", items: tasks.filter((task) => task.status === "upcoming") },
+    { title: "Overdue", tone: "text-[#B84B3D]", items: tasks.filter((task) => task.status === "overdue") },
+    { title: "Due today", tone: "text-[#3B241A]", items: tasks.filter((task) => task.status === "today") },
+    { title: "Upcoming", tone: "text-[#8A7361]", items: tasks.filter((task) => task.status === "upcoming") },
   ];
 
   return (
     <>
-      <section className="rounded-[27px] bg-[#174b3a] p-7 text-white shadow-[0_18px_40px_rgba(18,61,48,.14)] sm:p-9">
+      <section className="rounded-[27px] bg-[#3B241A] p-7 text-white shadow-[0_18px_40px_rgba(59,36,26,.14)] sm:p-9">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-xl">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-[11px] font-semibold text-[#d8f36a]"><CalendarClock size={13} /> Weekly tracker</div>
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-[11px] font-semibold text-[#FFC857]"><CalendarClock size={13} /> Weekly tracker</div>
             <h1 className="font-display text-[34px] font-semibold leading-[1.04] tracking-[-0.06em] sm:text-[40px]">Small tasks, on schedule.</h1>
-            <p className="mt-3 text-sm leading-6 text-[#c4ded0]">Your checklist for this week — clear the overdue ones first, then stay ahead of today’s deadlines.</p>
+            <p className="mt-3 text-sm leading-6 text-[#D9C4B0]">Your checklist for this week — clear the overdue ones first, then stay ahead of today’s deadlines.</p>
           </div>
           <div className="flex items-center gap-5">
-            <div className="text-center"><div className="font-display text-4xl font-semibold tracking-[-0.06em] text-[#d8f36a]">{done}<span className="text-lg text-[#c4ded0]">/{total}</span></div><div className="text-xs text-[#c4ded0]">tasks done</div></div>
-            <div className="w-40 rounded-full bg-white/10"><div className="h-3 rounded-full bg-[#d8f36a]" style={{ width: `${(done / total) * 100}%` }} /></div>
+            <div className="text-center"><div className="font-display text-4xl font-semibold tracking-[-0.06em] text-[#FFC857]">{done}<span className="text-lg text-[#D9C4B0]">/{total}</span></div><div className="text-xs text-[#D9C4B0]">tasks done</div></div>
+            <div className="w-40 rounded-full bg-white/10"><div className="h-3 rounded-full bg-[#FFC857]" style={{ width: `${(done / total) * 100}%` }} /></div>
           </div>
         </div>
       </section>
@@ -107,21 +107,21 @@ export function Tracker() {
         {lists.map((list) => {
           const ListIcon = list.title === "Overdue" ? AlarmClock : list.title === "Due today" ? CalendarClock : Flag;
           return (
-          <div key={list.title} className="rounded-[27px] border border-[#e3e8df] bg-white p-5 sm:p-6">
-            <div className="flex items-center gap-2"><ListIcon size={15} className={list.tone} /><h2 className={`font-display text-lg font-semibold tracking-[-0.04em] ${list.tone}`}>{list.title}</h2><span className="ml-auto rounded-full bg-[#f4f7ef] px-2 py-0.5 text-[10px] font-semibold text-[#527064]">{list.items.length}</span></div>
+          <div key={list.title} className="rounded-[27px] border border-[#E2CDB8] bg-[#FFFDF8] p-5 sm:p-6">
+            <div className="flex items-center gap-2"><ListIcon size={15} className={list.tone} /><h2 className={`font-display text-lg font-semibold tracking-[-0.04em] ${list.tone}`}>{list.title}</h2><span className="ml-auto rounded-full bg-[#F7EFE3] px-2 py-0.5 text-[10px] font-semibold text-[#765F4F]">{list.items.length}</span></div>
             <div className="mt-4 space-y-2.5">
-              {list.items.length === 0 && <div className="rounded-2xl bg-[#f6f8f3] p-4 text-xs text-[#8aa096]"><CheckCheck size={14} className="mr-1.5 inline text-[#3b926f]" />All clear here.</div>}
+              {list.items.length === 0 && <div className="rounded-2xl bg-[#F7EFE3] p-4 text-xs text-[#A08A75]"><CheckCheck size={14} className="mr-1.5 inline text-[#4B6B3C]" />All clear here.</div>}
               {list.items.map((task) => (
-                <div key={task.id} className="rounded-2xl border border-[#e9eee5] p-3.5 transition hover:border-[#c9d8cc]">
+                <div key={task.id} className="rounded-2xl border border-[#F3E9DE] p-3.5 transition hover:border-[#C8B3A0]">
                   <div className="flex items-start gap-3">
-                    <button onClick={() => toggle(task.id)} className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full border transition ${task.status === "done" ? "border-[#3b926f] bg-[#e5f5ed] text-[#3b926f]" : "border-[#ccd9ce] text-transparent hover:border-[#3b926f]"}`}><Check size={13} strokeWidth={3} /></button>
+                    <button onClick={() => toggle(task.id)} className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full border transition ${task.status === "done" ? "border-[#4B6B3C] bg-[#E9EED9] text-[#4B6B3C]" : "border-[#DCE2C8] text-transparent hover:border-[#4B6B3C]"}`}><Check size={13} strokeWidth={3} /></button>
                     <div className="min-w-0 flex-1">
-                      <div className={`text-sm font-semibold ${task.status === "done" ? "text-[#8aa096] line-through" : "text-[#25483c]"}`}>{task.title}</div>
-                      <div className="mt-0.5 text-xs text-[#8aa096]">{task.subject}{isTeacherTask(task.id) && <span className="ml-1.5 rounded bg-[#eef4ea] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#34775e]">new from teacher</span>} · <span className={task.status === "overdue" ? "font-semibold text-[#a25142]" : ""}>{task.due}</span></div>
+                      <div className={`text-sm font-semibold ${task.status === "done" ? "text-[#A08A75] line-through" : "text-[#3B241A]"}`}>{task.title}</div>
+                      <div className="mt-0.5 text-xs text-[#A08A75]">{task.subject}{isTeacherTask(task.id) && <span className="ml-1.5 rounded bg-[#EFEFDD] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#4B6B3C]">new from teacher</span>} · <span className={task.status === "overdue" ? "font-semibold text-[#B84B3D]" : ""}>{task.due}</span></div>
                       {task.status !== "done" && quizFor(task.id) && (
                         <button
                           onClick={() => setActiveQuiz(quizFor(task.id))}
-                          className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#d8f36a] px-3 py-1.5 text-[11px] font-bold text-[#133d2f] transition hover:bg-[#e1fa8c]"
+                          className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#FFC857] px-3 py-1.5 text-[11px] font-bold text-[#1A1512] transition hover:bg-[#FFC857]"
                         >
                           <PlayCircle size={13} /> Start quiz in-app
                         </button>

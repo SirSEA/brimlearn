@@ -17,6 +17,16 @@ export const SCHEME_MAX_BYTES = 12 * 1024 * 1024;
 export const SCHEME_MAX_BASE64_CHARS = Math.ceil((SCHEME_MAX_BYTES * 4) / 3) + 8;
 export const SCHEME_TOO_LARGE_MSG = 'Scheme-of-work PDFs must be 12 MB or smaller.';
 
+// Landing-page images (hero, about, feature cards, course cards) are stored
+// inline as base64 in their own Firestore doc, so each must stay well under
+// the 1 MiB document limit.
+export const SITE_IMAGE_MAX_BYTES = 480 * 1024;
+export const SITE_IMAGE_MAX_BASE64_CHARS = Math.ceil((SITE_IMAGE_MAX_BYTES * 4) / 3) + 8;
+export const SITE_IMAGE_TOO_LARGE_MSG =
+  'Images must be 480 KB or smaller. Export a smaller JPG/PNG, or paste a public image URL instead.';
+export const SITE_IMAGE_MIME_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"] as const;
+export type SiteImageMimeType = (typeof SITE_IMAGE_MIME_TYPES)[number];
+
 /** Every product role the auth flow can assign. Shared by the DB schema and the client. */
 export const USER_ROLES = ["user", "student", "parent", "tutor", "admin"] as const;
 export type UserRole = (typeof USER_ROLES)[number];

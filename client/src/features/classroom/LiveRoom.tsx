@@ -94,7 +94,7 @@ export function LiveRoom({ session, displayName, isHost, onLeave }: LiveRoomProp
           },
           interfaceConfigOverwrite: {
             MOBILE_APP_PROMO: false,
-            DEFAULT_BACKGROUND: "#0f2b22",
+            DEFAULT_BACKGROUND: "#1A1512",
             SHOW_JITSI_WATERMARK: false,
             SHOW_WATERMARK_FOR_GUESTS: false,
           },
@@ -124,28 +124,28 @@ export function LiveRoom({ session, displayName, isHost, onLeave }: LiveRoomProp
   }, [session.id, displayName, isHost, attempt]);
 
   return (
-    <div className="fixed inset-0 z-[80] grid place-items-center bg-[#0e2b22]/70 p-3 sm:p-6" onClick={onLeave}>
+    <div className="fixed inset-0 z-[80] grid place-items-center bg-[#1A1512]/70 p-3 sm:p-6" onClick={onLeave}>
       <div
-        className="flex h-full max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-[28px] bg-[#0f2b22] shadow-2xl"
+        className="flex h-full max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-[28px] bg-[#1A1512] shadow-2xl"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-center gap-3 border-b border-white/10 px-5 py-3">
-          <span className="flex items-center gap-1.5 rounded-full bg-[#ff4d4d] px-2.5 py-1 text-[10px] font-bold text-white">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" /> LIVE
+          <span className="flex items-center gap-1.5 rounded-full bg-[#E55048] px-2.5 py-1 text-[10px] font-bold text-white">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#FFFDF8]" /> LIVE
           </span>
           <div className="min-w-0 flex-1">
             <div className="truncate text-sm font-semibold text-white">{session.title}</div>
-            <div className="truncate text-[11px] text-[#c4ded0]">
+            <div className="truncate text-[11px] text-[#D9C4B0]">
               {session.subject ? `${session.subject} · ` : ""}
               {isHost ? "You're the host — start teaching when ready." : session.hostName ? `Hosted by ${session.hostName}` : "Waiting for the teacher to start"}
             </div>
           </div>
           {isHost && (
-            <span className="hidden items-center gap-1.5 rounded-full bg-[#d8f36a] px-3 py-1.5 text-[10px] font-bold text-[#173c2e] sm:flex">
+            <span className="hidden items-center gap-1.5 rounded-full bg-[#FFC857] px-3 py-1.5 text-[10px] font-bold text-[#3B241A] sm:flex">
               <Crown size={12} /> Host
             </span>
           )}
-          <button onClick={onLeave} className="flex items-center gap-2 rounded-full bg-[#d9533f] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#c1402e]">
+          <button onClick={onLeave} className="flex items-center gap-2 rounded-full bg-[#B84B3D] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#B84B3D]">
             <PhoneOff size={14} /> Leave class
           </button>
         </div>
@@ -154,23 +154,23 @@ export function LiveRoom({ session, displayName, isHost, onLeave }: LiveRoomProp
           <div ref={containerRef} className={ready ? "h-full w-full" : "h-full w-full opacity-0"} />
 
           {failed ? (
-            <div className="absolute inset-0 grid place-items-center bg-[#0f2b22] p-6">
+            <div className="absolute inset-0 grid place-items-center bg-[#1A1512] p-6">
               <div className="max-w-md text-center">
-                <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-white/5 text-[#c4ded0]"><VideoOff size={24} /></div>
+                <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-white/5 text-[#D9C4B0]"><VideoOff size={24} /></div>
                 <h3 className="mt-4 text-lg font-semibold text-white">The live classroom couldn't load.</h3>
-                <p className="mt-2 text-sm leading-6 text-[#c4ded0]">Check your internet connection and retry. The room link also works in a separate tab if your network blocks embeds.</p>
-                <button onClick={() => { setFailed(false); setReady(false); setAttempt((value) => value + 1); }} className="mt-5 rounded-full bg-[#d8f36a] px-5 py-2.5 text-xs font-semibold text-[#173c2e] hover:bg-[#e4fb8b]">
+                <p className="mt-2 text-sm leading-6 text-[#D9C4B0]">Check your internet connection and retry. The room link also works in a separate tab if your network blocks embeds.</p>
+                <button onClick={() => { setFailed(false); setReady(false); setAttempt((value) => value + 1); }} className="mt-5 rounded-full bg-[#FFC857] px-5 py-2.5 text-xs font-semibold text-[#3B241A] hover:bg-[#FFC857]">
                   Retry connecting
                 </button>
               </div>
             </div>
           ) : (
             !ready && (
-              <div className="absolute inset-0 grid place-items-center bg-[#0f2b22] p-6">
+              <div className="absolute inset-0 grid place-items-center bg-[#1A1512] p-6">
                 <div className="text-center">
-                  <Loader2 size={28} className="mx-auto animate-spin text-[#d8f36a]" />
+                  <Loader2 size={28} className="mx-auto animate-spin text-[#FFC857]" />
                   <h3 className="mt-4 text-lg font-semibold text-white">Connecting you to the classroom…</h3>
-                  <p className="mt-2 text-sm text-[#c4ded0]">
+                  <p className="mt-2 text-sm text-[#D9C4B0]">
                     {isHost ? "You joined first — the room is open for learners." : "Allow camera and mic access when the browser asks."}
                   </p>
                 </div>

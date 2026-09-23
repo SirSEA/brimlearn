@@ -35,8 +35,8 @@ const categories: Array<{ key: ResourceCategory; label: string }> = [
 ];
 
 const inputClass =
-  "w-full rounded-xl border border-[#e1e8df] bg-white px-3 py-2.5 text-xs font-semibold text-[#25483c] outline-none focus:border-[#5d9c7d]";
-const labelClass = "text-xs font-semibold text-[#527064]";
+  "w-full rounded-xl border border-[#E2CDB8] bg-[#FFFDF8] px-3 py-2.5 text-xs font-semibold text-[#3B241A] outline-none focus:border-[#8CAE70]";
+const labelClass = "text-xs font-semibold text-[#765F4F]";
 
 function formatBytes(bytes: number): string {
   if (bytes <= 0) return "0 KB";
@@ -247,22 +247,22 @@ export function TutorResources() {
 
   return (
     <>
-      <section className="rounded-[27px] bg-[#174b3a] p-7 text-white shadow-[0_18px_40px_rgba(18,61,48,.14)] sm:p-9">
+      <section className="rounded-[27px] bg-[#3B241A] p-7 text-white shadow-[0_18px_40px_rgba(59,36,26,.14)] sm:p-9">
         <div className="max-w-xl">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-[11px] font-semibold text-[#d8f36a]"><Library size={13} /> Resource studio</div>
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-[11px] font-semibold text-[#FFC857]"><Library size={13} /> Resource studio</div>
           <h1 className="font-display text-[34px] font-semibold leading-[1.04] tracking-[-0.06em] sm:text-[40px]">Share what your class needs.</h1>
-          <p className="mt-3 text-sm leading-6 text-[#c4ded0]">Publish lessons and worksheets as YouTube links, PDFs, or short recorded clips — every learner in the resource library can watch or download them.</p>
+          <p className="mt-3 text-sm leading-6 text-[#D9C4B0]">Publish lessons and worksheets as YouTube links, PDFs, or short recorded clips — every learner in the resource library can watch or download them.</p>
         </div>
       </section>
 
       <section className="mt-7 grid gap-5 xl:grid-cols-[1.15fr_.85fr]">
-        <div className="rounded-[27px] border border-[#e3e8df] bg-white p-6 sm:p-7">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8aa096]">Publish to the class library</div>
-          <h2 className="mt-1 font-display text-2xl font-semibold tracking-[-0.05em] text-[#183c31]">What are you adding?</h2>
+        <div className="rounded-[27px] border border-[#E2CDB8] bg-[#FFFDF8] p-6 sm:p-7">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#A08A75]">Publish to the class library</div>
+          <h2 className="mt-1 font-display text-2xl font-semibold tracking-[-0.05em] text-[#1A1512]">What are you adding?</h2>
 
           <div className="mt-5 flex flex-wrap gap-2">
             {tabs.map(({ key, label, Icon }) => (
-              <button key={key} onClick={() => setTab(key)} className={`flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold transition ${tab === key ? "border-[#3b926f] bg-[#e5f5ed] text-[#34775e]" : "border-[#dce5dc] text-[#527064] hover:bg-[#f4f7ef]"}`}><Icon size={14} />{label}</button>
+              <button key={key} onClick={() => setTab(key)} className={`flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold transition ${tab === key ? "border-[#4B6B3C] bg-[#E9EED9] text-[#4B6B3C]" : "border-[#E2CDB8] text-[#765F4F] hover:bg-[#F7EFE3]"}`}><Icon size={14} />{label}</button>
             ))}
           </div>
 
@@ -276,71 +276,71 @@ export function TutorResources() {
           </div>
 
           {tab === "video" && (
-            <div className="mt-5 rounded-2xl border border-[#e9eee5] p-4">
-              <div className="flex items-center gap-2 text-xs font-semibold text-[#527064]"><Link2 size={14} className="text-[#c0433a]" /> YouTube link</div>
+            <div className="mt-5 rounded-2xl border border-[#F3E9DE] p-4">
+              <div className="flex items-center gap-2 text-xs font-semibold text-[#765F4F]"><Link2 size={14} className="text-[#B84B3D]" /> YouTube link</div>
               <input value={videoUrl} onChange={(event) => setVideoUrl(event.target.value)} placeholder="https://youtube.com/watch?v=… or https://youtu.be/…" className={`mt-2 ${inputClass}`} />
               {youtubeId && (
-                <iframe title="YouTube preview" src={buildYouTubeEmbedUrl(youtubeId)} className="mt-3 h-44 w-full rounded-2xl border border-[#e9eee5]" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
+                <iframe title="YouTube preview" src={buildYouTubeEmbedUrl(youtubeId)} className="mt-3 h-44 w-full rounded-2xl border border-[#F3E9DE]" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
               )}
             </div>
           )}
 
           {tab === "file" && (
-            <div className="mt-5 rounded-2xl border border-[#e9eee5] p-4">
-              <div className="flex items-center gap-2 text-xs font-semibold text-[#527064]"><FileUp size={14} className="text-[#3b926f]" /> File to share (512 KB max)</div>
-              <label className="mt-3 flex cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[#cfdcc9] bg-[#fbfcf9] px-4 py-6 text-sm font-semibold text-[#527064] transition hover:border-[#5d9c7d] hover:bg-[#f4f7ef]"><UploadCloud size={16} />{file ? file.name : "Choose a PDF, worksheet, or slides"}{"\u00A0"}                <input type="file" onChange={onPickFile} className="sr-only" />
+            <div className="mt-5 rounded-2xl border border-[#F3E9DE] p-4">
+              <div className="flex items-center gap-2 text-xs font-semibold text-[#765F4F]"><FileUp size={14} className="text-[#4B6B3C]" /> File to share (512 KB max)</div>
+              <label className="mt-3 flex cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[#DCE2C8] bg-[#FFFDF8] px-4 py-6 text-sm font-semibold text-[#765F4F] transition hover:border-[#8CAE70] hover:bg-[#F7EFE3]"><UploadCloud size={16} />{file ? file.name : "Choose a PDF, worksheet, or slides"}{"\u00A0"}                <input type="file" onChange={onPickFile} className="sr-only" />
               </label>
               {file && (
-                <div className="mt-3 flex items-center justify-between rounded-xl bg-[#f6f8f3] p-3 text-xs text-[#527064]"><span className="truncate font-semibold text-[#25483c]">{file.name}</span><span className="shrink-0 rounded-full bg-white px-2.5 py-1 text-[10px] font-bold text-[#3b926f] shadow-sm">{formatBytes(file.size)}</span></div>
+                <div className="mt-3 flex items-center justify-between rounded-xl bg-[#F7EFE3] p-3 text-xs text-[#765F4F]"><span className="truncate font-semibold text-[#3B241A]">{file.name}</span><span className="shrink-0 rounded-full bg-[#FFFDF8] px-2.5 py-1 text-[10px] font-bold text-[#4B6B3C] shadow-sm">{formatBytes(file.size)}</span></div>
               )}
             </div>
           )}
 
           {tab === "record" && (
-            <div className="mt-5 rounded-2xl border border-[#e9eee5] p-4">
-              <div className="flex items-center gap-2 text-xs font-semibold text-[#527064]"><Video size={14} className="text-[#8f72b4]" /> Record a short clip (512 KB max)</div>
-              <p className="mt-1 text-xs text-[#8aa096]">Camera + microphone recording, saved as a webm file learners can download. For full lessons, use a YouTube link instead.</p>
+            <div className="mt-5 rounded-2xl border border-[#F3E9DE] p-4">
+              <div className="flex items-center gap-2 text-xs font-semibold text-[#765F4F]"><Video size={14} className="text-[#8B78C7]" /> Record a short clip (512 KB max)</div>
+              <p className="mt-1 text-xs text-[#A08A75]">Camera + microphone recording, saved as a webm file learners can download. For full lessons, use a YouTube link instead.</p>
               <div className="mt-3 flex items-center gap-3">
                 {isRecording ? (
-                  <button onClick={stopRecording} className="flex items-center gap-2 rounded-full bg-[#c0433a] px-4 py-2 text-xs font-semibold text-white hover:bg-[#a73a32]"><Square size={13} /> Stop recording</button>
+                  <button onClick={stopRecording} className="flex items-center gap-2 rounded-full bg-[#B84B3D] px-4 py-2 text-xs font-semibold text-white hover:bg-[#9E3A2F]"><Square size={13} /> Stop recording</button>
                 ) : (
-                  <button onClick={startRecording} className="flex items-center gap-2 rounded-full bg-[#173f31] px-4 py-2 text-xs font-semibold text-white hover:bg-[#286b51]"><Clapperboard size={13} /> Start recording</button>
+                  <button onClick={startRecording} className="flex items-center gap-2 rounded-full bg-[#C65A2E] px-4 py-2 text-xs font-semibold text-white hover:bg-[#A84A22]"><Clapperboard size={13} /> Start recording</button>
                 )}
               </div>
-              {recorded && <video src={recorded.previewUrl} controls className="mt-3 max-h-44 w-full rounded-2xl border border-[#e9eee5] bg-black" />}
+              {recorded && <video src={recorded.previewUrl} controls className="mt-3 max-h-44 w-full rounded-2xl border border-[#F3E9DE] bg-black" />}
             </div>
           )}
 
-          <button onClick={tab === "video" ? publishVideo : tab === "file" ? () => void publishFile() : () => void publishRecording()} disabled={publishing} className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-[#173f31] px-6 py-3 text-sm font-semibold text-white hover:bg-[#286b51] disabled:opacity-60 sm:w-auto"><Plus size={15} />{publishing ? "Publishing…" : "Publish to library"}</button>
+          <button onClick={tab === "video" ? publishVideo : tab === "file" ? () => void publishFile() : () => void publishRecording()} disabled={publishing} className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-[#C65A2E] px-6 py-3 text-sm font-semibold text-white hover:bg-[#A84A22] disabled:opacity-60 sm:w-auto"><Plus size={15} />{publishing ? "Publishing…" : "Publish to library"}</button>
         </div>
 
         <div className="space-y-5">
-          <div className="rounded-[27px] border border-[#e3e8df] bg-white p-6 sm:p-7">
-            <div className="flex items-center justify-between"><div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8aa096]">Published resources</div><span className="rounded-full bg-[#f4f7ef] px-3 py-1.5 text-xs font-semibold text-[#527064]">{resources.length}</span></div>
+          <div className="rounded-[27px] border border-[#E2CDB8] bg-[#FFFDF8] p-6 sm:p-7">
+            <div className="flex items-center justify-between"><div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#A08A75]">Published resources</div><span className="rounded-full bg-[#F7EFE3] px-3 py-1.5 text-xs font-semibold text-[#765F4F]">{resources.length}</span></div>
             <div className="mt-4 max-h-[540px] space-y-3 overflow-y-auto pr-1">
-              {loaded && resources.length === 0 && <div className="rounded-2xl bg-[#f6f8f3] p-6 text-center text-sm text-[#7d958b]">Nothing published yet. Add a video or file above and it will appear here for learners.</div>}
-              {!loaded && <div className="rounded-2xl bg-[#f6f8f3] p-6 text-center text-sm text-[#7d958b]">Loading resources…</div>}
+              {loaded && resources.length === 0 && <div className="rounded-2xl bg-[#F7EFE3] p-6 text-center text-sm text-[#8A7361]">Nothing published yet. Add a video or file above and it will appear here for learners.</div>}
+              {!loaded && <div className="rounded-2xl bg-[#F7EFE3] p-6 text-center text-sm text-[#8A7361]">Loading resources…</div>}
               {resources.map((resource) => {
                 const isVideo = resource.kind === "video";
                 return (
-                  <div key={resource.id} className="rounded-2xl border border-[#e9eee5] p-3.5">
+                  <div key={resource.id} className="rounded-2xl border border-[#F3E9DE] p-3.5">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex min-w-0 items-start gap-2.5">
-                        <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${isVideo ? "bg-[#e5f5ed] text-[#34775e]" : "bg-[#fff1d7] text-[#b07a1f]"}`}>{isVideo ? <Play size={15} /> : <FileText size={15} />}</span>
+                        <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${isVideo ? "bg-[#E9EED9] text-[#4B6B3C]" : "bg-[#FFF1CD] text-[#B67A17]"}`}>{isVideo ? <Play size={15} /> : <FileText size={15} />}</span>
                         <div className="min-w-0">
-                          <div className="truncate text-sm font-semibold text-[#25483c]">{resource.title}</div>
-                          <div className="mt-0.5 truncate text-xs text-[#8aa096]">{categoryLabel(resource.category)} · {isVideo ? "YouTube video" : `${resource.fileName ?? "file"} · ${formatBytes(resource.size)}`}</div>
+                          <div className="truncate text-sm font-semibold text-[#3B241A]">{resource.title}</div>
+                          <div className="mt-0.5 truncate text-xs text-[#A08A75]">{categoryLabel(resource.category)} · {isVideo ? "YouTube video" : `${resource.fileName ?? "file"} · ${formatBytes(resource.size)}`}</div>
                         </div>
                       </div>
-                      <span className="shrink-0 rounded-full bg-[#f4f7ef] px-2.5 py-1 text-[10px] font-bold text-[#527064]">{resource.createdByName ? resource.createdByName.split(" ")[0] : ""}</span>
+                      <span className="shrink-0 rounded-full bg-[#F7EFE3] px-2.5 py-1 text-[10px] font-bold text-[#765F4F]">{resource.createdByName ? resource.createdByName.split(" ")[0] : ""}</span>
                     </div>
                     <div className="mt-2.5 flex items-center gap-2">
                       {isVideo ? (
-                        <button onClick={() => setPreview(resource)} className="rounded-full bg-[#173f31] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[#286b51]">Preview</button>
+                        <button onClick={() => setPreview(resource)} className="rounded-full bg-[#C65A2E] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[#A84A22]">Preview</button>
                       ) : (
-                        <button onClick={() => void download(resource)} className="flex items-center gap-1.5 rounded-full bg-[#173f31] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[#286b51]"><Download size={12} /> Download</button>
+                        <button onClick={() => void download(resource)} className="flex items-center gap-1.5 rounded-full bg-[#C65A2E] px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-[#A84A22]"><Download size={12} /> Download</button>
                       )}
-                      <button onClick={() => void remove(resource)} className="ml-auto flex items-center gap-1.5 rounded-full border border-[#edd9d4] px-3 py-1.5 text-xs font-semibold text-[#b0523f] transition hover:bg-[#fff5f2]"><Trash2 size={12} /> Remove</button>
+                      <button onClick={() => void remove(resource)} className="ml-auto flex items-center gap-1.5 rounded-full border border-[#EAD0C8] px-3 py-1.5 text-xs font-semibold text-[#A94A3D] transition hover:bg-[#FBEBE5]"><Trash2 size={12} /> Remove</button>
                     </div>
                   </div>
                 );
@@ -352,9 +352,9 @@ export function TutorResources() {
 
       {preview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setPreview(null)}>
-          <div className="w-full max-w-2xl rounded-[27px] bg-white p-5" onClick={(event) => event.stopPropagation()}>
-            <div className="mb-3 flex items-center justify-between gap-3"><div className="min-w-0"><div className="truncate font-display text-lg font-semibold tracking-[-0.04em] text-[#183c31]">{preview.title}</div><div className="text-xs text-[#8aa096]">{categoryLabel(preview.category)} · waiting for class playback</div></div><button onClick={() => setPreview(null)} className="rounded-full bg-[#f4f7ef] p-2 text-[#527064] hover:bg-[#eaf2e6]"><X size={16} /></button></div>
-            {preview.youtubeId && <iframe title={preview.title} src={buildYouTubeEmbedUrl(preview.youtubeId)} className="aspect-video w-full rounded-2xl border border-[#e9eee5]" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />}
+          <div className="w-full max-w-2xl rounded-[27px] bg-[#FFFDF8] p-5" onClick={(event) => event.stopPropagation()}>
+            <div className="mb-3 flex items-center justify-between gap-3"><div className="min-w-0"><div className="truncate font-display text-lg font-semibold tracking-[-0.04em] text-[#1A1512]">{preview.title}</div><div className="text-xs text-[#A08A75]">{categoryLabel(preview.category)} · waiting for class playback</div></div><button onClick={() => setPreview(null)} className="rounded-full bg-[#F7EFE3] p-2 text-[#765F4F] hover:bg-[#E9EED9]"><X size={16} /></button></div>
+            {preview.youtubeId && <iframe title={preview.title} src={buildYouTubeEmbedUrl(preview.youtubeId)} className="aspect-video w-full rounded-2xl border border-[#F3E9DE]" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />}
           </div>
         </div>
       )}

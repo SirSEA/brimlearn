@@ -15,12 +15,12 @@ export type CurriculumUnit = {
 };
 
 export const curriculumSubjects: CurriculumSubject[] = [
-  { id: "maths", name: "Mathematics", short: "MAT", status: "live", accent: "#4e91c6", description: "Number, algebra, geometry, statistics, and quantitative reasoning." },
-  { id: "english", name: "English Studies", short: "ENG", status: "live", accent: "#9a6dc1", description: "Speech work, grammar, reading, composition, and literature." },
-  { id: "physics", name: "Physics", short: "PHY", status: "upcoming", accent: "#c58e3d", description: "Mechanics, energy, waves, electricity, and practical investigation." },
-  { id: "chemistry", name: "Chemistry", short: "CHE", status: "upcoming", accent: "#d45a4a", description: "Matter, reactions, periodicity, quantitative chemistry, and laboratory work." },
-  { id: "biology", name: "Biology", short: "BIO", status: "upcoming", accent: "#3b926f", description: "Living systems, ecology, genetics, health, and practical biology." },
-  { id: "history", name: "History", short: "HIS", status: "upcoming", accent: "#8053a9", description: "People, places, events, evidence, identity, and civic understanding." },
+  { id: "maths", name: "Mathematics", short: "MAT", status: "live", accent: "#33647A", description: "Number, algebra, geometry, statistics, and quantitative reasoning." },
+  { id: "english", name: "English Studies", short: "ENG", status: "live", accent: "#8B78C7", description: "Speech work, grammar, reading, composition, and literature." },
+  { id: "physics", name: "Physics", short: "PHY", status: "upcoming", accent: "#B67A17", description: "Mechanics, energy, waves, electricity, and practical investigation." },
+  { id: "chemistry", name: "Chemistry", short: "CHE", status: "upcoming", accent: "#B84B3D", description: "Matter, reactions, periodicity, quantitative chemistry, and laboratory work." },
+  { id: "biology", name: "Biology", short: "BIO", status: "upcoming", accent: "#4B6B3C", description: "Living systems, ecology, genetics, health, and practical biology." },
+  { id: "history", name: "History", short: "HIS", status: "upcoming", accent: "#8B78C7", description: "People, places, events, evidence, identity, and civic understanding." },
 ];
 
 export const nerdcUnits: CurriculumUnit[] = [

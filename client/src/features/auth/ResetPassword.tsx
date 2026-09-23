@@ -49,38 +49,38 @@ export default function ResetPassword() {
 
   return (
     <AuthLayout>
-      <div className="w-full rounded-[28px] bg-white p-7 shadow-[0_18px_40px_rgba(18,61,48,.08)] sm:p-9">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#34775e]">Account recovery</div>
-        <h2 className="mt-2 font-display text-3xl font-semibold tracking-[-0.06em] text-[#183c31]">
+      <div className="w-full rounded-[28px] bg-[#FFFDF8] p-7 shadow-[0_18px_40px_rgba(59,36,26,.08)] sm:p-9">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#4B6B3C]">Account recovery</div>
+        <h2 className="mt-2 font-display text-3xl font-semibold tracking-[-0.06em] text-[#1A1512]">
           Choose a new password.
         </h2>
-        <p className="mt-2 text-sm leading-6 text-[#648075]">
-          {email ? <>For <span className="font-semibold text-[#25483c]">{email}</span>.</> : "Set a new password for your BrimLearn account."}
+        <p className="mt-2 text-sm leading-6 text-[#765F4F]">
+          {email ? <>For <span className="font-semibold text-[#3B241A]">{email}</span>.</> : "Set a new password for your BrimLearn account."}
         </p>
 
         {done ? (
           <div className="mt-6 space-y-4">
-            <div className="rounded-2xl border border-[#cfe6d8] bg-[#f1faf5] p-4 text-sm leading-6 text-[#1f5c40]">
+            <div className="rounded-2xl border border-[#DDE5C9] bg-[#F0F2E4] p-4 text-sm leading-6 text-[#3B241A]">
               Your password has been updated. You can now sign in with it.
             </div>
             <button
               onClick={() => setLocation("/login")}
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-[#173f31] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#286b51]"
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-[#C65A2E] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#A84A22]"
             >
               Go to sign in <ArrowRight size={15} />
             </button>
           </div>
         ) : !token ? (
           <div className="mt-6 space-y-4">
-            <div className="flex items-start gap-3 rounded-2xl border border-[#f0d98a] bg-[#fff8e1] p-4">
-              <TriangleAlert size={18} className="mt-0.5 shrink-0 text-[#8a6d1f]" />
-              <div className="text-sm leading-6 text-[#7a5d10]">
+            <div className="flex items-start gap-3 rounded-2xl border border-[#FFE7A8] bg-[#FFF1CD] p-4">
+              <TriangleAlert size={18} className="mt-0.5 shrink-0 text-[#9A6712]" />
+              <div className="text-sm leading-6 text-[#9A6712]">
                 This link is missing its reset token. Open the reset link you received, or request a new one.
               </div>
             </div>
             <button
               onClick={() => setLocation("/forgot-password")}
-              className="w-full rounded-full bg-[#173f31] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#286b51]"
+              className="w-full rounded-full bg-[#C65A2E] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#A84A22]"
             >
               Request a new link
             </button>
@@ -113,16 +113,16 @@ export default function ResetPassword() {
             <button
               type="submit"
               disabled={submitting}
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-[#173f31] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#286b51] disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-[#C65A2E] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#A84A22] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {submitting ? "Please wait…" : "Update password"}
             </button>
           </form>
         )}
 
-        <div className="mt-6 text-center text-xs text-[#7d958b]">
+        <div className="mt-6 text-center text-xs text-[#8A7361]">
           Remembered it?{" "}
-          <button onClick={() => setLocation("/login")} className="font-semibold text-[#34775e] hover:text-[#286b51]">
+          <button onClick={() => setLocation("/login")} className="font-semibold text-[#4B6B3C] hover:text-[#C65A2E]">
             Back to sign in
           </button>
         </div>

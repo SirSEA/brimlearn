@@ -40,3 +40,13 @@ services:
         sync: false
       - key: FIREBASE_PRIVATE_KEY
         sync: false
+      - key: BUILT_IN_FORGE_API_KEY
+        sync: false
+      - key: OWNER_OPEN_ID
+        sync: false
+      # After deploy, create the first admin with:  npm run db:seed
+      # (reads ADMIN_EMAIL / ADMIN_PASSWORD from the environment below).
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false

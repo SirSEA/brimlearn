@@ -6,7 +6,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { BrimMark } from "@/components/layout/BrimMark";
 import { RedirectIfAuthed } from "@/components/auth/RedirectIfAuthed";
 import { roleHomePath } from "@/lib/roles";
-import { ArrowUpRight, Brain, GraduationCap, Lock, Mail, ShieldCheck, Sparkles, User, Users } from "lucide-react";
+import { Brain, GraduationCap, Lock, Mail, Sparkles, User, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function GoogleMark() {
@@ -32,7 +32,7 @@ function GoogleButton({ role, enabled }: { role: SignupRole; enabled: boolean })
         }
         window.location.assign(`/api/oauth/google/start?role=${encodeURIComponent(role)}`);
       }}
-      className="flex w-full items-center justify-center gap-2.5 rounded-full border border-[#e1e8df] bg-white px-4 py-3 text-sm font-semibold text-[#25483c] transition hover:border-[#99bda8] hover:bg-[#fbfcf9] disabled:cursor-not-allowed disabled:opacity-60"
+      className="flex w-full items-center justify-center gap-2.5 rounded-full border border-[#E2CDB8] bg-[#FFFDF8] px-4 py-3 text-sm font-semibold text-[#3B241A] transition hover:border-[#A9BF87] hover:bg-[#FFFDF8] disabled:cursor-not-allowed disabled:opacity-60"
     >
       <GoogleMark /> Continue with Google
     </button>
@@ -55,63 +55,63 @@ export function Field({
 }: React.InputHTMLAttributes<HTMLInputElement> & { label: string; icon?: typeof Mail; error?: string }) {
   return (
     <label className="block">
-      <span className="text-xs font-semibold text-[#527064]">
+      <span className="text-xs font-semibold text-[#765F4F]">
         {label}
-        {props.required && <span className="ml-0.5 text-[#d9533f]" title="Required">*</span>}
+        {props.required && <span className="ml-0.5 text-[#B84B3D]" title="Required">*</span>}
       </span>
       <div className="relative mt-2">
-        {Icon && <Icon size={16} className={cn("pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2", error ? "text-[#d9533f]" : "text-[#9aaca2]")} />}
+        {Icon && <Icon size={16} className={cn("pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2", error ? "text-[#B84B3D]" : "text-[#A08A75]")} />}
         <input
           {...props}
           aria-invalid={Boolean(error)}
           className={cn(
-            "w-full rounded-xl border bg-white px-3.5 py-3 text-sm font-semibold text-[#25483c] outline-none transition",
-            "placeholder:font-medium placeholder:text-[#a7b5ad]",
+            "w-full rounded-xl border bg-[#FFFDF8] px-3.5 py-3 text-sm font-semibold text-[#3B241A] outline-none transition",
+            "placeholder:font-medium placeholder:text-[#B3A089]",
             "focus:ring-2",
             Icon && "pl-10",
             error
-              ? "border-[#e4a9a1] bg-[#fff8f6] focus:border-[#d9533f] focus:ring-[#fbe1dc]/60"
-              : "border-[#e1e8df] focus:border-[#6b9f88] focus:ring-[#d8f36a]/40"
+              ? "border-[#DCA69B] bg-[#FBF0EB] focus:border-[#B84B3D] focus:ring-[#F7E0D9]/60"
+              : "border-[#E2CDB8] focus:border-[#8CAE70] focus:ring-[#FFC857]/40"
           )}
         />
       </div>
-      {error && <span className="mt-1.5 block text-xs font-medium text-[#d9533f]">{error}</span>}
+      {error && <span className="mt-1.5 block text-xs font-medium text-[#B84B3D]">{error}</span>}
     </label>
   );
 }
 
 export function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-[#fbfbf6] text-[#183c31] lg:grid lg:grid-cols-[440px_1fr]">
-      <aside className="relative hidden flex-col justify-between overflow-hidden bg-[#123d30] p-10 text-white lg:flex">
+    <div className="min-h-screen bg-[#F7F0E6] text-[#1A1512] lg:grid lg:grid-cols-[440px_1fr]">
+      <aside className="relative hidden flex-col justify-between overflow-hidden bg-[#3B241A] p-10 text-white lg:flex">
         <div className="relative z-10">
           <BrimMark />
         </div>
         <div className="relative z-10 max-w-sm">
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-[11px] font-semibold text-[#d8f36a]">
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-[11px] font-semibold text-[#FFC857]">
             <Sparkles size={13} /> One account, every view of learning
           </div>
           <h1 className="font-display text-[38px] font-semibold leading-[1.04] tracking-[-0.06em]">
             Short, steady practice.<br />
-            <span className="text-[#d8f36a]">Real growth for everyone.</span>
+            <span className="text-[#FFC857]">Real growth for everyone.</span>
           </h1>
-          <p className="mt-4 text-sm leading-6 text-[#c4ded0]">
+          <p className="mt-4 text-sm leading-6 text-[#D9C4B0]">
             Sign in once and BrimLearn knows who you are — a learner, a parent, or a tutor — and meets you where you are.
           </p>
           <div className="mt-7 flex flex-wrap gap-2">
             {ROLES.map((role) => (
-              <span key={role.id} className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.07] px-3 py-1.5 text-xs font-semibold text-[#c4ded0]">
+              <span key={role.id} className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.07] px-3 py-1.5 text-xs font-semibold text-[#D9C4B0]">
                 <role.icon size={13} /> {role.label}
               </span>
             ))}
           </div>
         </div>
-        <div className="relative z-10 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.2em] text-[#82a79a]">
+        <div className="relative z-10 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.2em] text-[#A08A75]">
           <span>BrimLearn · An online school aligned with BECE | WAEC | NECO | JAMB Curriculum</span>
           <span>JSS1 – SS3</span>
         </div>
-        <div className="absolute -right-16 -top-20 h-72 w-72 rounded-full border-[26px] border-[#c9e95b]/20" />
-        <div className="absolute -bottom-32 right-6 h-72 w-72 rounded-full border-[45px] border-[#c9e95b]/10" />
+        <div className="absolute -right-16 -top-20 h-72 w-72 rounded-full border-[26px] border-[#E3A72F]/20" />
+        <div className="absolute -bottom-32 right-6 h-72 w-72 rounded-full border-[45px] border-[#E3A72F]/10" />
       </aside>
 
       <main className="grid min-h-screen place-items-center px-5 py-10">
@@ -187,17 +187,17 @@ export default function AuthPage({ initialMode = "login" }: { initialMode?: "log
   return (
     <AuthLayout>
       <RedirectIfAuthed />
-      <div className="w-full rounded-[28px] bg-white p-7 shadow-[0_18px_40px_rgba(18,61,48,.08)] sm:p-9">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#34775e]">
+      <div className="w-full rounded-[28px] bg-[#FFFDF8] p-7 shadow-[0_18px_40px_rgba(59,36,26,.08)] sm:p-9">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#4B6B3C]">
           {mode === "login" ? "Welcome back" : "Create your account"}
         </div>
-        <h2 className="mt-2 font-display text-3xl font-semibold tracking-[-0.06em] text-[#183c31]">
+        <h2 className="mt-2 font-display text-3xl font-semibold tracking-[-0.06em] text-[#1A1512]">
           {mode === "login" ? "Sign in to keep learning." : "Start your learning journey."}
         </h2>
-        <p className="mt-2 text-sm leading-6 text-[#648075]">{activeRole.blurb}</p>
+        <p className="mt-2 text-sm leading-6 text-[#765F4F]">{activeRole.blurb}</p>
 
         <div className="mt-6">
-          <div className="text-xs font-semibold text-[#527064]">Signing in as</div>
+          <div className="text-xs font-semibold text-[#765F4F]">Signing in as</div>
           <div className="mt-2 grid grid-cols-3 gap-2">
             {ROLES.map((item) => {
               const selected = item.id === role;
@@ -209,8 +209,8 @@ export default function AuthPage({ initialMode = "login" }: { initialMode?: "log
                   className={cn(
                     "flex flex-col items-center gap-1.5 rounded-xl px-2 py-3 text-xs font-semibold transition",
                     selected
-                      ? "bg-[#d8f36a] text-[#133d2f] shadow-[0_4px_0_#0c3428]"
-                      : "border border-[#e3e8df] bg-[#fbfcf9] text-[#527064] hover:border-[#99bda8]"
+                      ? "bg-[#FFC857] text-[#1A1512] shadow-[0_4px_0_#2A1D16]"
+                      : "border border-[#E2CDB8] bg-[#FFFDF8] text-[#765F4F] hover:border-[#A9BF87]"
                   )}
                 >
                   <item.icon size={16} />
@@ -221,7 +221,7 @@ export default function AuthPage({ initialMode = "login" }: { initialMode?: "log
           </div>
         </div>
 
-        <div className="mt-5 flex gap-1 rounded-2xl bg-[#f6f8f3] p-1">
+        <div className="mt-5 flex gap-1 rounded-2xl bg-[#F7EFE3] p-1">
           {(["login", "signup"] as const).map((item) => (
             <button
               key={item}
@@ -229,7 +229,7 @@ export default function AuthPage({ initialMode = "login" }: { initialMode?: "log
               onClick={() => setMode(item)}
               className={cn(
                 "flex-1 rounded-xl px-4 py-2.5 text-xs font-semibold transition",
-                mode === item ? "bg-white text-[#25483c] shadow-sm" : "text-[#8aa096] hover:text-[#527064]"
+                mode === item ? "bg-[#FFFDF8] text-[#3B241A] shadow-sm" : "text-[#A08A75] hover:text-[#765F4F]"
               )}
             >
               {item === "login" ? "Sign in" : "Create account"}
@@ -240,11 +240,11 @@ export default function AuthPage({ initialMode = "login" }: { initialMode?: "log
         <div className="mt-6">
           <GoogleButton role={role} enabled={googleEnabled} />
           <div className="my-5 flex items-center gap-3">
-            <div className="h-px flex-1 bg-[#e7ece4]" />
-            <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#9aaca2]">
+            <div className="h-px flex-1 bg-[#E2CDB8]" />
+            <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#A08A75]">
               or continue with email
             </span>
-            <div className="h-px flex-1 bg-[#e7ece4]" />
+            <div className="h-px flex-1 bg-[#E2CDB8]" />
           </div>
         </div>
 
@@ -304,7 +304,7 @@ export default function AuthPage({ initialMode = "login" }: { initialMode?: "log
               <button
                 type="button"
                 onClick={() => setLocation("/forgot-password")}
-                className="text-xs font-semibold text-[#34775e] hover:text-[#286b51]"
+                className="text-xs font-semibold text-[#4B6B3C] hover:text-[#C65A2E]"
               >
                 Forgot password?
               </button>
@@ -314,36 +314,29 @@ export default function AuthPage({ initialMode = "login" }: { initialMode?: "log
           <button
             type="submit"
             disabled={submitting}
-            className="w-full rounded-full bg-[#173f31] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#286b51] disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-full bg-[#C65A2E] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#A84A22] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {submitting ? "Please wait…" : mode === "login" ? "Sign in" : "Create my account"}
           </button>
         </form>
 
-        <div className="mt-6 text-center text-xs text-[#7d958b]">
+        <div className="mt-6 text-center text-xs text-[#8A7361]">
           {mode === "login" ? (
             <>
               New here?{" "}
-              <button onClick={() => setMode("signup")} className="font-semibold text-[#34775e]">
+              <button onClick={() => setMode("signup")} className="font-semibold text-[#4B6B3C]">
                 Create an account
               </button>
             </>
           ) : (
             <>
               Already have an account?{" "}
-              <button onClick={() => setMode("login")} className="font-semibold text-[#34775e]">
+              <button onClick={() => setMode("login")} className="font-semibold text-[#4B6B3C]">
                 Sign in
               </button>
             </>
           )}
         </div>
-
-        <button
-          onClick={() => setLocation("/admin/login")}
-          className="mt-5 flex w-full items-center justify-center gap-1.5 rounded-2xl border border-[#e3e8df] bg-[#fbfcf9] px-4 py-3 text-xs font-semibold text-[#527064] transition hover:border-[#99bda8] hover:text-[#25483c]"
-        >
-          <ShieldCheck size={14} /> Administrator? Open the admin console <ArrowUpRight size={13} />
-        </button>
       </div>
     </AuthLayout>
   );

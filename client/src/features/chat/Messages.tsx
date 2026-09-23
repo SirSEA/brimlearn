@@ -10,7 +10,7 @@ const learnerThreads: Thread[] = [
     id: "sola",
     name: "Ms. Sola · maths coach",
     initials: "MS",
-    tone: "bg-[#ff9a87] text-[#63382d]",
+    tone: "bg-[#F28B78] text-[#5A2F22]",
     lastSeen: "online now",
     messages: [
       { from: "them", text: "Morning, Amira! You’re 3 concepts from finishing Multiplication. Fancy a quick boost today?", time: "08:02" },
@@ -22,7 +22,7 @@ const learnerThreads: Thread[] = [
     id: "group",
     name: "JSS1 Blue · class group",
     initials: "JB",
-    tone: "bg-[#8f72b4] text-white",
+    tone: "bg-[#8B78C7] text-white",
     lastSeen: "24 members",
     messages: [
       { from: "them", text: "Reminder: Friday’s live class moves to Google Meet (link in Classroom). See you at 3pm!", time: "Yesterday" },
@@ -37,7 +37,7 @@ const tutorThreads: Thread[] = [
     id: "amara",
     name: "Amara Okafor",
     initials: "AO",
-    tone: "bg-[#d8f36a] text-[#31583f]",
+    tone: "bg-[#FFC857] text-[#1A1512]",
     lastSeen: "online now",
     following: true,
     messages: [
@@ -51,7 +51,7 @@ const tutorThreads: Thread[] = [
     id: "leo",
     name: "Leo Mensah",
     initials: "LM",
-    tone: "bg-[#ff9a87] text-[#63382d]",
+    tone: "bg-[#F28B78] text-[#5A2F22]",
     lastSeen: "active 1h ago",
     following: false,
     messages: [
@@ -64,7 +64,7 @@ const tutorThreads: Thread[] = [
     id: "zuri",
     name: "Zuri Campbell",
     initials: "ZC",
-    tone: "bg-[#8f72b4] text-white",
+    tone: "bg-[#8B78C7] text-white",
     lastSeen: "active 3h ago",
     messages: [
       { from: "them", text: "Perimeter vs area — I always mix them for rectangles.", time: "Yesterday" },
@@ -95,12 +95,12 @@ export function Messages({ variant }: { variant: "learner" | "tutor" }) {
         const selected = thread.id === active.id;
         const last = thread.messages[thread.messages.length - 1];
         return (
-          <button key={thread.id} onClick={() => { setActiveId(thread.id); setMobileThreadOpen(true); }} className={`w-full rounded-2xl p-3 text-left transition ${selected ? "bg-[#eef4ea]" : "hover:bg-[#f6f8f3]"}`}>
+          <button key={thread.id} onClick={() => { setActiveId(thread.id); setMobileThreadOpen(true); }} className={`w-full rounded-2xl p-3 text-left transition ${selected ? "bg-[#EFEFDD]" : "hover:bg-[#F7EFE3]"}`}>
             <div className="flex items-center gap-3">
               <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-full text-xs font-bold ${thread.tone}`}>{thread.initials}</div>
               <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-2"><span className="truncate text-sm font-semibold text-[#25483c]">{thread.name}</span><span className="flex items-center gap-1.5 shrink-0 text-[10px] text-[#8aa096]">{variant === "tutor" && thread.following && <span className="flex items-center gap-0.5 rounded-full bg-[#e5f5ed] px-1.5 py-0.5 font-bold text-[#34775e]"><Bell size={9} />Following</span>}{last.time}</span></div>
-                <div className="mt-0.5 truncate text-xs text-[#7d958b]">{last.from === "me" ? "You: " : ""}{last.text}</div>
+                <div className="flex items-center justify-between gap-2"><span className="truncate text-sm font-semibold text-[#3B241A]">{thread.name}</span><span className="flex items-center gap-1.5 shrink-0 text-[10px] text-[#A08A75]">{variant === "tutor" && thread.following && <span className="flex items-center gap-0.5 rounded-full bg-[#E9EED9] px-1.5 py-0.5 font-bold text-[#4B6B3C]"><Bell size={9} />Following</span>}{last.time}</span></div>
+                <div className="mt-0.5 truncate text-xs text-[#8A7361]">{last.from === "me" ? "You: " : ""}{last.text}</div>
               </div>
             </div>
           </button>
@@ -111,10 +111,10 @@ export function Messages({ variant }: { variant: "learner" | "tutor" }) {
 
   const threadView = (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-3 border-b border-[#edf1e9] p-4">
-        <button onClick={() => setMobileThreadOpen(false)} className="rounded-lg p-1.5 text-[#527064] hover:bg-[#edf1e9] md:hidden"><ArrowLeft size={16} /></button>
+      <div className="flex items-center gap-3 border-b border-[#F3E9DE] p-4">
+        <button onClick={() => setMobileThreadOpen(false)} className="rounded-lg p-1.5 text-[#765F4F] hover:bg-[#F3E9DE] md:hidden"><ArrowLeft size={16} /></button>
         <div className={`grid h-10 w-10 place-items-center rounded-full text-xs font-bold ${active.tone}`}>{active.initials}</div>
-        <div><div className="text-sm font-semibold text-[#25483c]">{active.name}</div><div className="mt-0.5 text-[11px] text-[#7d958b]">{active.lastSeen}</div></div>
+        <div><div className="text-sm font-semibold text-[#3B241A]">{active.name}</div><div className="mt-0.5 text-[11px] text-[#8A7361]">{active.lastSeen}</div></div>
         {variant === "tutor" && (
           <button
             onClick={() => {
@@ -122,7 +122,7 @@ export function Messages({ variant }: { variant: "learner" | "tutor" }) {
               setThreads((current) => current.map((thread) => thread.id === active.id ? { ...thread, following: next } : thread));
               toast.success(next ? `You’re now following ${active.name.split(" ")[0]}'s progress.` : `You’ve stopped following ${active.name.split(" ")[0]}.`);
             }}
-            className={`ml-auto flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition ${active.following ? "bg-[#e5f5ed] text-[#34775e]" : "border border-[#dce5dc] text-[#527064] hover:bg-[#f4f7ef]"}`}
+            className={`ml-auto flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition ${active.following ? "bg-[#E9EED9] text-[#4B6B3C]" : "border border-[#E2CDB8] text-[#765F4F] hover:bg-[#F7EFE3]"}`}
             title={active.following ? "Stop following updates" : "Follow updates from this learner"}
           >
             {active.following ? <Bell size={13} /> : <BellOff size={13} />}
@@ -133,25 +133,25 @@ export function Messages({ variant }: { variant: "learner" | "tutor" }) {
       <div className="flex-1 space-y-3 overflow-y-auto p-4">
         {active.messages.map((message, index) => (
           <div key={index} className={`flex ${message.from === "me" ? "justify-end" : "justify-start"}`}>
-            <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-6 ${message.from === "me" ? "rounded-br-md bg-[#173f31] text-white" : "rounded-bl-md bg-[#f3f6ef] text-[#25483c]"}`}>{message.text}<div className={`mt-1 text-right text-[10px] ${message.from === "me" ? "text-[#a7c4b8]" : "text-[#8aa096]"}`}>{message.time}</div></div>
+            <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-6 ${message.from === "me" ? "rounded-br-md bg-[#C65A2E] text-white" : "rounded-bl-md bg-[#F7EFE3] text-[#3B241A]"}`}>{message.text}<div className={`mt-1 text-right text-[10px] ${message.from === "me" ? "text-[#BFA993]" : "text-[#A08A75]"}`}>{message.time}</div></div>
           </div>
         ))}
       </div>
-      <div className="flex items-center gap-2 border-t border-[#edf1e9] p-3">
-        <button onClick={() => toast("File attachment is available in the resource library.")} className="rounded-xl p-2.5 text-[#7d958b] hover:bg-[#f3f6ef]"><Paperclip size={17} /></button>
-        <input value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => event.key === "Enter" && send()} placeholder={`Message ${active.name.split(" ")[0]}…`} className="min-w-0 flex-1 rounded-full border border-[#e1e8df] bg-[#fbfcf9] px-4 py-2.5 text-sm text-[#25483c] outline-none focus:border-[#5d9c7d]" />
-        <button onClick={send} className="rounded-xl bg-[#173f31] p-2.5 text-white hover:bg-[#286b51]"><Send size={16} /></button>
+      <div className="flex items-center gap-2 border-t border-[#F3E9DE] p-3">
+        <button onClick={() => toast("File attachment is available in the resource library.")} className="rounded-xl p-2.5 text-[#8A7361] hover:bg-[#F7EFE3]"><Paperclip size={17} /></button>
+        <input value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => event.key === "Enter" && send()} placeholder={`Message ${active.name.split(" ")[0]}…`} className="min-w-0 flex-1 rounded-full border border-[#E2CDB8] bg-[#FFFDF8] px-4 py-2.5 text-sm text-[#3B241A] outline-none focus:border-[#8CAE70]" />
+        <button onClick={send} className="rounded-xl bg-[#C65A2E] p-2.5 text-white hover:bg-[#A84A22]"><Send size={16} /></button>
       </div>
     </div>
   );
 
   return (
     <section className="grid gap-5 xl:grid-cols-[300px_1fr]">
-      <div className="rounded-[27px] border border-[#e3e8df] bg-white p-4">
-        <div className="px-2 pb-3 pt-1"><div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8aa096]">Messages</div><h2 className="mt-1 font-display text-xl font-semibold tracking-[-0.05em] text-[#183c31]">{variant === "tutor" ? "Inbox" : "Your conversations"}</h2><p className="mt-1.5 text-[11px] leading-5 text-[#8aa096]">{variant === "learner" ? "You chat with your teachers and class group only." : "Follow a learner to keep receiving their progress updates."}</p></div>
+      <div className="rounded-[27px] border border-[#E2CDB8] bg-[#FFFDF8] p-4">
+        <div className="px-2 pb-3 pt-1"><div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#A08A75]">Messages</div><h2 className="mt-1 font-display text-xl font-semibold tracking-[-0.05em] text-[#1A1512]">{variant === "tutor" ? "Inbox" : "Your conversations"}</h2><p className="mt-1.5 text-[11px] leading-5 text-[#A08A75]">{variant === "learner" ? "You chat with your teachers and class group only." : "Follow a learner to keep receiving their progress updates."}</p></div>
         {threadList}
       </div>
-      <div className={`rounded-[27px] border border-[#e3e8df] bg-white shadow-[0_12px_30px_rgba(26,53,40,.05)] md:h-[620px] ${mobileThreadOpen ? "block" : "hidden md:block"}`}>{threadView}</div>
+      <div className={`rounded-[27px] border border-[#E2CDB8] bg-[#FFFDF8] shadow-[0_12px_30px_rgba(55,33,22,.05)] md:h-[620px] ${mobileThreadOpen ? "block" : "hidden md:block"}`}>{threadView}</div>
     </section>
   );
 }

@@ -6,12 +6,12 @@ import { roleHomePath } from "@/lib/roles";
 
 function AuthSplash() {
   return (
-    <div className="grid min-h-screen place-items-center bg-[#fbfbf6]">
+    <div className="grid min-h-screen place-items-center bg-[#F7F0E6]">
       <div className="flex flex-col items-center gap-3">
-        <div className="grid h-12 w-12 place-items-center rounded-[15px] bg-[#d8f36a] font-display text-xl font-bold text-[#133d2f] shadow-[0_6px_0_#0c3428]">
+        <div className="grid h-12 w-12 place-items-center rounded-[15px] bg-[#FFC857] font-display text-xl font-bold text-[#1A1512] shadow-[0_6px_0_#2A1D16]">
           n°
         </div>
-        <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#8aa096]">brimlearn</div>
+        <div className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#A08A75]">brimlearn</div>
       </div>
     </div>
   );

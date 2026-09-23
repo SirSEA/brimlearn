@@ -119,72 +119,72 @@ export function TutorAssignments() {
 
   return (
     <>
-      <section className="rounded-[27px] bg-[#174b3a] p-7 text-white shadow-[0_18px_40px_rgba(18,61,48,.14)] sm:p-9">
+      <section className="rounded-[27px] bg-[#3B241A] p-7 text-white shadow-[0_18px_40px_rgba(59,36,26,.14)] sm:p-9">
         <div className="max-w-xl">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-[11px] font-semibold text-[#d8f36a]"><ClipboardList size={13} /> Assignment studio</div>
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-[11px] font-semibold text-[#FFC857]"><ClipboardList size={13} /> Assignment studio</div>
           <h1 className="font-display text-[34px] font-semibold leading-[1.04] tracking-[-0.06em] sm:text-[40px]">Assign work that fits each learner.</h1>
-          <p className="mt-3 text-sm leading-6 text-[#c4ded0]">Worksheets, quizzes, and lessons — sent to the whole class, a group, or one learner, tuned to their understanding.</p>
+          <p className="mt-3 text-sm leading-6 text-[#D9C4B0]">Worksheets, quizzes, and lessons — sent to the whole class, a group, or one learner, tuned to their understanding.</p>
         </div>
       </section>
 
       <section className="mt-7 grid gap-5 xl:grid-cols-[1.25fr_.75fr]">
-        <div className="rounded-[27px] border border-[#e3e8df] bg-white p-6 sm:p-7">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8aa096]">Create assignment</div>
-          <h2 className="mt-1 font-display text-2xl font-semibold tracking-[-0.05em] text-[#183c31]">What are you assigning?</h2>
+        <div className="rounded-[27px] border border-[#E2CDB8] bg-[#FFFDF8] p-6 sm:p-7">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#A08A75]">Create assignment</div>
+          <h2 className="mt-1 font-display text-2xl font-semibold tracking-[-0.05em] text-[#1A1512]">What are you assigning?</h2>
 
           <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {(["Worksheet", "Quiz", "Lesson", "Practice"] as TeacherType[]).map((item) => {
               const Icon = item === "Worksheet" ? FileText : item === "Quiz" ? Sparkles : item === "Lesson" ? GraduationCap : Target;
               const isPractice = item === "Practice";
               return (
-                <button key={item} onClick={() => { setType(item); if (isPractice) setDue(""); else if (!due) setDue("Sun, Sep 27"); }} className={`flex items-center gap-3 rounded-2xl border p-4 text-left transition ${type === item ? "border-[#3b926f] bg-[#e5f5ed]" : "border-[#e9eee5] bg-[#fbfcf9] hover:border-[#c9d8cc]"}`}><Icon size={18} className={type === item ? "text-[#34775e]" : "text-[#7d958b]"} /><span className="text-sm font-semibold text-[#25483c]">{item}</span></button>
+                <button key={item} onClick={() => { setType(item); if (isPractice) setDue(""); else if (!due) setDue("Sun, Sep 27"); }} className={`flex items-center gap-3 rounded-2xl border p-4 text-left transition ${type === item ? "border-[#4B6B3C] bg-[#E9EED9]" : "border-[#F3E9DE] bg-[#FFFDF8] hover:border-[#C8B3A0]"}`}><Icon size={18} className={type === item ? "text-[#4B6B3C]" : "text-[#8A7361]"} /><span className="text-sm font-semibold text-[#3B241A]">{item}</span></button>
               );
             })}
           </div>
 
           <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <label className="text-xs font-semibold text-[#527064]">Title<span className="mt-1.5 block"><input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="e.g. Multiplying by 10s" className="w-full rounded-xl border border-[#e1e8df] bg-white px-3 py-2.5 text-xs font-semibold text-[#25483c] outline-none focus:border-[#5d9c7d]" /></span></label>
-            <label className="text-xs font-semibold text-[#527064]">Subject<select value={subject} onChange={(event) => setSubject(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#e1e8df] bg-white px-3 py-2.5 text-xs font-semibold text-[#25483c]"><option>Mathematics</option><option>English Studies</option><option>Basic Science</option><option>Social Studies</option></select></label>
-            <label className="text-xs font-semibold text-[#527064]">Due date{type === "Practice" && <span className="ml-1.5 rounded bg-[#f3e6ff] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#8053a9]">practice · no deadline</span>}<input value={due} disabled={type === "Practice"} onChange={(event) => setDue(event.target.value)} placeholder={type === "Practice" ? "No due date" : "Sun, Sep 27"} className={`mt-1.5 w-full rounded-xl border border-[#e1e8df] bg-white px-3 py-2.5 text-xs font-semibold text-[#25483c] outline-none focus:border-[#5d9c7d] ${type === "Practice" ? "opacity-50" : ""}`} /></label>
+            <label className="text-xs font-semibold text-[#765F4F]">Title<span className="mt-1.5 block"><input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="e.g. Multiplying by 10s" className="w-full rounded-xl border border-[#E2CDB8] bg-[#FFFDF8] px-3 py-2.5 text-xs font-semibold text-[#3B241A] outline-none focus:border-[#8CAE70]" /></span></label>
+            <label className="text-xs font-semibold text-[#765F4F]">Subject<select value={subject} onChange={(event) => setSubject(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#E2CDB8] bg-[#FFFDF8] px-3 py-2.5 text-xs font-semibold text-[#3B241A]"><option>Mathematics</option><option>English Studies</option><option>Basic Science</option><option>Social Studies</option></select></label>
+            <label className="text-xs font-semibold text-[#765F4F]">Due date{type === "Practice" && <span className="ml-1.5 rounded bg-[#EFE8FC] px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-[#8B78C7]">practice · no deadline</span>}<input value={due} disabled={type === "Practice"} onChange={(event) => setDue(event.target.value)} placeholder={type === "Practice" ? "No due date" : "Sun, Sep 27"} className={`mt-1.5 w-full rounded-xl border border-[#E2CDB8] bg-[#FFFDF8] px-3 py-2.5 text-xs font-semibold text-[#3B241A] outline-none focus:border-[#8CAE70] ${type === "Practice" ? "opacity-50" : ""}`} /></label>
           </div>
 
           <div className="mt-6">
-            <div className="text-xs font-semibold text-[#527064]">Who is it for?</div>
+            <div className="text-xs font-semibold text-[#765F4F]">Who is it for?</div>
             <div className="mt-2 flex flex-wrap gap-2">
               {([["class", "Whole class", Users], ["group", "Group", Users2], ["individual", "Individual", User]] as Array<[Audience, string, typeof Users]>).map(([key, label, Icon]) => (
-                <button key={key} onClick={() => setAudience(key)} className={`flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold transition ${audience === key ? "border-[#3b926f] bg-[#e5f5ed] text-[#34775e]" : "border-[#dce5dc] text-[#527064] hover:bg-[#f4f7ef]"}`}><Icon size={14} />{label}</button>
+                <button key={key} onClick={() => setAudience(key)} className={`flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold transition ${audience === key ? "border-[#4B6B3C] bg-[#E9EED9] text-[#4B6B3C]" : "border-[#E2CDB8] text-[#765F4F] hover:bg-[#F7EFE3]"}`}><Icon size={14} />{label}</button>
               ))}
             </div>
           </div>
 
           {audience === "individual" && (
-            <div className="mt-4 rounded-2xl bg-[#f6f8f3] p-4">
-              <div className="text-xs font-semibold text-[#527064]">Choose a learner</div>
-              <div className="mt-2 flex flex-wrap gap-2">{Object.keys(learnerDefaults).map((learner) => <button key={learner} onClick={() => setSelected((current) => current.includes(learner) ? [] : [learner])} className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${selected.includes(learner) ? "bg-[#173f31] text-white" : "bg-white text-[#527064] shadow-sm hover:bg-[#eef4ea]"}`}>{learner}</button>)}</div>
+            <div className="mt-4 rounded-2xl bg-[#F7EFE3] p-4">
+              <div className="text-xs font-semibold text-[#765F4F]">Choose a learner</div>
+              <div className="mt-2 flex flex-wrap gap-2">{Object.keys(learnerDefaults).map((learner) => <button key={learner} onClick={() => setSelected((current) => current.includes(learner) ? [] : [learner])} className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${selected.includes(learner) ? "bg-[#C65A2E] text-white" : "bg-[#FFFDF8] text-[#765F4F] shadow-sm hover:bg-[#EFEFDD]"}`}>{learner}</button>)}</div>
             </div>
           )}
 
-          <div className="mt-6 rounded-2xl border border-[#e9eee5] p-4">
-            <div className="flex items-center gap-2 text-xs font-semibold text-[#527064]"><Sparkles size={14} className="text-[#8f72b4]" /> Challenge level</div>
-            <p className="mt-1 text-xs text-[#8aa096]">BrimLearn differentiates the questions for each learner — this is the cap so nobody is pushed past their understanding.</p>
-            <div className="mt-3 flex flex-wrap gap-2">{levels.map((level) => <button key={level} onClick={() => setDifficulty(level)} className={`rounded-full px-4 py-2 text-xs font-semibold transition ${difficulty === level ? "bg-[#8f72b4] text-white" : "bg-[#f6f8f3] text-[#527064] hover:bg-[#eef4ea]"}`}>{level}</button>)}</div>
+          <div className="mt-6 rounded-2xl border border-[#F3E9DE] p-4">
+            <div className="flex items-center gap-2 text-xs font-semibold text-[#765F4F]"><Sparkles size={14} className="text-[#8B78C7]" /> Challenge level</div>
+            <p className="mt-1 text-xs text-[#A08A75]">BrimLearn differentiates the questions for each learner — this is the cap so nobody is pushed past their understanding.</p>
+            <div className="mt-3 flex flex-wrap gap-2">{levels.map((level) => <button key={level} onClick={() => setDifficulty(level)} className={`rounded-full px-4 py-2 text-xs font-semibold transition ${difficulty === level ? "bg-[#8B78C7] text-white" : "bg-[#F7EFE3] text-[#765F4F] hover:bg-[#EFEFDD]"}`}>{level}</button>)}</div>
           </div>
 
-          <button onClick={assign} className="mt-6 w-full rounded-full bg-[#173f31] px-4 py-3 text-sm font-semibold text-white hover:bg-[#286b51] sm:w-auto sm:px-6">Assign {type.toLowerCase()}</button>
+          <button onClick={assign} className="mt-6 w-full rounded-full bg-[#C65A2E] px-4 py-3 text-sm font-semibold text-white hover:bg-[#A84A22] sm:w-auto sm:px-6">Assign {type.toLowerCase()}</button>
         </div>
 
         <div className="space-y-5">
-          <div className="rounded-[27px] border border-[#e3e8df] bg-white p-6 sm:p-7">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8aa096]">Differentiation preview</div>
-            <h2 className="mt-1 font-display text-xl font-semibold tracking-[-0.05em] text-[#183c31]">How each learner gets this.</h2>
+          <div className="rounded-[27px] border border-[#E2CDB8] bg-[#FFFDF8] p-6 sm:p-7">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#A08A75]">Differentiation preview</div>
+            <h2 className="mt-1 font-display text-xl font-semibold tracking-[-0.05em] text-[#1A1512]">How each learner gets this.</h2>
             <div className="mt-4 space-y-2.5">
-              {previewLearners.map((learner) => <div key={learner} className="flex items-center justify-between rounded-xl bg-[#f6f8f3] p-3"><span className="text-sm font-semibold text-[#25483c]">{learner}</span><span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold text-[#8f72b4] shadow-sm">{learnerDefaults[learner]}</span></div>)}
+              {previewLearners.map((learner) => <div key={learner} className="flex items-center justify-between rounded-xl bg-[#F7EFE3] p-3"><span className="text-sm font-semibold text-[#3B241A]">{learner}</span><span className="rounded-full bg-[#FFFDF8] px-2.5 py-1 text-[10px] font-bold text-[#8B78C7] shadow-sm">{learnerDefaults[learner]}</span></div>)}
             </div>
           </div>
-          <div className="rounded-[27px] border border-[#e3e8df] bg-white p-6 sm:p-7">
-            <div className="flex items-center justify-between"><div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#8aa096]">Recent assignments</div><span className="rounded-full bg-[#f4f7ef] px-3 py-1.5 text-xs font-semibold text-[#527064]">{loading ? "…" : assignments.length}</span></div>
-            <div className="mt-4 space-y-3">{assignments.map((assignment) => <div key={assignment.id} className="rounded-2xl border border-[#e9eee5] p-3.5"><div className="flex items-center justify-between gap-2"><div className="min-w-0"><div className="truncate text-sm font-semibold text-[#25483c]">{assignment.title}</div><div className="mt-0.5 truncate text-xs text-[#8aa096]">{assignment.type} · {assignment.subject} · {assignment.audience}</div></div><span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${assignment.status === "Scheduled" ? "bg-[#e5f5ed] text-[#34775e]" : "bg-[#fff1d7] text-[#916d22]"}`}>{assignment.status}</span></div><div className="mt-2.5 flex items-center gap-2 text-[10px] text-[#8aa096]"><CheckCircle2 size={12} className="text-[#3b926f]" /> {assignment.difficulty} cap{assignment.due === "No due date" ? <span className="rounded bg-[#f3e6ff] px-1.5 py-0.5 font-bold text-[#8053a9]">no due date</span> : <span>due {assignment.due}</span>}</div></div>)}</div>
-            {!loading && assignments.length === 0 && <div className="mt-3 rounded-2xl bg-[#f6f8f3] p-5 text-center text-sm text-[#7d958b]">No assignments yet. Create one above and it will show up here and on every learner’s Tracker.</div>}
+          <div className="rounded-[27px] border border-[#E2CDB8] bg-[#FFFDF8] p-6 sm:p-7">
+            <div className="flex items-center justify-between"><div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#A08A75]">Recent assignments</div><span className="rounded-full bg-[#F7EFE3] px-3 py-1.5 text-xs font-semibold text-[#765F4F]">{loading ? "…" : assignments.length}</span></div>
+            <div className="mt-4 space-y-3">{assignments.map((assignment) => <div key={assignment.id} className="rounded-2xl border border-[#F3E9DE] p-3.5"><div className="flex items-center justify-between gap-2"><div className="min-w-0"><div className="truncate text-sm font-semibold text-[#3B241A]">{assignment.title}</div><div className="mt-0.5 truncate text-xs text-[#A08A75]">{assignment.type} · {assignment.subject} · {assignment.audience}</div></div><span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${assignment.status === "Scheduled" ? "bg-[#E9EED9] text-[#4B6B3C]" : "bg-[#FFF1CD] text-[#9A6712]"}`}>{assignment.status}</span></div><div className="mt-2.5 flex items-center gap-2 text-[10px] text-[#A08A75]"><CheckCircle2 size={12} className="text-[#4B6B3C]" /> {assignment.difficulty} cap{assignment.due === "No due date" ? <span className="rounded bg-[#EFE8FC] px-1.5 py-0.5 font-bold text-[#8B78C7]">no due date</span> : <span>due {assignment.due}</span>}</div></div>)}</div>
+            {!loading && assignments.length === 0 && <div className="mt-3 rounded-2xl bg-[#F7EFE3] p-5 text-center text-sm text-[#8A7361]">No assignments yet. Create one above and it will show up here and on every learner’s Tracker.</div>}
           </div>
         </div>
       </section>

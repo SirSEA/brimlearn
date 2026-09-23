@@ -42,11 +42,11 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#123d30] text-[#183c31]">
+    <div className="relative min-h-screen overflow-hidden bg-[#3B241A] text-[#1A1512]">
       <RedirectIfAuthed />
       <button
         onClick={() => setLocation("/login")}
-        className="absolute left-5 top-5 z-20 flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-2 text-xs font-semibold text-[#c4ded0] transition hover:bg-white/20 hover:text-white"
+        className="absolute left-5 top-5 z-20 flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-2 text-xs font-semibold text-[#D9C4B0] transition hover:bg-white/20 hover:text-white"
       >
         <ArrowLeft size={13} /> Back to sign in
       </button>
@@ -56,22 +56,22 @@ export default function AdminLogin() {
           <div className="mb-8 flex justify-center">
             <BrimMark />
           </div>
-          <div className="w-full rounded-[28px] bg-white p-7 shadow-[0_24px_60px_rgba(0,0,0,.28)] sm:p-9">
-            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#34775e]">
+          <div className="w-full rounded-[28px] bg-[#FFFDF8] p-7 shadow-[0_24px_60px_rgba(0,0,0,.28)] sm:p-9">
+            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#4B6B3C]">
               <ShieldCheck size={14} /> Admin console
             </div>
-            <h2 className="mt-2 font-display text-3xl font-semibold tracking-[-0.06em] text-[#183c31]">
+            <h2 className="mt-2 font-display text-3xl font-semibold tracking-[-0.06em] text-[#1A1512]">
               Restricted area.
             </h2>
-            <p className="mt-2 text-sm leading-6 text-[#648075]">
+            <p className="mt-2 text-sm leading-6 text-[#765F4F]">
               Authorised administrators only. Your session stays on this secure route.
             </p>
 
             <form className="mt-7 space-y-4" onSubmit={handleSubmit}>
               <label className="block">
-                <span className="text-xs font-semibold text-[#527064]">Admin email<span className="ml-0.5 text-[#d9533f]" title="Required">*</span></span>
+                <span className="text-xs font-semibold text-[#765F4F]">Admin email<span className="ml-0.5 text-[#B84B3D]" title="Required">*</span></span>
                 <div className="relative mt-2">
-                  <Mail size={16} className={`pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 ${fieldErrors.email ? "text-[#d9533f]" : "text-[#9aaca2]"}`} />
+                  <Mail size={16} className={`pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 ${fieldErrors.email ? "text-[#B84B3D]" : "text-[#A08A75]"}`} />
                   <input
                     type="email"
                     placeholder="admin@brimlearn.com"
@@ -80,15 +80,15 @@ export default function AdminLogin() {
                     aria-invalid={Boolean(fieldErrors.email)}
                     required
                     autoComplete="email"
-                    className={`w-full rounded-xl border bg-white py-3 pl-10 pr-3.5 text-sm font-semibold text-[#25483c] outline-none transition placeholder:font-medium placeholder:text-[#a7b5ad] focus:ring-2 ${fieldErrors.email ? "border-[#e4a9a1] bg-[#fff8f6] focus:border-[#d9533f] focus:ring-[#fbe1dc]/60" : "border-[#e1e8df] focus:border-[#6b9f88] focus:ring-[#d8f36a]/40"}`}
+                    className={`w-full rounded-xl border bg-[#FFFDF8] py-3 pl-10 pr-3.5 text-sm font-semibold text-[#3B241A] outline-none transition placeholder:font-medium placeholder:text-[#B3A089] focus:ring-2 ${fieldErrors.email ? "border-[#DCA69B] bg-[#FBF0EB] focus:border-[#B84B3D] focus:ring-[#F7E0D9]/60" : "border-[#E2CDB8] focus:border-[#8CAE70] focus:ring-[#FFC857]/40"}`}
                   />
                 </div>
-                {fieldErrors.email && <span className="mt-1.5 block text-xs font-medium text-[#d9533f]">{fieldErrors.email}</span>}
+                {fieldErrors.email && <span className="mt-1.5 block text-xs font-medium text-[#B84B3D]">{fieldErrors.email}</span>}
               </label>
               <label className="block">
-                <span className="text-xs font-semibold text-[#527064]">Password<span className="ml-0.5 text-[#d9533f]" title="Required">*</span></span>
+                <span className="text-xs font-semibold text-[#765F4F]">Password<span className="ml-0.5 text-[#B84B3D]" title="Required">*</span></span>
                 <div className="relative mt-2">
-                  <Lock size={16} className={`pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 ${fieldErrors.password ? "text-[#d9533f]" : "text-[#9aaca2]"}`} />
+                  <Lock size={16} className={`pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 ${fieldErrors.password ? "text-[#B84B3D]" : "text-[#A08A75]"}`} />
                   <input
                     type="password"
                     placeholder="Your admin password"
@@ -97,30 +97,30 @@ export default function AdminLogin() {
                     aria-invalid={Boolean(fieldErrors.password)}
                     required
                     autoComplete="current-password"
-                    className={`w-full rounded-xl border bg-white py-3 pl-10 pr-3.5 text-sm font-semibold text-[#25483c] outline-none transition placeholder:font-medium placeholder:text-[#a7b5ad] focus:ring-2 ${fieldErrors.password ? "border-[#e4a9a1] bg-[#fff8f6] focus:border-[#d9533f] focus:ring-[#fbe1dc]/60" : "border-[#e1e8df] focus:border-[#6b9f88] focus:ring-[#d8f36a]/40"}`}
+                    className={`w-full rounded-xl border bg-[#FFFDF8] py-3 pl-10 pr-3.5 text-sm font-semibold text-[#3B241A] outline-none transition placeholder:font-medium placeholder:text-[#B3A089] focus:ring-2 ${fieldErrors.password ? "border-[#DCA69B] bg-[#FBF0EB] focus:border-[#B84B3D] focus:ring-[#F7E0D9]/60" : "border-[#E2CDB8] focus:border-[#8CAE70] focus:ring-[#FFC857]/40"}`}
                   />
                 </div>
-                {fieldErrors.password && <span className="mt-1.5 block text-xs font-medium text-[#d9533f]">{fieldErrors.password}</span>}
+                {fieldErrors.password && <span className="mt-1.5 block text-xs font-medium text-[#B84B3D]">{fieldErrors.password}</span>}
               </label>
 
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full rounded-full bg-[#d8f36a] px-4 py-3 text-sm font-semibold text-[#173c2e] transition hover:bg-[#e4fb8b] disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full rounded-full bg-[#FFC857] px-4 py-3 text-sm font-semibold text-[#3B241A] transition hover:bg-[#FFC857] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {submitting ? "Verifying…" : "Enter admin console"}
               </button>
             </form>
 
-            <p className="mt-6 text-center text-[11px] leading-5 text-[#9aaca2]">
+            <p className="mt-6 text-center text-[11px] leading-5 text-[#A08A75]">
               Admin credentials are provisioned for school coordinators only.
             </p>
           </div>
         </div>
       </div>
 
-      <div className="absolute -right-20 -top-24 h-80 w-80 rounded-full border-[28px] border-[#c9e95b]/15" />
-      <div className="absolute -bottom-36 -left-16 h-96 w-96 rounded-full border-[50px] border-[#c9e95b]/10" />
+      <div className="absolute -right-20 -top-24 h-80 w-80 rounded-full border-[28px] border-[#E3A72F]/15" />
+      <div className="absolute -bottom-36 -left-16 h-96 w-96 rounded-full border-[50px] border-[#E3A72F]/10" />
     </div>
   );
 }

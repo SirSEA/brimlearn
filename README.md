@@ -75,6 +75,20 @@ Or manually: add a new **Web Service**, build command `npm ci --include=dev && n
 
 Same idea — build `npm run build`, start `npm start`, expose `PORT`, and set the same env vars. The server already trusts one proxy hop, so HTTPS and Secure cookies work behind their reverse proxies.
 
+### Admin console & first admin
+
+Admin access is a **dedicated route** (`/admin/login`) — it is not part of the public sign-up/sign-in page. An admin can also sign in on the public page and will be redirected to `/admin`. Create the first admin with:
+
+```bash
+ADMIN_EMAIL=you@school... ADMIN_PASSWORD=... npm run db:seed
+```
+
+On a managed host (Render), set `ADMIN_EMAIL` / `ADMIN_PASSWORD` in the environment and run the seed once (e.g. `npm run db:seed`) — it is idempotent and refuses passwords shorter than 8 characters. The admin console lets you:
+
+- **Website** — edit the public landing page (headline, sections, course/lesson carousel), upload images (PNG/JPG/WebP/GIF ≤ 480 KB) or paste public URLs, then Preview → Publish → Revert.
+- **Team & access** — see every account and promote/demote roles. `OWNER_OPEN_ID` users can never be demoted.
+- **Today** — live counts (users, resources, sessions, schemes, assignments).
+
 ### What NOT to do
 
 - Do not use static hosting that serves only `dist/public` (e.g. the old `netlify.toml`). Without the API, the app falls back to offline demo mode and Google sign-in cannot work.

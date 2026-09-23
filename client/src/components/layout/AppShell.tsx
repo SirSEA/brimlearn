@@ -35,14 +35,14 @@ export default function AppShell({ mode, onNavigate, tabs, renderBody }: AppShel
   };
 
   return (
-    <div className="min-h-screen bg-[#fbfbf6] text-[#183c31]">
+    <div className="min-h-screen bg-[#F7F0E6] text-[#1A1512]">
       <div className="flex min-h-screen">
         <div className="hidden lg:block">
           <Sidebar {...sidebarProps} />
         </div>
         {mobileOpen && (
           <div className="fixed inset-0 z-50 flex lg:hidden">
-            <button className="absolute inset-0 bg-[#0e2b22]/45" onClick={() => setMobileOpen(false)} />
+            <button className="absolute inset-0 bg-[#1A1512]/45" onClick={() => setMobileOpen(false)} />
             <div className="relative h-full shadow-2xl">
               <Sidebar {...sidebarProps} onClose={() => setMobileOpen(false)} />
             </div>

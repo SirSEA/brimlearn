@@ -145,6 +145,25 @@ export type { Scheme, ImportSchemeInput };
 
 export type { LandingContent, SiteContentDoc };
 
+export type AdminUser = {
+  id: string;
+  name: string | null;
+  email: string | null;
+  loginMethod: string | null;
+  role: AuthRole;
+  createdAt: string;
+  lastSignedIn: string;
+};
+
+export type AdminOverview = {
+  users: number;
+  resources: number;
+  liveSessions: number;
+  schemes: number;
+  assignments: number;
+  recentUsers: AdminUser[];
+};
+
 /** Thrown when there is no backend to call (Netlify) or it errored. */
 export class ApiUnavailableError extends Error {
   constructor(message = "BrimLearn API is unavailable (offline demo mode)") {
@@ -194,7 +213,11 @@ const ENDPOINTS = {
   updateSiteContent: "/api/trpc/site.update",
   publishSiteContent: "/api/trpc/site.publish",
   revertSiteContent: "/api/trpc/site.revert",
+  uploadSiteImage: "/api/trpc/site.uploadImage",
   generateFromObjectives: "/api/trpc/quiz.generateFromObjectives",
+  adminOverview: "/api/trpc/admin.overview",
+  listAdminUsers: "/api/trpc/admin.users.list",
+  setAdminUserRole: "/api/trpc/admin.users.setRole",
 } as const;
 
 type Availability = "unknown" | "online" | "offline";
@@ -491,6 +514,16 @@ function updateSiteContent(content: LandingContent): Promise<SiteContentDoc> {
   return postApi<SiteContentDoc>(ENDPOINTS.updateSiteContent, content);
 }
 
+export type UploadSiteImageInput = {
+  fileName: string;
+  mimeType: "image/png" | "image/jpeg" | "image/webp" | "image/gif";
+  dataBase64: string;
+};
+
+function uploadSiteImage(input: UploadSiteImageInput): Promise<{ url: string; id: string }> {
+  return postApi<{ url: string; id: string }>(ENDPOINTS.uploadSiteImage, input);
+}
+
 function publishSiteContent(): Promise<SiteContentDoc> {
   return postApi<SiteContentDoc>(ENDPOINTS.publishSiteContent, {});
 }
@@ -555,6 +588,23 @@ async function generateQuiz(input: QuizInput): Promise<GeneratedQuiz> {
   };
 }
 
+async function getAdminOverview(): Promise<AdminOverview> {
+  const data = await getQuery<AdminOverview>(ENDPOINTS.adminOverview, {});
+  if (!data || typeof data.users !== "number") {
+    throw new ApiUnavailableError("Malformed admin overview response");
+  }
+  return data;
+}
+
+async function listAdminUsers(): Promise<AdminUser[]> {
+  const users = await getQuery<AdminUser[]>(ENDPOINTS.listAdminUsers, {});
+  return Array.isArray(users) ? users : [];
+}
+
+function setAdminUserRole(openId: string, role: AuthRole): Promise<AdminUser> {
+  return postApi<AdminUser>(ENDPOINTS.setAdminUserRole, { openId, role });
+}
+
 export const api = {
   probe: probeApi,
   isOnline: () => availability === "online",
@@ -587,5 +637,9 @@ export const api = {
   updateSiteContent,
   publishSiteContent,
   revertSiteContent,
+  uploadSiteImage,
   generateFromObjectives,
+  getAdminOverview,
+  listAdminUsers,
+  setAdminUserRole,
 };

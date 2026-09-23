@@ -1,4 +1,4 @@
-import { COOKIE_NAME, EMAIL_LOGIN_METHOD, NOT_ADMIN_ERR_MSG, ONE_YEAR_MS, RESOURCE_MAX_BASE64_CHARS, SCHEME_MAX_BASE64_CHARS, SCHEME_TOO_LARGE_MSG, RESOURCE_TOO_LARGE_MSG, SIGNUP_ROLES, UNAUTHED_ERR_MSG } from "@shared/const";
+import { COOKIE_NAME, EMAIL_LOGIN_METHOD, NOT_ADMIN_ERR_MSG, ONE_YEAR_MS, RESOURCE_MAX_BASE64_CHARS, SCHEME_MAX_BASE64_CHARS, SCHEME_TOO_LARGE_MSG, RESOURCE_TOO_LARGE_MSG, SITE_IMAGE_MIME_TYPES, SITE_IMAGE_MAX_BASE64_CHARS, SITE_IMAGE_TOO_LARGE_MSG, SIGNUP_ROLES, UNAUTHED_ERR_MSG, USER_ROLES } from "@shared/const";
 import { nanoid } from "nanoid";
 import { TRPCError } from "@trpc/server";
 import { getSessionCookieOptions } from "./_core/cookies";
@@ -41,6 +41,16 @@ function appOrigin(req: IncomingMessage): string {
   return `https://${host}`;
 }
 
+/** Public: https://
+URL or a relative /site-images/… upload served by this app. */
+const imageUrlField = z
+  .string()
+  .trim()
+  .max(500)
+  .refine((value) => /^https?:\/\//i.test(value) || value.startsWith("/site-images/"), "Use a public https:// URL or the site image upload.")
+  .optional()
+  .nullable();
+
 /** Landing-page content schema (admin-edited public site). */
 const landingContentSchema = z.object({
   brand: z.object({
@@ -51,7 +61,7 @@ const landingContentSchema = z.object({
     eyebrow: z.string().trim().max(140),
     headline: z.string().trim().min(1).max(160),
     subheadline: z.string().trim().max(400),
-    imageUrl: z.string().trim().url("The hero image must be a valid URL").max(500).optional().nullable(),
+    imageUrl: imageUrlField,
     primaryCtaLabel: z.string().trim().max(40),
     primaryCtaHref: z.string().trim().max(200),
     secondaryCtaLabel: z.string().trim().max(40),
@@ -60,14 +70,14 @@ const landingContentSchema = z.object({
   about: z.object({
     heading: z.string().trim().min(1).max(120),
     body: z.string().trim().max(800),
-    imageUrl: z.string().trim().url("The image must be a valid URL").max(500).optional().nullable(),
+    imageUrl: imageUrlField,
   }),
   features: z
     .array(
       z.object({
         heading: z.string().trim().min(1).max(120),
         body: z.string().trim().max(500),
-        imageUrl: z.string().trim().url("The image must be a valid URL").max(500).optional().nullable(),
+        imageUrl: imageUrlField,
       })
     )
     .min(1)
@@ -81,7 +91,7 @@ const landingContentSchema = z.object({
         category: z.string().trim().max(80),
         platform: z.string().trim().max(80),
         url: z.string().trim().url("The course link must be a valid URL").max(500),
-        imageUrl: z.string().trim().url("The image must be a valid URL").max(500).optional().nullable(),
+        imageUrl: imageUrlField,
       })
     )
     .max(40),
@@ -757,6 +767,21 @@ export const appRouter = router({
       }
     }),
 
+    /** Stores an uploaded landing-page image and returns its public /site-images URL. */
+    uploadImage: adminProcedure
+      .input(
+        z.object({
+          fileName: z.string().trim().max(160, "File name is too long"),
+          mimeType: z.enum(SITE_IMAGE_MIME_TYPES, { message: "Use a PNG, JPG, WebP, or GIF image." }),
+          dataBase64: z.string().min(1, "The image data is missing").max(SITE_IMAGE_MAX_BASE64_CHARS, SITE_IMAGE_TOO_LARGE_MSG),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const id = `site_${nanoid(16)}`;
+        await db.saveSiteImage(id, input.mimeType, input.dataBase64);
+        return { url: `/site-images/${id}`, id } as const;
+      }),
+
     /** Saves edits to the working draft (does not publish). */
     update: adminProcedure
       .input(landingContentSchema)
@@ -767,6 +792,53 @@ export const appRouter = router({
 
     /** Rolls the working draft back to the last published version. */
     revert: adminProcedure.mutation(async ({ ctx }) => db.revertSiteContent(ctx.user.name ?? null)),
+  }),
+
+  admin: router({
+    /** Live counts across the workspace for the console landing tab. */
+    overview: adminProcedure.query(async () => {
+      try {
+        return await db.getAdminOverview();
+      } catch (error) {
+        console.error("[Admin] overview failed", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Could not load the admin overview right now.",
+        });
+      }
+    }),
+
+    users: router({
+      /** Everyone with an account, newest first (no password data). */
+      list: adminProcedure.query(async () => {
+        try {
+          return await db.listUsers();
+        } catch (error) {
+          console.error("[Admin] users.list failed", error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Could not load users right now.",
+          });
+        }
+      }),
+
+      /** Promotes or demotes a user. The root owner cannot be demoted here. */
+      setRole: adminProcedure
+        .input(z.object({ openId: z.string().trim().min(1), role: z.enum(USER_ROLES) }))
+        .mutation(async ({ input }) => {
+          if (input.openId === ENV.ownerOpenId && input.role !== "admin") {
+            throw new TRPCError({
+              code: "FORBIDDEN",
+              message: "The workspace owner always keeps the admin role (managed by OWNER_OPEN_ID).",
+            });
+          }
+          const updated = await db.setUserRole(input.openId, input.role);
+          if (!updated) {
+            throw new TRPCError({ code: "NOT_FOUND", message: "That user could not be found." });
+          }
+          return updated;
+        }),
+    }),
   }),
 });
 

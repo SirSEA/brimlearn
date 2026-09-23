@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { defaultLandingContent, type LandingContent, type SiteContentDoc } from "@shared/site";
-import { ApiUnavailableError, api } from "@/_core/api";
+import { SITE_IMAGE_MAX_BYTES } from "@shared/const";
+import { ApiUnavailableError, api, type UploadSiteImageInput } from "@/_core/api";
 import { LandingPage } from "@/pages/Landing";
-import { ArrowRight, Check, Eye, Globe, Image as ImageIcon, Info, Link2, Plus, RotateCcw, Save, Send, Sparkles, Trash2, X } from "lucide-react";
+import { Eye, Globe, Image as ImageIcon, Plus, RotateCcw, Save, Send, TriangleAlert, Trash2, Upload, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function guessPlatform(url: string): string {
@@ -19,12 +20,12 @@ function guessPlatform(url: string): string {
 
 function SectionCard({ number, title, hint, children }: { number: string; title: string; hint: ReactNode; children: ReactNode }) {
   return (
-    <section id={`editor-${number}`} className="rounded-[24px] border border-[#e2e8df] bg-white p-6">
+    <section id={`editor-${number}`} className="rounded-[24px] border border-[#E2CDB8] bg-[#FFFDF8] p-6">
       <div className="mb-1 flex items-center gap-2">
-        <span className="grid h-6 w-6 place-items-center rounded-lg bg-[#123d30] text-[11px] font-bold text-[#d8f36a]">{number}</span>
+        <span className="grid h-6 w-6 place-items-center rounded-lg bg-[#3B241A] text-[11px] font-bold text-[#FFC857]">{number}</span>
         <h3 className="font-display text-lg font-semibold tracking-[-0.03em]">{title}</h3>
       </div>
-      <div className="mb-5 rounded-xl bg-[#f3f6f1] px-3.5 py-2.5 text-xs leading-5 text-[#648075]">{hint}</div>
+      <div className="mb-5 rounded-xl bg-[#F7EFE3] px-3.5 py-2.5 text-xs leading-5 text-[#765F4F]">{hint}</div>
       <div className="space-y-4">{children}</div>
     </section>
   );
@@ -45,15 +46,15 @@ function TextInput({
 }) {
   return (
     <label className="block">
-      <span className="text-xs font-semibold text-[#527064]">{label}</span>
+      <span className="text-xs font-semibold text-[#765F4F]">{label}</span>
       <input
         type="text"
         value={value}
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-1.5 w-full rounded-xl border border-[#e1e8df] bg-white px-3.5 py-2.5 text-sm font-medium text-[#25483c] outline-none transition focus:border-[#6b9f88] focus:ring-2 focus:ring-[#d8f36a]/40"
+        className="mt-1.5 w-full rounded-xl border border-[#E2CDB8] bg-[#FFFDF8] px-3.5 py-2.5 text-sm font-medium text-[#3B241A] outline-none transition focus:border-[#8CAE70] focus:ring-2 focus:ring-[#FFC857]/40"
       />
-      {hint && <span className="mt-1 block text-[11px] leading-4 text-[#9aaca2]">{hint}</span>}
+      {hint && <span className="mt-1 block text-[11px] leading-4 text-[#A08A75]">{hint}</span>}
     </label>
   );
 }
@@ -71,12 +72,12 @@ function TextArea({
 }) {
   return (
     <label className="block">
-      <span className="text-xs font-semibold text-[#527064]">{label}</span>
+      <span className="text-xs font-semibold text-[#765F4F]">{label}</span>
       <textarea
         rows={rows}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-1.5 w-full resize-y rounded-xl border border-[#e1e8df] bg-white px-3.5 py-2.5 text-sm font-medium text-[#25483c] outline-none transition focus:border-[#6b9f88] focus:ring-2 focus:ring-[#d8f36a]/40"
+        className="mt-1.5 w-full resize-y rounded-xl border border-[#E2CDB8] bg-[#FFFDF8] px-3.5 py-2.5 text-sm font-medium text-[#3B241A] outline-none transition focus:border-[#8CAE70] focus:ring-2 focus:ring-[#FFC857]/40"
       />
     </label>
   );
@@ -92,12 +93,138 @@ const emptyCourse = () => ({
   imageUrl: null,
 });
 
+const ACCEPTED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
+
+const isSiteImageUrl = (value: string | null | undefined) =>
+  Boolean(value && value.startsWith("/site-images/"));
+
+function ImageInput({
+  label,
+  value,
+  onChange,
+  placeholder = "https://… (publicly accessible image)",
+  hint,
+  onUploading,
+}: {
+  label: string;
+  value: string | null | undefined;
+  onChange: (value: string | null) => void;
+  placeholder?: string;
+  hint?: string;
+  onUploading?: (uploading: boolean) => void;
+}) {
+  const [uploading, setUploading] = useState(false);
+
+  const pickFile = async (file: File | undefined | null) => {
+    if (!file) return;
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+      toast.error("Use a PNG, JPG, WebP, or GIF image.");
+      return;
+    }
+    if (file.size > SITE_IMAGE_MAX_BYTES) {
+      toast.error("That image is too large — keep it under 480 KB. Compress it, or paste a public image URL instead.");
+      return;
+    }
+    setUploading(true);
+    onUploading?.(true);
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result ?? ""));
+        reader.onerror = () => reject(new Error("Could not read the file"));
+        reader.readAsDataURL(file);
+      });
+      const dataBase64 = base64.includes(",") ? base64.slice(base64.indexOf(",") + 1) : base64;
+      const input: UploadSiteImageInput = { fileName: file.name, mimeType: file.type as UploadSiteImageInput["mimeType"], dataBase64 };
+      const uploaded = await api.uploadSiteImage(input);
+      onChange(uploaded.url);
+      toast.success("Image uploaded. Save the draft to keep it.");
+    } catch (error) {
+      toast.error(error instanceof ApiUnavailableError ? "Offline — start the dev server to upload images." : "Upload failed. Check the file size and try again.");
+    } finally {
+      setUploading(false);
+      onUploading?.(false);
+    }
+  };
+
+  return (
+    <div>
+      <span className="text-xs font-semibold text-[#765F4F]">{label}</span>
+      <div className="mt-1.5 flex flex-wrap items-center gap-2">
+        <input
+          type="text"
+          value={value ?? ""}
+          placeholder={placeholder}
+          onChange={(event) => onChange(event.target.value || null)}
+          className="min-w-0 flex-1 rounded-xl border border-[#E2CDB8] bg-[#FFFDF8] px-3.5 py-2.5 text-sm font-medium text-[#3B241A] outline-none transition focus:border-[#8CAE70] focus:ring-2 focus:ring-[#FFC857]/40"
+        />
+        <label
+          className={cn(
+            "inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-[#E2CDB8] bg-[#FFFDF8] px-3 py-2.5 text-xs font-semibold text-[#765F4F] transition hover:border-[#A9BF87] hover:text-[#3B241A]",
+            uploading && "cursor-wait opacity-60"
+          )}
+        >
+          <Upload size={13} /> {uploading ? "Uploading…" : "Upload image"}
+          <input
+            type="file"
+            accept={ACCEPTED_IMAGE_TYPES.join(",")}
+            className="hidden"
+            disabled={uploading}
+            onChange={(event) => {
+              pickFile(event.target.files?.[0]);
+              event.target.value = "";
+            }}
+          />
+        </label>
+        {value && (
+          <button
+            type="button"
+            onClick={() => onChange(null)}
+            className="inline-flex items-center gap-1 rounded-xl px-2 py-2.5 text-xs font-semibold text-[#B84B3D] transition hover:bg-[#F7E0D9]"
+            title="Clear this image"
+          >
+            <X size={14} /> Remove
+          </button>
+        )}
+      </div>
+      {value && (
+        <div className="mt-2 flex items-center gap-2">
+          <div className="grid h-12 w-20 shrink-0 place-items-center overflow-hidden rounded-lg border border-[#E2CDB8] bg-[#F7EFE3]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={value} alt="" className="h-full w-full object-cover" onError={(event) => (event.currentTarget.style.opacity = "0.4")} />
+          </div>
+          <span className="text-[11px] leading-4 text-[#A08A75]">{isSiteImageUrl(value) ? "Uploaded to BrimLearn — stored with your site." : "External URL — this loads from the link you pasted."}</span>
+        </div>
+      )}
+      {hint && <span className="mt-1 block text-[11px] leading-4 text-[#A08A75]">{hint}</span>}
+    </div>
+  );
+}
+
+function WarningNote() {
+  return (
+    <div className="rounded-[20px] border border-[#FFE7A8] bg-[#FFFDF8] p-5">
+      <div className="flex items-center gap-2 text-sm font-bold text-[#9A6712]">
+        <TriangleAlert size={16} /> How the landing page is structured — read before you edit
+      </div>
+      <ul className="mt-3 space-y-2 text-xs leading-5 text-[#8A7361]">
+        <li className="flex gap-2"><span className="shrink-0 font-bold text-[#9A6712]">Fixed order</span> The live page always renders: <b>Nav</b> → <b>Hero</b> → <b>Why BrimLearn (feature cards)</b> → <b>Courses &amp; lessons (carousel)</b> → <b>About</b> → <b>Final call-to-action</b> → <b>Footer</b>. You edit the text inside each section — the sections and their positions cannot be reordered here.</li>
+        <li className="flex gap-2"><span className="shrink-0 font-bold text-[#9A6712]">Length matters</span> Keep the hero headline short (one line, ~90 characters max), the subheadline to two sentences, and course/feature descriptions to one or two sentences so cards stay aligned in the grid.</li>
+        <li className="flex gap-2"><span className="shrink-0 font-bold text-[#9A6712]">Images</span> Use the <b>Upload image</b> button for PNG/JPG/WebP/GIF up to 480 KB, or paste a public <code className="rounded bg-[#F3E4BE] px-1">https://…</code> URL. The hero image sits beside the text on wide screens and stacks above it on phones; the about image sits beside the text; course and feature images fill the card tops.</li>
+        <li className="flex gap-2"><span className="shrink-0 font-bold text-[#9A6712]">Carousel links</span> Every course must be a real, public lesson (YouTube, Khan Academy, BBC Bitesize…). Avoid links that require a login — learners open them in a new tab.</li>
+        <li className="flex gap-2"><span className="shrink-0 font-bold text-[#9A6712]">Publish</span> Edits go to a private draft. <b>Preview</b> first, then click <b>Publish to live site</b> for visitors to see them. <b>Revert</b> rolls back to the last published version.</li>
+      </ul>
+    </div>
+  );
+}
+
 export function SiteEditor() {
   const [doc, setDoc] = useState<SiteContentDoc | null>(null);
   const [draft, setDraft] = useState<LandingContent>(defaultLandingContent());
   const [preview, setPreview] = useState(false);
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const load = useCallback(async () => {
     const loaded = await api.getSiteContent();
@@ -167,49 +294,51 @@ export function SiteEditor() {
     <div className="mx-auto max-w-4xl">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#34775e]">
+          <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#4B6B3C]">
             <Globe size={13} /> Website editor
           </div>
           <h1 className="mt-2 font-display text-3xl font-semibold tracking-[-0.05em]">Edit the public landing page</h1>
-          <p className="mt-2 max-w-xl text-sm leading-6 text-[#648075]">
+          <p className="mt-2 max-w-xl text-sm leading-6 text-[#765F4F]">
             Each section below updates a different part of the landing page. Save a draft, preview exactly what visitors see, then publish.
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className={cn("rounded-full px-3 py-1.5 text-xs font-semibold", doc?.status === "published" ? "bg-[#e5f5ed] text-[#2f7a57]" : "bg-[#fff5d6] text-[#8a6d1f]")}>
+          <span className={cn("rounded-full px-3 py-1.5 text-xs font-semibold", doc?.status === "published" ? "bg-[#E9EED9] text-[#4B6B3C]" : "bg-[#FFF1CD] text-[#9A6712]")}>
             {doc?.status === "published" ? "Live website" : "Unpublished draft"}
           </span>
           {doc?.previous && (
-            <button onClick={revert} className="flex items-center gap-1.5 rounded-full border border-[#e1e8df] bg-white px-3 py-1.5 text-xs font-semibold text-[#527064] transition hover:border-[#99bda8] hover:text-[#25483c]">
+            <button onClick={revert} disabled={uploadingImage} className="flex items-center gap-1.5 rounded-full border border-[#E2CDB8] bg-[#FFFDF8] px-3 py-1.5 text-xs font-semibold text-[#765F4F] transition hover:border-[#A9BF87] hover:text-[#3B241A]">
               <RotateCcw size={13} /> Revert
             </button>
           )}
         </div>
       </div>
 
+      <div className="mt-6"><WarningNote /></div>
+
       {doc && (
-        <div className="mt-3 flex flex-wrap gap-4 text-xs text-[#8aa096]">
+        <div className="mt-3 flex flex-wrap gap-4 text-xs text-[#A08A75]">
           <span>Updated: {new Date(doc.updatedAt).toLocaleString()}</span>
           <span>by {doc.updatedByName ?? "system"}</span>
           {doc.publishedAt && <span>Published {new Date(doc.publishedAt).toLocaleString()}</span>}
         </div>
       )}
 
-      <div className="sticky top-2 z-30 mt-6 flex flex-wrap items-center gap-2 rounded-2xl border border-[#dfe5d9] bg-white/95 p-2 backdrop-blur">
-        <button onClick={() => setPreview(true)} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#123d30] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#286b51]">
+      <div className="sticky top-2 z-30 mt-6 flex flex-wrap items-center gap-2 rounded-2xl border border-[#E2CDB8] bg-white/95 p-2 backdrop-blur">
+        <button onClick={() => setPreview(true)} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#3B241A] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#A84A22]">
           <Eye size={15} /> Preview landing page
         </button>
         <button
           onClick={saveDraft}
-          disabled={saving}
-          className="flex items-center gap-2 rounded-xl border border-[#123d30] px-4 py-2.5 text-sm font-semibold text-[#123d30] transition hover:bg-[#edf1e9] disabled:opacity-60"
+          disabled={saving || uploadingImage}
+          className="flex items-center gap-2 rounded-xl border border-[#3B241A] px-4 py-2.5 text-sm font-semibold text-[#3B241A] transition hover:bg-[#F3E9DE] disabled:opacity-60"
         >
           <Save size={15} /> {saving ? "Saving…" : "Save draft"}
         </button>
         <button
           onClick={publish}
-          disabled={publishing}
-          className="flex items-center gap-2 rounded-xl bg-[#d8f36a] px-4 py-2.5 text-sm font-semibold text-[#133d2f] shadow-[0_4px_0_#0c3428] transition hover:bg-[#e1fa8c] disabled:opacity-60"
+          disabled={publishing || uploadingImage}
+          className="flex items-center gap-2 rounded-xl bg-[#FFC857] px-4 py-2.5 text-sm font-semibold text-[#1A1512] shadow-[0_4px_0_#2A1D16] transition hover:bg-[#FFC857] disabled:opacity-60"
         >
           <Send size={15} /> {publishing ? "Publishing…" : "Publish to live site"}
         </button>
@@ -227,12 +356,13 @@ export function SiteEditor() {
           <TextInput label="Eyebrow chip" value={draft.hero.eyebrow} onChange={(v) => patch((c) => ({ ...c, hero: { ...c.hero, eyebrow: v } }))} />
           <TextArea label="Headline" value={draft.hero.headline} onChange={(v) => patch((c) => ({ ...c, hero: { ...c.hero, headline: v } }))} rows={2} />
           <TextArea label="Subheadline" value={draft.hero.subheadline} onChange={(v) => patch((c) => ({ ...c, hero: { ...c.hero, subheadline: v } }))} rows={3} />
-          <TextInput
-            label="Hero image URL"
-            value={draft.hero.imageUrl ?? ""}
+          <ImageInput
+            label="Hero image"
+            value={draft.hero.imageUrl}
             placeholder="https://… (publicly accessible image)"
-            hint="Optional. When blank, a built-in graphic is shown instead."
-            onChange={(v) => patch((c) => ({ ...c, hero: { ...c.hero, imageUrl: v || null } }))}
+            hint="Optional. When blank, a built-in graphic is shown instead. The image sits on the right of the hero on wide screens and stacks above the text on smaller devices."
+            onChange={(v) => patch((c) => ({ ...c, hero: { ...c.hero, imageUrl: v } }))}
+            onUploading={setUploadingImage}
           />
           <div className="grid gap-4 sm:grid-cols-2">
             <TextInput label="Primary button label" value={draft.hero.primaryCtaLabel} onChange={(v) => patch((c) => ({ ...c, hero: { ...c.hero, primaryCtaLabel: v } }))} />
@@ -245,17 +375,23 @@ export function SiteEditor() {
         <SectionCard number="3" title="About section" hint="One paragraph describing what the project does. The right-side panel shows the brand tagline when no image is set.">
           <TextInput label="Heading" value={draft.about.heading} onChange={(v) => patch((c) => ({ ...c, about: { ...c.about, heading: v } }))} />
           <TextArea label="Body" value={draft.about.body} onChange={(v) => patch((c) => ({ ...c, about: { ...c.about, body: v } }))} rows={5} />
-          <TextInput label="About image URL" value={draft.about.imageUrl ?? ""} onChange={(v) => patch((c) => ({ ...c, about: { ...c.about, imageUrl: v || null } }))} />
+          <ImageInput
+            label="About image"
+            value={draft.about.imageUrl}
+            hint="Optional. When blank, the brand tagline panel is shown instead."
+            onChange={(v) => patch((c) => ({ ...c, about: { ...c.about, imageUrl: v } }))}
+            onUploading={setUploadingImage}
+          />
         </SectionCard>
 
         <SectionCard number="4" title="Feature cards" hint="The four cards under “Why BrimLearn”. Pick the three or four features you want to lead with.">
           {draft.features.map((feature, index) => (
-            <div key={index} className="rounded-2xl border border-[#edf1e9] bg-[#fbfcf9] p-4">
+            <div key={index} className="rounded-2xl border border-[#F3E9DE] bg-[#FFFDF8] p-4">
               <div className="mb-3 flex items-center justify-between">
-                <span className="text-xs font-bold text-[#34775e]">Card {index + 1}</span>
+                <span className="text-xs font-bold text-[#4B6B3C]">Card {index + 1}</span>
                 <button
                   onClick={() => patch((c) => ({ ...c, features: c.features.filter((_, i) => i !== index) }))}
-                  className="grid h-7 w-7 place-items-center rounded-lg text-[#c0564a] transition hover:bg-[#fbe1dc]"
+                  className="grid h-7 w-7 place-items-center rounded-lg text-[#B84B3D] transition hover:bg-[#F7E0D9]"
                   aria-label={`Remove card ${index + 1}`}
                 >
                   <Trash2 size={14} />
@@ -264,13 +400,22 @@ export function SiteEditor() {
               <div className="grid gap-4 lg:grid-cols-2">
                 <TextInput label="Heading" value={feature.heading} onChange={(v) => patch((c) => ({ ...c, features: c.features.map((f, i) => (i === index ? { ...f, heading: v } : f)) }))} />
                 <TextArea label="Body" rows={2} value={feature.body} onChange={(v) => patch((c) => ({ ...c, features: c.features.map((f, i) => (i === index ? { ...f, body: v } : f)) }))} />
+                <div className="lg:col-span-2">
+                  <ImageInput
+                    label="Card image (optional)"
+                    value={feature.imageUrl}
+                    hint="Optional. When set, the image fills the top of the card."
+                    onChange={(v) => patch((c) => ({ ...c, features: c.features.map((f, i) => (i === index ? { ...f, imageUrl: v } : f)) }))}
+                    onUploading={setUploadingImage}
+                  />
+                </div>
               </div>
             </div>
           ))}
           {draft.features.length < 8 && (
             <button
               onClick={() => patch((c) => ({ ...c, features: [...c.features, { heading: "New feature", body: "Describe the benefit in one or two sentences.", imageUrl: null }] }))}
-              className="flex items-center gap-2 rounded-xl border border-dashed border-[#99bda8] px-4 py-2.5 text-sm font-semibold text-[#34775e] transition hover:bg-[#f3f6f1]"
+              className="flex items-center gap-2 rounded-xl border border-dashed border-[#A9BF87] px-4 py-2.5 text-sm font-semibold text-[#4B6B3C] transition hover:bg-[#F7EFE3]"
             >
               <Plus size={15} /> Add feature card
             </button>
@@ -282,19 +427,20 @@ export function SiteEditor() {
           title="Courses & lessons carousel"
           hint={
             <span>
-              <span className="flex items-center gap-1.5 font-semibold text-[#40602a]"><Info size={13} /> Requirements for course links</span>
-              Each entry must point to a real, open lesson — a YouTube video/playlist, a course page, or an exercise on a trusted platform (Khan Academy, BBC Bitesize, etc.). The link opens in a new tab. Keep the title short, the description one or two sentences, and pick a category (e.g. Mathematics). Platforms are auto-labelled from the link, and links work best when they don't require a login.
+              <span className="flex items-center gap-1.5 font-bold text-[#9A6712]"><TriangleAlert size={14} /> Important — how course links must look</span>
+              <br />
+              The carousel only shows <b>real, open lessons</b> that learners can open from any device. Use a YouTube video/playlist, a course page, or an exercise on a trusted platform (Khan Academy, BBC Bitesize, etc.). The link opens in a new tab. Keep the title short, the description one or two sentences, and pick a category (e.g. Mathematics). Platforms are auto-labelled from the link, and links work best when they don't require a login.
             </span>
           }
         >
           {draft.courses.map((course, index) => (
-            <div key={course.id} className="rounded-2xl border border-[#edf1e9] bg-[#fbfcf9] p-4">
+            <div key={course.id} className="rounded-2xl border border-[#F3E9DE] bg-[#FFFDF8] p-4">
               <div className="mb-3 flex items-center justify-between gap-2">
-                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#34775e]"><ImageIcon size={13} /> Course {index + 1}</span>
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#4B6B3C]"><ImageIcon size={13} /> Course {index + 1}</span>
                 <div className="flex items-center gap-1.5">
-                  <button onClick={() => moveCourse(index, -1)} disabled={index === 0} className="rounded-lg border border-[#dfe5d9] px-2 py-1 text-xs font-semibold text-[#527064] disabled:opacity-40" aria-label="Move up">↑</button>
-                  <button onClick={() => moveCourse(index, 1)} disabled={index === draft.courses.length - 1} className="rounded-lg border border-[#dfe5d9] px-2 py-1 text-xs font-semibold text-[#527064] disabled:opacity-40" aria-label="Move down">↓</button>
-                  <button onClick={() => patch((c) => ({ ...c, courses: c.courses.filter((_, i) => i !== index) }))} className="grid h-7 w-7 place-items-center rounded-lg text-[#c0564a] transition hover:bg-[#fbe1dc]" aria-label="Remove course"><Trash2 size={14} /></button>
+                  <button onClick={() => moveCourse(index, -1)} disabled={index === 0} className="rounded-lg border border-[#E2CDB8] px-2 py-1 text-xs font-semibold text-[#765F4F] disabled:opacity-40" aria-label="Move up">↑</button>
+                  <button onClick={() => moveCourse(index, 1)} disabled={index === draft.courses.length - 1} className="rounded-lg border border-[#E2CDB8] px-2 py-1 text-xs font-semibold text-[#765F4F] disabled:opacity-40" aria-label="Move down">↓</button>
+                  <button onClick={() => patch((c) => ({ ...c, courses: c.courses.filter((_, i) => i !== index) }))} className="grid h-7 w-7 place-items-center rounded-lg text-[#B84B3D] transition hover:bg-[#F7E0D9]" aria-label="Remove course"><Trash2 size={14} /></button>
                 </div>
               </div>
               <div className="grid gap-4 lg:grid-cols-2">
@@ -311,7 +457,13 @@ export function SiteEditor() {
                   <TextArea label="Description" rows={2} value={course.description} onChange={(v) => patch((c) => ({ ...c, courses: c.courses.map((x, i) => (i === index ? { ...x, description: v } : x)) }))} />
                 </div>
                 <div className="lg:col-span-2">
-                  <TextInput label="Card image URL (optional)" value={course.imageUrl ?? ""} onChange={(v) => patch((c) => ({ ...c, courses: c.courses.map((x, i) => (i === index ? { ...x, imageUrl: v || null } : x)) }))} />
+                  <ImageInput
+                    label="Card image (optional)"
+                    value={course.imageUrl}
+                    hint="Optional. When blank, the platform label chip is shown instead."
+                    onChange={(v) => patch((c) => ({ ...c, courses: c.courses.map((x, i) => (i === index ? { ...x, imageUrl: v } : x)) }))}
+                    onUploading={setUploadingImage}
+                  />
                 </div>
               </div>
             </div>
@@ -319,7 +471,7 @@ export function SiteEditor() {
           {draft.courses.length < 40 && (
             <button
               onClick={() => patch((c) => ({ ...c, courses: [...c.courses, emptyCourse()] }))}
-              className="flex items-center gap-2 rounded-xl border border-dashed border-[#99bda8] px-4 py-2.5 text-sm font-semibold text-[#34775e] transition hover:bg-[#f3f6f1]"
+              className="flex items-center gap-2 rounded-xl border border-dashed border-[#A9BF87] px-4 py-2.5 text-sm font-semibold text-[#4B6B3C] transition hover:bg-[#F7EFE3]"
             >
               <Plus size={15} /> Add course link
             </button>
@@ -342,20 +494,20 @@ export function SiteEditor() {
       </div>
 
       <div className="mt-8 flex flex-wrap justify-end gap-2 pb-10">
-        <button onClick={() => setPreview(true)} className="flex items-center gap-2 rounded-xl border border-[#e1e8df] bg-white px-4 py-2.5 text-sm font-semibold text-[#527064] transition hover:border-[#99bda8]">
+        <button onClick={() => setPreview(true)} className="flex items-center gap-2 rounded-xl border border-[#E2CDB8] bg-[#FFFDF8] px-4 py-2.5 text-sm font-semibold text-[#765F4F] transition hover:border-[#A9BF87]">
           <Eye size={15} /> Preview
         </button>
-        <button onClick={saveDraft} disabled={saving} className="flex items-center gap-2 rounded-xl bg-[#123d30] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#286b51] disabled:opacity-60">
+        <button onClick={saveDraft} disabled={saving} className="flex items-center gap-2 rounded-xl bg-[#3B241A] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#A84A22] disabled:opacity-60">
           <Save size={15} /> {saving ? "Saving…" : "Save draft"}
         </button>
-        <button onClick={publish} disabled={publishing} className="flex items-center gap-2 rounded-xl bg-[#d8f36a] px-4 py-2.5 text-sm font-semibold text-[#133d2f] shadow-[0_4px_0_#0c3428] transition hover:bg-[#e1fa8c] disabled:opacity-60">
+        <button onClick={publish} disabled={publishing} className="flex items-center gap-2 rounded-xl bg-[#FFC857] px-4 py-2.5 text-sm font-semibold text-[#1A1512] shadow-[0_4px_0_#2A1D16] transition hover:bg-[#FFC857] disabled:opacity-60">
           <Send size={15} /> {publishing ? "Publishing…" : "Publish to live site"}
         </button>
       </div>
 
       {preview && (
-        <div className="fixed inset-0 z-[60] overflow-y-auto bg-[#0b241c]/70 backdrop-blur-sm">
-          <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-white/10 bg-[#123d30] px-5 py-3 text-white">
+        <div className="fixed inset-0 z-[60] overflow-y-auto bg-[#1A1512]/70 backdrop-blur-sm">
+          <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-white/10 bg-[#3B241A] px-5 py-3 text-white">
             <div className="flex items-center gap-2 text-sm font-semibold"><Eye size={15} /> Live preview — this is exactly what visitors see</div>
             <button onClick={() => setPreview(false)} className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold transition hover:bg-white/20">
               <X size={14} /> Close preview
