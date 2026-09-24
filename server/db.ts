@@ -1,11 +1,12 @@
 import { EMAIL_LOGIN_METHOD } from "@shared/const";
-import {
-  Timestamp,
-  type DocumentSnapshot,
-} from "firebase-admin/firestore";
+import { Timestamp, type DocumentSnapshot } from "firebase-admin/firestore";
 import { nanoid } from "nanoid";
 import type { User } from "@shared/user";
-import type { CreateResourceInput, Resource, ResourceWithContent } from "@shared/resource";
+import type {
+  CreateResourceInput,
+  Resource,
+  ResourceWithContent,
+} from "@shared/resource";
 import type { Scheme, SchemeWeek } from "@shared/scheme";
 import type {
   CreateLiveSessionInput,
@@ -21,10 +22,18 @@ import type {
   AssessmentQuestion,
   CreateAssignmentInput,
 } from "@shared/assignment";
-import type { LandingContent, SiteContentDoc, SiteContentStatus } from "@shared/site";
+import type {
+  LandingContent,
+  SiteContentDoc,
+  SiteContentStatus,
+} from "@shared/site";
 import { defaultLandingContent, SITE_CONTENT_DOC_ID } from "@shared/site";
 import type { ClassGroup } from "@shared/class";
-import type { ContactMessage, MessageStatus, ContactType } from "@shared/message";
+import type {
+  ContactMessage,
+  MessageStatus,
+  ContactType,
+} from "@shared/message";
 import type { School, SchoolStatus } from "@shared/school";
 import { ENV } from "./_core/env";
 import { getFirestoreDb } from "./_core/firebase";
@@ -82,13 +91,20 @@ function mapUser(doc: DocumentSnapshot): User | undefined {
   };
 }
 
-export async function getUserByOpenId(openId: string): Promise<User | undefined> {
+export async function getUserByOpenId(
+  openId: string,
+): Promise<User | undefined> {
   if (!ENV.firebaseConfigured) return undefined;
-  const doc = await getFirestoreDb().collection(USERS_COLLECTION).doc(openId).get();
+  const doc = await getFirestoreDb()
+    .collection(USERS_COLLECTION)
+    .doc(openId)
+    .get();
   return mapUser(doc);
 }
 
-export async function findUserByEmail(email: string): Promise<User | undefined> {
+export async function findUserByEmail(
+  email: string,
+): Promise<User | undefined> {
   if (!ENV.firebaseConfigured) return undefined;
   const snap = await getFirestoreDb()
     .collection(USERS_COLLECTION)
@@ -131,13 +147,16 @@ export async function upsertUser(user: UpsertUserInput): Promise<void> {
 
   if (user.name !== undefined) store.name = user.name ?? null;
   if (user.email !== undefined) store.email = user.email ?? null;
-  if (user.loginMethod !== undefined) store.loginMethod = user.loginMethod ?? null;
+  if (user.loginMethod !== undefined)
+    store.loginMethod = user.loginMethod ?? null;
   if (user.role !== undefined) store.role = user.role;
   else if (user.openId === ENV.ownerOpenId) store.role = "admin";
   if (user.status !== undefined) store.status = user.status;
   if (user.preferences !== undefined) store.preferences = user.preferences;
-  if (user.passwordHash !== undefined) store.passwordHash = user.passwordHash ?? null;
-  if (user.passwordSalt !== undefined) store.passwordSalt = user.passwordSalt ?? null;
+  if (user.passwordHash !== undefined)
+    store.passwordHash = user.passwordHash ?? null;
+  if (user.passwordSalt !== undefined)
+    store.passwordSalt = user.passwordSalt ?? null;
   if (user.createdAt !== undefined) store.createdAt = user.createdAt;
   store.lastSignedIn = user.lastSignedIn ?? new Date();
 
@@ -156,10 +175,12 @@ export type CreateEmailUserInput = {
   role: NonNullable<User["role"]>;
 };
 
-export async function createEmailUser(input: CreateEmailUserInput): Promise<User> {
+export async function createEmailUser(
+  input: CreateEmailUserInput,
+): Promise<User> {
   if (!ENV.firebaseConfigured) {
     throw new Error(
-      "Firestore is not configured. Set FIREBASE_* credentials in .env first."
+      "Firestore is not configured. Set FIREBASE_* credentials in .env first.",
     );
   }
 
@@ -212,7 +233,10 @@ type StoredResource = {
   dataBase64?: string | null;
 };
 
-function mapResource(includeContent: boolean, doc: DocumentSnapshot): ResourceWithContent | undefined {
+function mapResource(
+  includeContent: boolean,
+  doc: DocumentSnapshot,
+): ResourceWithContent | undefined {
   if (!doc.exists) return undefined;
   const data = doc.data() ?? {};
   return {
@@ -226,7 +250,8 @@ function mapResource(includeContent: boolean, doc: DocumentSnapshot): ResourceWi
     mimeType: typeof data.mimeType === "string" ? data.mimeType : null,
     size: typeof data.size === "number" ? data.size : 0,
     createdBy: String(data.createdBy ?? ""),
-    createdByName: typeof data.createdByName === "string" ? data.createdByName : null,
+    createdByName:
+      typeof data.createdByName === "string" ? data.createdByName : null,
     grade: typeof data.grade === "string" ? data.grade : null,
     subjectId: typeof data.subjectId === "string" ? data.subjectId : null,
     subject: typeof data.subject === "string" ? data.subject : null,
@@ -234,7 +259,9 @@ function mapResource(includeContent: boolean, doc: DocumentSnapshot): ResourceWi
     week: typeof data.week === "string" ? data.week : null,
     createdAt: toDate(data.createdAt).toISOString(),
     dataBase64:
-      includeContent && typeof data.dataBase64 === "string" ? data.dataBase64 : null,
+      includeContent && typeof data.dataBase64 === "string"
+        ? data.dataBase64
+        : null,
   };
 }
 
@@ -250,18 +277,26 @@ export async function listResources(): Promise<Resource[]> {
     .filter((resource): resource is ResourceWithContent => Boolean(resource));
 }
 
-export async function getResource(id: string): Promise<ResourceWithContent | undefined> {
+export async function getResource(
+  id: string,
+): Promise<ResourceWithContent | undefined> {
   if (!ENV.firebaseConfigured) return undefined;
-  const doc = await getFirestoreDb().collection(RESOURCES_COLLECTION).doc(id).get();
+  const doc = await getFirestoreDb()
+    .collection(RESOURCES_COLLECTION)
+    .doc(id)
+    .get();
   return mapResource(true, doc);
 }
 
 export async function createResource(
-  input: CreateResourceInput & { createdBy: string; createdByName: string | null }
+  input: CreateResourceInput & {
+    createdBy: string;
+    createdByName: string | null;
+  },
 ): Promise<Resource> {
   if (!ENV.firebaseConfigured) {
     throw new Error(
-      "Firestore is not configured. Set FIREBASE_* credentials in .env first."
+      "Firestore is not configured. Set FIREBASE_* credentials in .env first.",
     );
   }
 
@@ -271,9 +306,9 @@ export async function createResource(
     category: input.category,
     title: input.title.trim(),
     description: input.description?.trim() ?? "",
-    youtubeId: input.kind === "video" ? input.youtubeId ?? null : null,
-    fileName: input.kind === "file" ? input.fileName ?? null : null,
-    mimeType: input.kind === "file" ? input.mimeType ?? null : null,
+    youtubeId: input.kind === "video" ? (input.youtubeId ?? null) : null,
+    fileName: input.kind === "file" ? (input.fileName ?? null) : null,
+    mimeType: input.kind === "file" ? (input.mimeType ?? null) : null,
     size:
       input.kind === "file" && input.dataBase64
         ? Math.floor((input.dataBase64.length * 3) / 4)
@@ -286,7 +321,7 @@ export async function createResource(
     subject: input.subject ?? null,
     term: input.term ?? null,
     week: input.week ?? null,
-    dataBase64: input.kind === "file" ? input.dataBase64 ?? null : null,
+    dataBase64: input.kind === "file" ? (input.dataBase64 ?? null) : null,
   };
 
   const doc = getFirestoreDb().collection(RESOURCES_COLLECTION).doc(nanoid(18));
@@ -364,18 +399,25 @@ export async function listLiveSessions(): Promise<LiveSession[]> {
     .filter((session): session is LiveSession => Boolean(session));
 }
 
-export async function getLiveSession(id: string): Promise<LiveSession | undefined> {
+export async function getLiveSession(
+  id: string,
+): Promise<LiveSession | undefined> {
   if (!ENV.firebaseConfigured) return undefined;
-  const doc = await getFirestoreDb().collection(LIVE_SESSIONS_COLLECTION).doc(id).get();
+  const doc = await getFirestoreDb()
+    .collection(LIVE_SESSIONS_COLLECTION)
+    .doc(id)
+    .get();
   return mapLiveSession(doc);
 }
 
 export async function createLiveSession(
   input: CreateLiveSessionInput & { hostBy: string; hostName: string | null },
-  id?: string
+  id?: string,
 ): Promise<LiveSession> {
   if (!ENV.firebaseConfigured) {
-    throw new Error("Firestore is not configured. Set FIREBASE_* credentials in .env first.");
+    throw new Error(
+      "Firestore is not configured. Set FIREBASE_* credentials in .env first.",
+    );
   }
 
   const now = new Date();
@@ -399,7 +441,9 @@ export async function createLiveSession(
     updatedAt: now,
   };
 
-  const doc = getFirestoreDb().collection(LIVE_SESSIONS_COLLECTION).doc(id ?? nanoid(18));
+  const doc = getFirestoreDb()
+    .collection(LIVE_SESSIONS_COLLECTION)
+    .doc(id ?? nanoid(18));
   await doc.set(store);
   const created = await doc.get();
   const session = mapLiveSession(created);
@@ -409,21 +453,23 @@ export async function createLiveSession(
 
 export async function updateLiveSession(
   id: string,
-  input: UpdateLiveSessionInput & { hostBy: string; hostName: string | null }
+  input: UpdateLiveSessionInput & { hostBy: string; hostName: string | null },
 ): Promise<LiveSession | undefined> {
   if (!ENV.firebaseConfigured) return undefined;
   const doc = getFirestoreDb().collection(LIVE_SESSIONS_COLLECTION).doc(id);
   const patch: StoredLiveSession = { updatedAt: new Date() };
 
   if (input.title !== undefined) patch.title = input.title.trim();
-  if (input.description !== undefined) patch.description = input.description.trim();
+  if (input.description !== undefined)
+    patch.description = input.description.trim();
   if (input.grade !== undefined) patch.grade = input.grade ?? null;
   if (input.subjectId !== undefined) patch.subjectId = input.subjectId ?? null;
   if (input.subject !== undefined) patch.subject = input.subject ?? null;
   if (input.term !== undefined) patch.term = input.term ?? null;
   if (input.week !== undefined) patch.week = input.week ?? null;
   if (input.platform !== undefined) patch.platform = input.platform;
-  if (input.meetingUrl !== undefined) patch.meetingUrl = input.meetingUrl ?? null;
+  if (input.meetingUrl !== undefined)
+    patch.meetingUrl = input.meetingUrl ?? null;
   if (input.meetingId !== undefined) patch.meetingId = input.meetingId ?? null;
   if (input.passcode !== undefined) patch.passcode = input.passcode ?? null;
   if (input.startsAt !== undefined) patch.startsAt = input.startsAt;
@@ -486,13 +532,18 @@ export async function listSchemes(): Promise<Scheme[]> {
 
 export async function getScheme(id: string): Promise<Scheme | undefined> {
   if (!ENV.firebaseConfigured) return undefined;
-  const doc = await getFirestoreDb().collection(SCHEMES_COLLECTION).doc(id).get();
+  const doc = await getFirestoreDb()
+    .collection(SCHEMES_COLLECTION)
+    .doc(id)
+    .get();
   return mapScheme(doc);
 }
 
 export async function createSchemes(schemes: Scheme[]): Promise<Scheme[]> {
   if (!ENV.firebaseConfigured) {
-    throw new Error("Firestore is not configured. Set FIREBASE_* credentials in .env first.");
+    throw new Error(
+      "Firestore is not configured. Set FIREBASE_* credentials in .env first.",
+    );
   }
 
   const saved: Scheme[] = [];
@@ -523,7 +574,7 @@ export async function createSchemes(schemes: Scheme[]): Promise<Scheme[]> {
 
 export async function updateSchemeCurrentWeek(
   id: string,
-  currentWeek: string
+  currentWeek: string,
 ): Promise<Scheme | undefined> {
   if (!ENV.firebaseConfigured) return undefined;
   const doc = getFirestoreDb().collection(SCHEMES_COLLECTION).doc(id);
@@ -554,6 +605,9 @@ type StoredAssignment = {
   createdAt?: Date;
   status?: AssignmentStatus;
   questions?: AssessmentQuestion[];
+  fileUrl?: string | null;
+  fileName?: string | null;
+  fileSize?: number | null;
 };
 
 function mapAssignment(doc: DocumentSnapshot): Assignment | undefined {
@@ -572,10 +626,22 @@ function mapAssignment(doc: DocumentSnapshot): Assignment | undefined {
     difficulty: (data.difficulty ?? "Medium") as AssignmentDifficulty,
     due: typeof data.due === "string" && data.due.length > 0 ? data.due : null,
     createdBy: String(data.createdBy ?? ""),
-    createdByName: typeof data.createdByName === "string" ? data.createdByName : null,
+    createdByName:
+      typeof data.createdByName === "string" ? data.createdByName : null,
     createdAt: toDate(data.createdAt).toISOString(),
     status: (data.status ?? "Scheduled") as AssignmentStatus,
-    questions: Array.isArray(data.questions) ? (data.questions as AssessmentQuestion[]) : [],
+    questions: Array.isArray(data.questions)
+      ? (data.questions as AssessmentQuestion[])
+      : [],
+    fileUrl:
+      typeof data.fileUrl === "string" && data.fileUrl.length > 0
+        ? data.fileUrl
+        : null,
+    fileName:
+      typeof data.fileName === "string" && data.fileName.length > 0
+        ? data.fileName
+        : null,
+    fileSize: typeof data.fileSize === "number" ? data.fileSize : null,
   };
 }
 
@@ -592,10 +658,15 @@ export async function listAssignments(): Promise<Assignment[]> {
 }
 
 export async function createAssignment(
-  input: CreateAssignmentInput & { createdBy: string; createdByName: string | null }
+  input: CreateAssignmentInput & {
+    createdBy: string;
+    createdByName: string | null;
+  },
 ): Promise<Assignment> {
   if (!ENV.firebaseConfigured) {
-    throw new Error("Firestore is not configured. Set FIREBASE_* credentials in .env first.");
+    throw new Error(
+      "Firestore is not configured. Set FIREBASE_* credentials in .env first.",
+    );
   }
 
   const now = new Date();
@@ -613,13 +684,19 @@ export async function createAssignment(
     createdAt: now,
     status: "Scheduled",
     questions: input.questions ?? [],
+    fileUrl: input.fileUrl ?? null,
+    fileName: input.fileName ?? null,
+    fileSize: input.fileSize ?? null,
   };
 
-  const doc = getFirestoreDb().collection(ASSIGNMENTS_COLLECTION).doc(nanoid(18));
+  const doc = getFirestoreDb()
+    .collection(ASSIGNMENTS_COLLECTION)
+    .doc(nanoid(18));
   await doc.set(store);
   const created = await doc.get();
   const assignment = mapAssignment(created);
-  if (!assignment) throw new Error("Failed to read back the created assignment");
+  if (!assignment)
+    throw new Error("Failed to read back the created assignment");
   return assignment;
 }
 
@@ -651,12 +728,16 @@ function mapSiteContent(doc: DocumentSnapshot): SiteContentDoc | undefined {
   return {
     id: doc.id,
     status: (data.status ?? "draft") as SiteContentStatus,
-    content: (data.content as LandingContent | undefined) ?? defaultLandingContent(),
+    content:
+      (data.content as LandingContent | undefined) ?? defaultLandingContent(),
     previous: (data.previous as LandingContent | null | undefined) ?? null,
     version: typeof data.version === "number" ? data.version : 1,
     updatedAt: toDate(data.updatedAt).toISOString(),
-    publishedAt: data.publishedAt ? toDate(data.publishedAt).toISOString() : null,
-    updatedByName: typeof data.updatedByName === "string" ? data.updatedByName : null,
+    publishedAt: data.publishedAt
+      ? toDate(data.publishedAt).toISOString()
+      : null,
+    updatedByName:
+      typeof data.updatedByName === "string" ? data.updatedByName : null,
   };
 }
 
@@ -680,9 +761,17 @@ export async function getSiteContent(): Promise<SiteContentDoc> {
       updatedByName: null,
     };
     await doc.set(store);
-    return { ...store, id: SITE_CONTENT_DOC_ID, publishedAt: now.toISOString(), updatedAt: now.toISOString() } as SiteContentDoc;
+    return {
+      ...store,
+      id: SITE_CONTENT_DOC_ID,
+      publishedAt: now.toISOString(),
+      updatedAt: now.toISOString(),
+    } as SiteContentDoc;
   }
-  return mapSiteContent(snap) ?? { ...defaultsFrom(doc.id), id: doc.id } as SiteContentDoc;
+  return (
+    mapSiteContent(snap) ??
+    ({ ...defaultsFrom(doc.id), id: doc.id } as SiteContentDoc)
+  );
 }
 
 function defaultsFrom(id: string): Omit<SiteContentDoc, "id"> {
@@ -700,7 +789,7 @@ function defaultsFrom(id: string): Omit<SiteContentDoc, "id"> {
 
 export async function updateSiteContent(
   content: LandingContent,
-  byName: string | null
+  byName: string | null,
 ): Promise<SiteContentDoc> {
   if (!ENV.firebaseConfigured) {
     return {
@@ -711,7 +800,9 @@ export async function updateSiteContent(
       updatedByName: byName,
     };
   }
-  const doc = getFirestoreDb().collection(SITE_CONTENT_COLLECTION).doc(SITE_CONTENT_DOC_ID);
+  const doc = getFirestoreDb()
+    .collection(SITE_CONTENT_COLLECTION)
+    .doc(SITE_CONTENT_DOC_ID);
   await doc.set(
     {
       status: "draft",
@@ -719,19 +810,32 @@ export async function updateSiteContent(
       updatedAt: new Date(),
       updatedByName: byName,
     } satisfies StoredSiteContent,
-    { merge: true }
+    { merge: true },
   );
   const updated = await doc.get();
-  return mapSiteContent(updated) ?? ({ ...defaultsFrom(doc.id), id: doc.id, content } as SiteContentDoc);
+  return (
+    mapSiteContent(updated) ??
+    ({ ...defaultsFrom(doc.id), id: doc.id, content } as SiteContentDoc)
+  );
 }
 
-export async function publishSiteContent(byName: string | null): Promise<SiteContentDoc> {
+export async function publishSiteContent(
+  byName: string | null,
+): Promise<SiteContentDoc> {
   if (!ENV.firebaseConfigured) {
-    return { ...defaultsFrom(SITE_CONTENT_DOC_ID), id: SITE_CONTENT_DOC_ID, updatedByName: byName };
+    return {
+      ...defaultsFrom(SITE_CONTENT_DOC_ID),
+      id: SITE_CONTENT_DOC_ID,
+      updatedByName: byName,
+    };
   }
-  const doc = getFirestoreDb().collection(SITE_CONTENT_COLLECTION).doc(SITE_CONTENT_DOC_ID);
+  const doc = getFirestoreDb()
+    .collection(SITE_CONTENT_COLLECTION)
+    .doc(SITE_CONTENT_DOC_ID);
   const snap = await doc.get();
-  const current = mapSiteContent(snap) ?? ({ ...defaultsFrom(doc.id), id: doc.id } as SiteContentDoc);
+  const current =
+    mapSiteContent(snap) ??
+    ({ ...defaultsFrom(doc.id), id: doc.id } as SiteContentDoc);
   await doc.update({
     status: "published",
     previous: current.content,
@@ -745,13 +849,23 @@ export async function publishSiteContent(byName: string | null): Promise<SiteCon
 }
 
 /** Rolls the working draft back to the last published version. */
-export async function revertSiteContent(byName: string | null): Promise<SiteContentDoc> {
+export async function revertSiteContent(
+  byName: string | null,
+): Promise<SiteContentDoc> {
   if (!ENV.firebaseConfigured) {
-    return { ...defaultsFrom(SITE_CONTENT_DOC_ID), id: SITE_CONTENT_DOC_ID, updatedByName: byName };
+    return {
+      ...defaultsFrom(SITE_CONTENT_DOC_ID),
+      id: SITE_CONTENT_DOC_ID,
+      updatedByName: byName,
+    };
   }
-  const doc = getFirestoreDb().collection(SITE_CONTENT_COLLECTION).doc(SITE_CONTENT_DOC_ID);
+  const doc = getFirestoreDb()
+    .collection(SITE_CONTENT_COLLECTION)
+    .doc(SITE_CONTENT_DOC_ID);
   const snap = await doc.get();
-  const current = mapSiteContent(snap) ?? ({ ...defaultsFrom(doc.id), id: doc.id } as SiteContentDoc);
+  const current =
+    mapSiteContent(snap) ??
+    ({ ...defaultsFrom(doc.id), id: doc.id } as SiteContentDoc);
   if (!current.previous) return current;
   await doc.update({
     status: "draft",
@@ -796,31 +910,43 @@ function mapPasswordReset(doc: DocumentSnapshot): PasswordResetRow | undefined {
 export async function createPasswordReset(
   userId: string,
   email: string,
-  ttlMs: number
+  ttlMs: number,
 ): Promise<string> {
-  const token = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+  const token =
+    Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
   if (!ENV.firebaseConfigured) return "";
   const now = new Date();
-  await getFirestoreDb().collection(PASSWORD_RESETS_COLLECTION).doc(token).set({
-    email,
-    userId,
-    expiresAt: new Date(now.getTime() + ttlMs),
-    createdAt: now,
-    used: false,
-  });
+  await getFirestoreDb()
+    .collection(PASSWORD_RESETS_COLLECTION)
+    .doc(token)
+    .set({
+      email,
+      userId,
+      expiresAt: new Date(now.getTime() + ttlMs),
+      createdAt: now,
+      used: false,
+    });
   return token;
 }
 
-export async function findPasswordReset(token: string): Promise<PasswordResetRow | undefined> {
+export async function findPasswordReset(
+  token: string,
+): Promise<PasswordResetRow | undefined> {
   if (!ENV.firebaseConfigured) return undefined;
-  const doc = await getFirestoreDb().collection(PASSWORD_RESETS_COLLECTION).doc(token).get();
+  const doc = await getFirestoreDb()
+    .collection(PASSWORD_RESETS_COLLECTION)
+    .doc(token)
+    .get();
   return mapPasswordReset(doc);
 }
 
 /** Marks a reset row used and removes it once consumed. */
 export async function consumePasswordReset(token: string): Promise<void> {
   if (!ENV.firebaseConfigured) return;
-  await getFirestoreDb().collection(PASSWORD_RESETS_COLLECTION).doc(token).delete();
+  await getFirestoreDb()
+    .collection(PASSWORD_RESETS_COLLECTION)
+    .doc(token)
+    .delete();
 }
 
 /* ---------------------------------------------------------------------------
@@ -870,28 +996,34 @@ export async function listUsers(): Promise<AdminUserSummary[]> {
 
 export async function setUserRole(
   openId: string,
-  role: NonNullable<User["role"]>
+  role: NonNullable<User["role"]>,
 ): Promise<AdminUserSummary | undefined> {
   if (!ENV.firebaseConfigured) return undefined;
   await getFirestoreDb()
     .collection(USERS_COLLECTION)
     .doc(openId)
     .set({ role, updatedAt: new Date() }, { merge: true });
-  const doc = await getFirestoreDb().collection(USERS_COLLECTION).doc(openId).get();
+  const doc = await getFirestoreDb()
+    .collection(USERS_COLLECTION)
+    .doc(openId)
+    .get();
   return mapAdminUser(doc);
 }
 
 /** Suspends or reactivates an account. Suspended users lose sign-in + live sessions. */
 export async function setUserStatus(
   openId: string,
-  status: User["status"]
+  status: User["status"],
 ): Promise<AdminUserSummary | undefined> {
   if (!ENV.firebaseConfigured) return undefined;
   await getFirestoreDb()
     .collection(USERS_COLLECTION)
     .doc(openId)
     .set({ status, updatedAt: new Date() }, { merge: true });
-  const doc = await getFirestoreDb().collection(USERS_COLLECTION).doc(openId).get();
+  const doc = await getFirestoreDb()
+    .collection(USERS_COLLECTION)
+    .doc(openId)
+    .get();
   return mapAdminUser(doc);
 }
 
@@ -902,13 +1034,25 @@ export async function deleteUser(openId: string): Promise<void> {
   await firestore.collection(USERS_COLLECTION).doc(openId).delete();
 
   const batch = firestore.batch();
-  const tutorClasses = await firestore.collection(CLASSES_COLLECTION).where("tutorId", "==", openId).get();
+  const tutorClasses = await firestore
+    .collection(CLASSES_COLLECTION)
+    .where("tutorId", "==", openId)
+    .get();
   tutorClasses.forEach((doc) => {
-    batch.update(doc.ref, { tutorId: null, tutorName: null, updatedAt: new Date() });
+    batch.update(doc.ref, {
+      tutorId: null,
+      tutorName: null,
+      updatedAt: new Date(),
+    });
   });
-  const studentClasses = await firestore.collection(CLASSES_COLLECTION).where("studentIds", "array-contains", openId).get();
+  const studentClasses = await firestore
+    .collection(CLASSES_COLLECTION)
+    .where("studentIds", "array-contains", openId)
+    .get();
   studentClasses.forEach((doc) => {
-    const studentIds = (doc.data().studentIds ?? []).filter((id: string) => id !== openId);
+    const studentIds = (doc.data().studentIds ?? []).filter(
+      (id: string) => id !== openId,
+    );
     batch.update(doc.ref, { studentIds, updatedAt: new Date() });
   });
   await batch.commit();
@@ -925,17 +1069,29 @@ export type AdminOverviewData = {
 
 export async function getAdminOverview(): Promise<AdminOverviewData> {
   if (!ENV.firebaseConfigured) {
-    return { users: 0, resources: 0, liveSessions: 0, schemes: 0, assignments: 0, recentUsers: [] };
+    return {
+      users: 0,
+      resources: 0,
+      liveSessions: 0,
+      schemes: 0,
+      assignments: 0,
+      recentUsers: [],
+    };
   }
   const db = getFirestoreDb();
-  const [users, resources, liveSessions, schemes, assignments, recentUsers] = await Promise.all([
-    db.collection(USERS_COLLECTION).count().get(),
-    db.collection(RESOURCES_COLLECTION).count().get(),
-    db.collection(LIVE_SESSIONS_COLLECTION).count().get(),
-    db.collection(SCHEMES_COLLECTION).count().get(),
-    db.collection(ASSIGNMENTS_COLLECTION).count().get(),
-    db.collection(USERS_COLLECTION).orderBy("createdAt", "desc").limit(5).get(),
-  ]);
+  const [users, resources, liveSessions, schemes, assignments, recentUsers] =
+    await Promise.all([
+      db.collection(USERS_COLLECTION).count().get(),
+      db.collection(RESOURCES_COLLECTION).count().get(),
+      db.collection(LIVE_SESSIONS_COLLECTION).count().get(),
+      db.collection(SCHEMES_COLLECTION).count().get(),
+      db.collection(ASSIGNMENTS_COLLECTION).count().get(),
+      db
+        .collection(USERS_COLLECTION)
+        .orderBy("createdAt", "desc")
+        .limit(5)
+        .get(),
+    ]);
   return {
     users: users.data().count,
     resources: resources.data().count,
@@ -960,23 +1116,39 @@ export type StoredSiteImage = {
   createdAt?: Date;
 };
 
-export async function saveSiteImage(id: string, mimeType: string, dataBase64: string): Promise<void> {
+export async function saveSiteImage(
+  id: string,
+  mimeType: string,
+  dataBase64: string,
+): Promise<void> {
   if (!ENV.firebaseConfigured) {
     throw new Error("Firestore is not configured — cannot store the image.");
   }
   await getFirestoreDb()
     .collection(SITE_IMAGES_COLLECTION)
     .doc(id)
-    .set({ mimeType, dataBase64, createdAt: new Date() } satisfies StoredSiteImage);
+    .set({
+      mimeType,
+      dataBase64,
+      createdAt: new Date(),
+    } satisfies StoredSiteImage);
 }
 
-export async function getSiteImage(id: string): Promise<StoredSiteImage | null> {
+export async function getSiteImage(
+  id: string,
+): Promise<StoredSiteImage | null> {
   if (!ENV.firebaseConfigured) return null;
-  const snap = await getFirestoreDb().collection(SITE_IMAGES_COLLECTION).doc(id).get();
+  const snap = await getFirestoreDb()
+    .collection(SITE_IMAGES_COLLECTION)
+    .doc(id)
+    .get();
   if (!snap.exists) return null;
   const data = snap.data() ?? {};
   if (typeof data.dataBase64 !== "string") return null;
-  return { mimeType: typeof data.mimeType === "string" ? data.mimeType : "image/png", dataBase64: data.dataBase64 };
+  return {
+    mimeType: typeof data.mimeType === "string" ? data.mimeType : "image/png",
+    dataBase64: data.dataBase64,
+  };
 }
 
 /* ---------------------------------------------------------------------------
@@ -1023,9 +1195,13 @@ export type CreateClassInput = {
   studentIds?: string[];
 };
 
-export async function createClass(input: CreateClassInput): Promise<ClassGroup> {
+export async function createClass(
+  input: CreateClassInput,
+): Promise<ClassGroup> {
   if (!ENV.firebaseConfigured) {
-    throw new Error("Firestore is not configured. Set FIREBASE_* credentials in .env first.");
+    throw new Error(
+      "Firestore is not configured. Set FIREBASE_* credentials in .env first.",
+    );
   }
   const now = new Date();
   const doc = getFirestoreDb().collection(CLASSES_COLLECTION).doc(nanoid(18));
@@ -1047,7 +1223,10 @@ export async function createClass(input: CreateClassInput): Promise<ClassGroup> 
 
 export type UpdateClassInput = Partial<CreateClassInput>;
 
-export async function updateClass(id: string, input: UpdateClassInput): Promise<ClassGroup | undefined> {
+export async function updateClass(
+  id: string,
+  input: UpdateClassInput,
+): Promise<ClassGroup | undefined> {
   if (!ENV.firebaseConfigured) return undefined;
   const patch: Record<string, unknown> = { updatedAt: new Date() };
   if (input.name !== undefined) patch.name = input.name.trim();
@@ -1096,8 +1275,10 @@ function mapContactMessage(doc: DocumentSnapshot): ContactMessage | undefined {
     phone: typeof data.phone === "string" ? data.phone : null,
     message: String(data.message ?? ""),
     schoolName: typeof data.schoolName === "string" ? data.schoolName : null,
-    roleAtSchool: typeof data.roleAtSchool === "string" ? data.roleAtSchool : null,
-    learnerCount: typeof data.learnerCount === "string" ? data.learnerCount : null,
+    roleAtSchool:
+      typeof data.roleAtSchool === "string" ? data.roleAtSchool : null,
+    learnerCount:
+      typeof data.learnerCount === "string" ? data.learnerCount : null,
     status: (data.status ?? "new") as MessageStatus,
     createdAt: toDate(data.createdAt).toISOString(),
     readAt: data.readAt ? toDate(data.readAt).toISOString() : null,
@@ -1115,9 +1296,13 @@ export type CreateContactMessageInput = {
   learnerCount?: string | null;
 };
 
-export async function createContactMessage(input: CreateContactMessageInput): Promise<ContactMessage> {
+export async function createContactMessage(
+  input: CreateContactMessageInput,
+): Promise<ContactMessage> {
   if (!ENV.firebaseConfigured) {
-    const doc = { id: `msg_${input.email.replace(/[^a-z0-9]/gi, "").slice(0, 8)}` } as ContactMessage;
+    const doc = {
+      id: `msg_${input.email.replace(/[^a-z0-9]/gi, "").slice(0, 8)}`,
+    } as ContactMessage;
     return doc;
   }
   const now = new Date();
@@ -1155,7 +1340,7 @@ export async function listMessages(): Promise<ContactMessage[]> {
 
 export async function updateMessageStatus(
   id: string,
-  status: MessageStatus
+  status: MessageStatus,
 ): Promise<ContactMessage | undefined> {
   if (!ENV.firebaseConfigured) return undefined;
   const doc = getFirestoreDb().collection(MESSAGES_COLLECTION).doc(id);
@@ -1191,7 +1376,8 @@ function mapSchool(doc: DocumentSnapshot): School | undefined {
     contactName: String(data.contactName ?? ""),
     contactEmail: String(data.contactEmail ?? ""),
     phone: typeof data.phone === "string" ? data.phone : null,
-    learnerCount: typeof data.learnerCount === "string" ? data.learnerCount : null,
+    learnerCount:
+      typeof data.learnerCount === "string" ? data.learnerCount : null,
     messageId: typeof data.messageId === "string" ? data.messageId : null,
     status: (data.status ?? "pending") as SchoolStatus,
     apiKey: typeof data.apiKey === "string" ? data.apiKey : null,
@@ -1211,7 +1397,7 @@ export type CreateSchoolInput = {
 
 /** Fetches an existing pending school for a message (dedupe), else creates one. */
 export async function upsertSchoolRequest(
-  input: CreateSchoolInput
+  input: CreateSchoolInput,
 ): Promise<School> {
   if (!ENV.firebaseConfigured) {
     return {
@@ -1273,7 +1459,7 @@ export async function listSchools(): Promise<School[]> {
 export async function decideSchool(
   id: string,
   status: SchoolStatus,
-  apiKey: string | null
+  apiKey: string | null,
 ): Promise<School | undefined> {
   if (!ENV.firebaseConfigured) return undefined;
   const doc = getFirestoreDb().collection(SCHOOLS_COLLECTION).doc(id);

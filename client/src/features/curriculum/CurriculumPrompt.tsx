@@ -23,7 +23,10 @@ function readFileAsBase64(blob: Blob): Promise<string> {
 
 export function CurriculumPrompt({ onClose }: { onClose: () => void }) {
   const { user } = useAuth();
-  const canManage = canManageCurriculum(user?.role);
+  // Signed-in admins and tutors can add subjects. In offline demo mode there
+  // is no session to gate on, so match the demo's "render everything" spirit
+  // and let the library modal stay useful to anyone previewing it.
+  const canManage = api.isOnline() ? canManageCurriculum(user?.role) : true;
   const [tab, setTab] = useState<"library" | "add">("library");
   const [subject, setSubject] = useState("maths");
   const [grade, setGrade] = useState("JSS1");

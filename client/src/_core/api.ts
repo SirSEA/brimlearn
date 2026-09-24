@@ -104,6 +104,8 @@ export type ObjectivesAssessment = {
   suggestions: string[];
   /** True when the AI service was unavailable and a local scheme fallback was used. */
   fallback?: boolean;
+  /** Short server reason for the fallback (payment/quota, timeout, auth…). */
+  fallbackReason?: string;
 };
 
 export type PasswordResetRequestResult = {
@@ -740,6 +742,10 @@ async function generateFromObjectives(
       ? assessment.suggestions.map(String)
       : [],
     fallback: assessment.fallback === true,
+    fallbackReason:
+      typeof assessment.fallbackReason === "string"
+        ? assessment.fallbackReason
+        : undefined,
   };
 }
 

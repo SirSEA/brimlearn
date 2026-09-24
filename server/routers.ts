@@ -330,7 +330,38 @@ const landingContentSchema = z.object({
   }),
 });
 
-/** Deterministic quiz built from the scheme when AI generation is unavailable. */
+/** Short, client-safe description of why AI generation failed (logged as
+ *  `fallbackReason` so the UI can show a truthful, actionable notice). */
+function fallbackReasonOf(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+  return message.replace(/\s+/g, " ").trim().slice(0, 300);
+}
+
+/** Pulls one readable "fact" out of a week's content cell so locally-built
+ *  questions can quote the real uploaded objectives instead of generic filler. */
+function factPhrase(content: string): string | null {
+  const cleaned = content
+    .split("\n")
+    .map((line) => line.replace(/^[\s\d.()•·▪◦–—‑\t-]+/, "").trim())
+    .filter(Boolean)
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!cleaned) return null;
+  if (cleaned.length <= 110) return cleaned;
+  const cut = cleaned.slice(0, 107).replace(/\s+\S*$/, "");
+  return `${cut}…`;
+}
+
+const FALLBACK_DISTRACTORS = [
+  "It is usually swapped for a different topic.",
+  "It is only reviewed in the final week of term.",
+  "It appears in other subjects, not this scheme.",
+] as const;
+
+/** Deterministic quiz built from the scheme when AI generation is unavailable.
+ *  Questions are grounded in the uploaded weeks/topics (and, where available,
+ *  the actual objective text) so the tutor still gets a reviewable draft. */
 function fallbackFromScheme(
   pattern: Scheme,
   weeks: SchemeWeek[],
@@ -339,24 +370,35 @@ function fallbackFromScheme(
 ) {
   const bank: AssessmentQuestion[] = [];
   const used = weeks.slice(0, Math.max(1, Math.ceil(count / 3)));
+  const allFacts = pattern.weeks
+    .map((week) => factPhrase(week.content))
+    .filter((phrase): phrase is string => Boolean(phrase));
+
   for (const week of used) {
+    const fact = factPhrase(week.content) ?? week.topic;
+    const distractors = allFacts
+      .filter((phrase) => phrase !== fact)
+      .slice(0, 3);
+    let distractorCursor = 0;
+    while (distractors.length < 3) {
+      distractors.push(
+        FALLBACK_DISTRACTORS[distractorCursor % FALLBACK_DISTRACTORS.length],
+      );
+      distractorCursor += 1;
+    }
+
     bank.push({
-      question: `Which statement best describes the ${week.week} topic "${week.topic}"?`,
-      options: [
-        `It is the main idea explored in ${week.week}`,
-        "It is unrelated to this scheme",
-        "It is only tested at the very end of term",
-        "It is a maths-only idea",
-      ],
+      question: `Which statement best matches what ${week.week} ("${week.topic}") is about?`,
+      options: [fact, ...distractors],
       answer: 0,
-      explanation: `${week.topic} is the focus of ${week.week}. ${week.content ? week.content.slice(0, 140) : "Review the objectives above to confirm."}`,
+      explanation: `The scheme of work for ${week.week} covers: ${fact}`,
     });
     bank.push({
-      question: `What is the best first step when practising "${week.topic}"?`,
+      question: `What is the best first step when practising "${week.topic}" this week?`,
       options: [
         "Read the learning objectives first",
-        "Skip the examples",
-        "Memorise without practice",
+        "Skip the examples and guess",
+        "Memorise without any practice",
         "Leave it until the exam",
       ],
       answer: 0,
@@ -841,6 +883,7 @@ export const appRouter = router({
             ...fallbackQuiz(input.topic, input.count, input.subject),
             context: input,
             fallback: true,
+            fallbackReason: fallbackReasonOf(error),
           };
         }
       }),
@@ -1007,6 +1050,7 @@ export const appRouter = router({
               difficulty: input.difficulty,
             },
             fallback: true,
+            fallbackReason: fallbackReasonOf(error),
           };
         }
       }),
@@ -1382,12 +1426,35 @@ export const appRouter = router({
           learnerIds: z.array(z.string().trim().min(1)).max(200).default([]),
           difficulty: z.enum(ASSIGNMENT_DIFFICULTIES),
           due: z.string().trim().max(120).optional().nullable(),
+          fileUrl: z.string().trim().max(500).optional().nullable(),
+          fileName: z.string().trim().max(160).optional().nullable(),
+          fileSize: z
+            .number()
+            .int()
+            .min(0)
+            .max(50_000_000)
+            .optional()
+            .nullable(),
           questions: z
             .array(
               z.object({
                 question: z.string().trim().min(1).max(400),
-                options: z.array(z.string().trim().min(1).max(120)).length(4),
-                answer: z.number().int().min(0).max(3),
+                questionType: z
+                  .enum(["choice", "numeric", "expression"])
+                  .optional(),
+                options: z.array(z.string().trim().max(120)).max(4).default([]),
+                answer: z
+                  .number()
+                  .int()
+                  .min(0)
+                  .max(3)
+                  .or(z.string().trim().max(80)),
+                acceptedAnswers: z
+                  .array(z.string().trim().max(80))
+                  .max(10)
+                  .optional(),
+                hint: z.string().trim().max(200).optional().nullable(),
+                unit: z.string().trim().max(40).optional().nullable(),
                 explanation: z.string().trim().max(400),
               }),
             )

@@ -12,13 +12,14 @@ export function Sidebar({ mode, onNavigate, tabs, active, setActive, onClose, on
   const allowedModes = modesForRole(user?.role ?? null);
 
   const handleLogout = async () => {
+    const destination = user?.role === "admin" ? "/admin/login" : "/login";
     try {
       await logout();
       toast.success("Signed out. See you soon.");
     } catch {
       toast("Signed out locally.");
     }
-    setLocation("/login");
+    setLocation(destination);
   };
 
   const selectTab = (item: NavItem) => {

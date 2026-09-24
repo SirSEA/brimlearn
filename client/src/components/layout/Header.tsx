@@ -52,13 +52,14 @@ export function Header({ mode, setMobileOpen }: { mode: Mode; setMobileOpen: (op
 
   const handleLogout = async () => {
     setMenuOpen(false);
+    const destination = user?.role === "admin" ? "/admin/login" : "/login";
     try {
       await logout();
       toast.success("Signed out. See you soon.");
     } catch {
       toast("Signed out locally.");
     }
-    setLocation("/login");
+    setLocation(destination);
   };
 
   return (

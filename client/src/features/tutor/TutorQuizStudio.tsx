@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { Scheme } from "@shared/scheme";
+import type { AssessmentQuestion } from "@shared/assignment";
 import type {
   ObjectivesAssessmentInput,
   ObjectivesAssessment,
@@ -10,10 +11,14 @@ import {
   ArrowRight,
   Check,
   Lightbulb,
+  Pencil,
+  RefreshCw,
+  Save,
   Send,
   ShieldAlert,
   Sparkles,
   Wand2,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isChoiceQuestion, questionAnswerText } from "@/lib/quiz";
@@ -24,6 +29,23 @@ const DIFFICULTY_MAP = {
   hard: "Hard",
   advanced: "Advanced",
 } as const;
+
+/** Turns a raw server error into a short, truthful explanation a tutor can act on. */
+function humanizeReason(raw: string): string {
+  if (!raw) {
+    return "The AI service didn't respond this time.";
+  }
+  if (/payment|billing|quota|insufficient|402/i.test(raw)) {
+    return "The AI provider has run out of credits (Payment Required). Add funds to the API key, then hit Try again — your local draft stays intact.";
+  }
+  if (/timeout|timed out|abort/i.test(raw)) {
+    return "The AI request timed out. Try again, or review and edit the local draft below before publishing.";
+  }
+  if (/401|403|unauthorized|api[_-]?key/i.test(raw)) {
+    return "The AI API key was rejected. Check BUILT_IN_FORGE_API_KEY, then try again.";
+  }
+  return "The AI service didn't respond this time. Review and edit the local draft below before publishing.";
+}
 
 function OptionLetter({ index }: { index: number }) {
   return (
@@ -46,6 +68,12 @@ export function TutorQuizStudio() {
   const [generating, setGenerating] = useState(false);
   const [result, setResult] = useState<ObjectivesAssessment | null>(null);
   const [fallback, setFallback] = useState(false);
+  const [fallbackReason, setFallbackReason] = useState("");
+  const [localQuestions, setLocalQuestions] = useState<AssessmentQuestion[]>(
+    [],
+  );
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [draft, setDraft] = useState<AssessmentQuestion | null>(null);
   const [publishing, setPublishing] = useState(false);
   const [published, setPublished] = useState(false);
   const [title, setTitle] = useState("");
@@ -92,6 +120,10 @@ export function TutorQuizStudio() {
       setResult(assessment);
       setTitle(assessment.title);
       setFallback(assessment.fallback ?? false);
+      setFallbackReason(assessment.fallbackReason ?? "");
+      setLocalQuestions(assessment.questions);
+      setEditingIndex(null);
+      setDraft(null);
       toast.success(
         assessment.questions.length > 0
           ? "Assessment ready — review the questions, then publish."
@@ -120,7 +152,7 @@ export function TutorQuizStudio() {
         audienceKey: "class",
         difficulty: DIFFICULTY_MAP[difficulty],
         due: assessmentType === "quiz" ? null : "Due Fri 5pm",
-        questions: result.questions,
+        questions: localQuestions,
       });
       setPublished(true);
       toast.success(
@@ -141,6 +173,64 @@ export function TutorQuizStudio() {
     setResult(null);
     setPublished(false);
     setFallback(false);
+    setFallbackReason("");
+    setLocalQuestions([]);
+    setEditingIndex(null);
+    setDraft(null);
+  };
+
+  const startEditing = (index: number) => {
+    const question = localQuestions[index];
+    if (!question) return;
+    setEditingIndex(index);
+    setDraft({
+      ...question,
+      options: isChoiceQuestion(question) ? [...(question.options ?? [])] : [],
+      acceptedAnswers: question.acceptedAnswers
+        ? [...question.acceptedAnswers]
+        : undefined,
+    });
+  };
+
+  const saveDraft = () => {
+    if (draft === null || editingIndex === null) return;
+    const next = [...localQuestions];
+    if (isChoiceQuestion(draft)) {
+      const options = draft.options.map((option) => option.trim());
+      const correctIndex =
+        typeof draft.answer === "number"
+          ? draft.answer
+          : Number(draft.answer) || 0;
+      next[editingIndex] = {
+        ...draft,
+        question: draft.question.trim(),
+        options,
+        answer: Math.min(
+          Math.max(correctIndex, 0),
+          Math.max(options.length - 1, 0),
+        ),
+        explanation: (draft.explanation ?? "").trim(),
+      };
+    } else {
+      const answer = String(draft.answer ?? "").trim();
+      const acceptedAnswers = (draft.acceptedAnswers ?? [])
+        .map((item) => item.trim())
+        .filter(Boolean);
+      next[editingIndex] = {
+        ...draft,
+        question: draft.question.trim(),
+        answer,
+        acceptedAnswers:
+          acceptedAnswers.length > 0 ? acceptedAnswers : undefined,
+        unit: (draft.unit ?? "").trim() || null,
+        hint: (draft.hint ?? "").trim() || null,
+        explanation: (draft.explanation ?? "").trim(),
+      };
+    }
+    setLocalQuestions(next);
+    setEditingIndex(null);
+    setDraft(null);
+    toast.success("Question updated — it will be used when you publish.");
   };
 
   return (
@@ -319,9 +409,40 @@ export function TutorQuizStudio() {
       </div>
 
       {fallback && result && (
-        <div className="mt-4 flex items-center gap-2 rounded-2xl border border-[#FFE7A8] bg-[#FFF1CD] px-4 py-3 text-sm text-[#9A6712]">
-          <ShieldAlert size={16} /> The AI service was unavailable, so this was
-          built from the scheme locally. Review the questions before publishing.
+        <div className="mt-4 rounded-2xl border border-[#E4C87A] bg-[#FFF6DC] px-4 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex min-w-0 items-start gap-2 text-sm text-[#8A620F]">
+              <ShieldAlert size={16} className="mt-0.5 shrink-0" />
+              <div className="min-w-0">
+                <p className="font-semibold">
+                  Drafted locally — the AI assistant wasn&apos;t available.
+                </p>
+                <p className="mt-0.5 text-xs leading-5 text-[#A07B1E]">
+                  {humanizeReason(fallbackReason)}
+                </p>
+                <p className="mt-0.5 text-xs leading-5 text-[#8A620F]">
+                  Every question below can be edited line by line — review them
+                  before publishing.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={generate}
+              disabled={!scheme || generating}
+              className="flex shrink-0 items-center gap-1.5 rounded-xl border border-[#D8AE4A] bg-white px-3.5 py-2 text-xs font-semibold text-[#8A620F] transition hover:border-[#B98C1E] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {generating ? (
+                <>
+                  <RefreshCw size={13} className="animate-spin" /> Retrying…
+                </>
+              ) : (
+                <>
+                  <RefreshCw size={13} /> Try again
+                </>
+              )}
+            </button>
+          </div>
         </div>
       )}
 
@@ -370,84 +491,282 @@ export function TutorQuizStudio() {
               </div>
             </div>
             <div className="mt-2 text-xs text-[#A08A75]">
-              {result.questions.length} questions · {scheme?.subject} · whole
+              {localQuestions.length} questions · {scheme?.subject} · whole
               class · students answer in-app and get instant grading
             </div>
           </div>
 
           <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
             <div className="space-y-4">
-              {result.questions.map((q, index) => (
-                <div
-                  key={index}
-                  className="rounded-[20px] border border-[#E2CDB8] bg-[#FFFDF8] p-5"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="font-display text-base font-semibold leading-snug tracking-[-0.02em]">
-                      <span className="mr-2 text-[#A08A75]">Q{index + 1}.</span>
-                      {q.question}
-                    </p>
-                  </div>
-                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                    {isChoiceQuestion(q) ? (
-                      q.options.map((option, optionIndex) => (
-                        <div
-                          key={optionIndex}
-                          className={cn(
-                            "flex items-center gap-2 rounded-xl border px-3 py-2 text-sm",
-                            optionIndex === q.answer
-                              ? "border-[#A9BF87] bg-[#E9EED9] font-semibold text-[#3B241A]"
-                              : "border-[#F3E9DE] bg-[#FFFDF8] text-[#765F4F]",
-                          )}
-                        >
-                          <OptionLetter index={optionIndex} />
-                          {option}
-                          {optionIndex === q.answer && (
-                            <Check
-                              size={14}
-                              className="ml-auto text-[#4B6B3C]"
-                            />
-                          )}
-                        </div>
-                      ))
-                    ) : (
-                      <div className="sm:col-span-2">
-                        <div className="flex items-center gap-2 rounded-xl border border-[#A9BF87] bg-[#EDF0DC] px-3 py-2.5 text-sm font-semibold text-[#3B241A]">
-                          {questionAnswerText(q)}
-                          {q.unit && (
-                            <span className="text-xs font-semibold text-[#765F4F]">
-                              {q.unit}
-                            </span>
-                          )}
-                          <span className="ml-auto text-[10px] font-bold uppercase tracking-wide text-[#4B6B3C]">
-                            Answer · worked by hand
-                          </span>
-                        </div>
-                        {q.hint && (
-                          <p className="mt-1.5 text-[11px] leading-5 text-[#7A5415]">
-                            <Lightbulb
-                              size={11}
-                              className="mr-1 inline text-[#B67A17]"
-                            />{" "}
-                            Hint: {q.hint}
-                            {q.acceptedAnswers &&
-                              q.acceptedAnswers.length > 0 && (
-                                <span className="text-[#765F4F]">
-                                  {" "}
-                                  (also accept: {q.acceptedAnswers.join(", ")})
-                                </span>
-                              )}
-                          </p>
+              {localQuestions.map((q, index) => {
+                const isEditing = editingIndex === index && draft;
+                return (
+                  <div
+                    key={index}
+                    className={cn(
+                      "rounded-[20px] border p-5",
+                      isEditing
+                        ? "border-[#B9A2E0] bg-[#FBF8FF]"
+                        : "border-[#E2CDB8] bg-[#FFFDF8]",
+                    )}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="font-display text-base font-semibold leading-snug tracking-[-0.02em]">
+                        <span className="mr-2 text-[#A08A75]">
+                          Q{index + 1}.
+                        </span>
+                        {isEditing ? "Editing this question" : q.question}
+                      </p>
+                      <div className="flex shrink-0 gap-1.5">
+                        {isEditing ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingIndex(null);
+                                setDraft(null);
+                              }}
+                              className="flex items-center gap-1.5 rounded-xl border border-[#E2CDB8] bg-white px-3 py-1.5 text-xs font-semibold text-[#765F4F] transition hover:border-[#C9A1DE]"
+                            >
+                              <X size={13} /> Cancel
+                            </button>
+                            <button
+                              type="button"
+                              onClick={saveDraft}
+                              className="flex items-center gap-1.5 rounded-xl bg-[#3B241A] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#A84A22]"
+                            >
+                              <Save size={13} /> Save
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => startEditing(index)}
+                            className="flex items-center gap-1.5 rounded-xl border border-[#E2CDB8] bg-[#FFFDF8] px-3 py-1.5 text-xs font-semibold text-[#765F4F] transition hover:border-[#A9BF87]"
+                          >
+                            <Pencil size={13} /> Edit
+                          </button>
                         )}
                       </div>
+                    </div>
+
+                    {isEditing ? (
+                      <div className="mt-4 space-y-3">
+                        <label className="block">
+                          <span className="text-xs font-semibold text-[#765F4F]">
+                            Question text
+                          </span>
+                          <textarea
+                            value={draft.question}
+                            onChange={(event) =>
+                              setDraft({
+                                ...draft,
+                                question: event.target.value,
+                              })
+                            }
+                            rows={2}
+                            className="mt-1.5 w-full rounded-xl border border-[#E2CDB8] bg-[#FFFDF8] px-3.5 py-2.5 text-sm text-[#3B241A] outline-none transition focus:border-[#8CAE70]"
+                          />
+                        </label>
+
+                        {isChoiceQuestion(draft) ? (
+                          <div className="grid gap-2 sm:grid-cols-2">
+                            {draft.options.map((option, optionIndex) => (
+                              <div
+                                key={optionIndex}
+                                className="flex items-center gap-2 rounded-xl border border-[#F3E9DE] bg-[#FFFDF8] px-3 py-2"
+                              >
+                                <input
+                                  type="radio"
+                                  name={`correct-${index}`}
+                                  checked={draft.answer === optionIndex}
+                                  onChange={() =>
+                                    setDraft({
+                                      ...draft,
+                                      answer: optionIndex,
+                                    })
+                                  }
+                                  aria-label={`Mark option ${String.fromCharCode(65 + optionIndex)} correct`}
+                                />
+                                <span className="text-xs font-bold text-[#A08A75]">
+                                  {String.fromCharCode(65 + optionIndex)}
+                                </span>
+                                <input
+                                  value={option}
+                                  onChange={(event) =>
+                                    setDraft({
+                                      ...draft,
+                                      options: draft.options.map((o, oi) =>
+                                        oi === optionIndex
+                                          ? event.target.value
+                                          : o,
+                                      ),
+                                    })
+                                  }
+                                  className="w-full bg-transparent text-sm text-[#3B241A] outline-none"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <>
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              <label className="block">
+                                <span className="text-xs font-semibold text-[#765F4F]">
+                                  Correct answer
+                                </span>
+                                <input
+                                  value={String(draft.answer ?? "")}
+                                  onChange={(event) =>
+                                    setDraft({
+                                      ...draft,
+                                      answer: event.target.value,
+                                    })
+                                  }
+                                  className="mt-1.5 w-full rounded-xl border border-[#E2CDB8] bg-[#FFFDF8] px-3.5 py-2.5 text-sm text-[#3B241A] outline-none transition focus:border-[#8CAE70]"
+                                />
+                              </label>
+                              <label className="block">
+                                <span className="text-xs font-semibold text-[#765F4F]">
+                                  Unit (optional)
+                                </span>
+                                <input
+                                  value={draft.unit ?? ""}
+                                  onChange={(event) =>
+                                    setDraft({
+                                      ...draft,
+                                      unit: event.target.value.trim() || null,
+                                    })
+                                  }
+                                  className="mt-1.5 w-full rounded-xl border border-[#E2CDB8] bg-[#FFFDF8] px-3.5 py-2.5 text-sm text-[#3B241A] outline-none transition focus:border-[#8CAE70]"
+                                />
+                              </label>
+                            </div>
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              <label className="block">
+                                <span className="text-xs font-semibold text-[#765F4F]">
+                                  Hint (optional)
+                                </span>
+                                <input
+                                  value={draft.hint ?? ""}
+                                  onChange={(event) =>
+                                    setDraft({
+                                      ...draft,
+                                      hint: event.target.value.trim() || null,
+                                    })
+                                  }
+                                  className="mt-1.5 w-full rounded-xl border border-[#E2CDB8] bg-[#FFFDF8] px-3.5 py-2.5 text-sm text-[#3B241A] outline-none transition focus:border-[#8CAE70]"
+                                />
+                              </label>
+                              <label className="block">
+                                <span className="text-xs font-semibold text-[#765F4F]">
+                                  Also accept (comma separated)
+                                </span>
+                                <input
+                                  value={(draft.acceptedAnswers ?? []).join(
+                                    ", ",
+                                  )}
+                                  onChange={(event) =>
+                                    setDraft({
+                                      ...draft,
+                                      acceptedAnswers: event.target.value
+                                        .split(",")
+                                        .map((a) => a.trim())
+                                        .filter(Boolean),
+                                    })
+                                  }
+                                  className="mt-1.5 w-full rounded-xl border border-[#E2CDB8] bg-[#FFFDF8] px-3.5 py-2.5 text-sm text-[#3B241A] outline-none transition focus:border-[#8CAE70]"
+                                />
+                              </label>
+                            </div>
+                          </>
+                        )}
+
+                        <label className="block">
+                          <span className="text-xs font-semibold text-[#765F4F]">
+                            Explanation shown after answering
+                          </span>
+                          <textarea
+                            value={draft.explanation ?? ""}
+                            onChange={(event) =>
+                              setDraft({
+                                ...draft,
+                                explanation: event.target.value,
+                              })
+                            }
+                            rows={2}
+                            className="mt-1.5 w-full rounded-xl border border-[#E2CDB8] bg-[#FFFDF8] px-3.5 py-2.5 text-sm text-[#3B241A] outline-none transition focus:border-[#8CAE70]"
+                          />
+                        </label>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                          {isChoiceQuestion(q) ? (
+                            q.options.map((option, optionIndex) => (
+                              <div
+                                key={optionIndex}
+                                className={cn(
+                                  "flex items-center gap-2 rounded-xl border px-3 py-2 text-sm",
+                                  optionIndex === q.answer
+                                    ? "border-[#A9BF87] bg-[#E9EED9] font-semibold text-[#3B241A]"
+                                    : "border-[#F3E9DE] bg-[#FFFDF8] text-[#765F4F]",
+                                )}
+                              >
+                                <OptionLetter index={optionIndex} />
+                                {option}
+                                {optionIndex === q.answer && (
+                                  <Check
+                                    size={14}
+                                    className="ml-auto text-[#4B6B3C]"
+                                  />
+                                )}
+                              </div>
+                            ))
+                          ) : (
+                            <div className="sm:col-span-2">
+                              <div className="flex items-center gap-2 rounded-xl border border-[#A9BF87] bg-[#EDF0DC] px-3 py-2.5 text-sm font-semibold text-[#3B241A]">
+                                {questionAnswerText(q)}
+                                {q.unit && (
+                                  <span className="text-xs font-semibold text-[#765F4F]">
+                                    {q.unit}
+                                  </span>
+                                )}
+                                <span className="ml-auto text-[10px] font-bold uppercase tracking-wide text-[#4B6B3C]">
+                                  Answer · worked by hand
+                                </span>
+                              </div>
+                              {q.hint && (
+                                <p className="mt-1.5 text-[11px] leading-5 text-[#7A5415]">
+                                  <Lightbulb
+                                    size={11}
+                                    className="mr-1 inline text-[#B67A17]"
+                                  />{" "}
+                                  Hint: {q.hint}
+                                  {q.acceptedAnswers &&
+                                    q.acceptedAnswers.length > 0 && (
+                                      <span className="text-[#765F4F]">
+                                        {" "}
+                                        (also accept:{" "}
+                                        {q.acceptedAnswers.join(", ")})
+                                      </span>
+                                    )}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        <p className="mt-3 flex items-start gap-2 text-xs leading-5 text-[#765F4F]">
+                          <span className="font-semibold text-[#4B6B3C]">
+                            Why:
+                          </span>{" "}
+                          {q.explanation}
+                        </p>
+                      </>
                     )}
                   </div>
-                  <p className="mt-3 flex items-start gap-2 text-xs leading-5 text-[#765F4F]">
-                    <span className="font-semibold text-[#4B6B3C]">Why:</span>{" "}
-                    {q.explanation}
-                  </p>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {result.suggestions.length > 0 && (

@@ -84,6 +84,10 @@ export type Assignment = {
   status: AssignmentStatus;
   /** Questions for AI-built quizzes/assessments (empty for non-quiz work). */
   questions?: AssessmentQuestion[];
+  /** Uploaded worksheet file (Worksheet assignments only). */
+  fileUrl?: string | null;
+  fileName?: string | null;
+  fileSize?: number | null;
 };
 
 export type CreateAssignmentInput = {
@@ -96,4 +100,7 @@ export type CreateAssignmentInput = {
   difficulty: AssignmentDifficulty;
   due?: string | null;
   questions?: AssessmentQuestion[];
+  fileUrl?: string | null;
+  fileName?: string | null;
+  fileSize?: number | null;
 };
