@@ -6,13 +6,14 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { registerStorageProxy } from "./storageProxy";
 import { registerSiteImageRoutes } from "./siteImages";
+import { registerChatRoutes } from "./chat";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { seedSampleContent } from "../seed-content";
 
 function isPortAvailable(port: number): Promise<boolean> {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     const server = net.createServer();
     server.listen(port, () => {
       server.close(() => resolve(true));
@@ -43,6 +44,7 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   registerStorageProxy(app);
   registerSiteImageRoutes(app);
+  registerChatRoutes(app);
   registerOAuthRoutes(app);
   // tRPC API
   app.use(
@@ -50,7 +52,7 @@ async function startServer() {
     createExpressMiddleware({
       router: appRouter,
       createContext,
-    })
+    }),
   );
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
@@ -71,7 +73,10 @@ async function startServer() {
   try {
     await seedSampleContent();
   } catch (error) {
-    console.warn("[Seed] Sample content seeding skipped:", error instanceof Error ? error.message : error);
+    console.warn(
+      "[Seed] Sample content seeding skipped:",
+      error instanceof Error ? error.message : error,
+    );
   }
 
   server.listen(port, () => {

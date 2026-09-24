@@ -4,6 +4,7 @@ import { defaultLandingContent, type LandingContent } from "@shared/site";
 import { api } from "@/_core/api";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { BrimMark } from "@/components/layout/BrimMark";
+import { ContactForm } from "@/features/contact/ContactForm";
 import { roleHomePath } from "@/lib/roles";
 import { ArrowRight, ArrowUpRight, BookOpen, ChevronLeft, ChevronRight, ExternalLink, Globe, GraduationCap, Play, ShieldCheck, Sparkles, Timer } from "lucide-react";
 
@@ -32,10 +33,10 @@ export function LandingPage({ content }: { content: LandingContent }) {
           <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="text-left" aria-label={content.brand.name}>
             <BrimMark />
           </button>
-          <nav className="hidden items-center gap-8 text-sm font-semibold text-[#D9C4B0] md:flex">
+          <nav className="hidden items-center gap-8 text-sm font-semibold text-[#F3E5D5] md:flex">
             <a href="#features" className="transition hover:text-white">Why BrimLearn</a>
             <a href="#courses" className="transition hover:text-white">Courses & lessons</a>
-            <a href="#about" className="transition hover:text-white">About</a>
+            <a href="#contact" className="transition hover:text-white">About & contact</a>
           </nav>
           <div className="flex items-center gap-2.5">
             {authLoading ? null : user ? (
@@ -49,7 +50,7 @@ export function LandingPage({ content }: { content: LandingContent }) {
               <>
                 <button
                   onClick={() => setLocation("/login")}
-                  className="hidden rounded-full px-4 py-2 text-sm font-semibold text-[#D9C4B0] transition hover:bg-white/10 hover:text-white sm:block"
+                  className="hidden rounded-full px-4 py-2 text-sm font-semibold text-[#F3E5D5] transition hover:bg-white/10 hover:text-white sm:block"
                 >
                   Sign in
                 </button>
@@ -88,7 +89,7 @@ export function LandingPage({ content }: { content: LandingContent }) {
                 {content.hero.secondaryCtaLabel}
               </a>
             </div>
-            <div className="mt-9 flex flex-wrap gap-4 text-xs font-semibold text-[#A08A75]">
+            <div className="mt-9 flex flex-wrap gap-4 text-xs font-semibold text-[#E7D8C8]">
               <span className="inline-flex items-center gap-1.5"><Timer size={13} /> 10-minute daily practice</span>
               <span className="inline-flex items-center gap-1.5"><GraduationCap size={13} /> JSS1 – SS3</span>
               <span className="inline-flex items-center gap-1.5"><ShieldCheck size={13} /> Curriculum-aligned</span>
@@ -194,29 +195,23 @@ export function LandingPage({ content }: { content: LandingContent }) {
         </div>
       </section>
 
-      {/* About */}
-      <section id="about" className="mx-auto max-w-6xl px-5 py-16 lg:py-20">
-        <div className="grid items-center gap-10 lg:grid-cols-2">
+      {/* Contact us & About */}
+      <section id="contact" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-16 lg:py-20">
+        <div className="grid items-start gap-10 lg:grid-cols-2">
           <div className="order-2 lg:order-1">
-            {content.about.imageUrl ? (
-              <img src={content.about.imageUrl} alt={content.about.heading} className="h-[320px] w-full rounded-[28px] object-cover" />
-            ) : (
-              <div className="grid h-[320px] place-items-center rounded-[28px] bg-[#3B241A] text-center">
-                <div className="px-8">
-                  <BrimMark />
-                  <div className="mt-6 text-sm leading-7 text-[#D9C4B0]">{content.brand.tagline}</div>
-                </div>
-              </div>
-            )}
+            <ContactForm />
           </div>
           <div className="order-1 lg:order-2">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#4B6B3C]">About {content.brand.name}</div>
-            <h2 className="mt-2 font-display text-3xl font-semibold tracking-[-0.05em] sm:text-4xl">{content.about.heading}</h2>
-            <p className="mt-4 text-base leading-7 text-[#765F4F]">{content.about.body}</p>
-            <div className="mt-7 flex flex-wrap gap-2">
-              {["BECE", "WAEC", "NECO", "JAMB"].map((exam) => (
-                <span key={exam} className="rounded-full border border-[#E2CDB8] bg-[#FFFDF8] px-3 py-1.5 text-xs font-semibold text-[#4B6B3C]">{exam}</span>
-              ))}
+            <div className="rounded-[28px] border border-[#E2CDB8] bg-[#FFFDF8] p-6 sm:p-8">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#4B6B3C]">About {content.brand.name}</div>
+              <h2 className="mt-2 font-display text-3xl font-semibold tracking-[-0.05em] sm:text-4xl">{content.about.heading}</h2>
+              <p className="mt-4 text-base leading-7 text-[#765F4F]">{content.about.body}</p>
+              {content.about.imageUrl && <img src={content.about.imageUrl} alt={content.about.heading} className="mt-6 h-56 w-full rounded-[24px] object-cover" />}
+              <div className="mt-7 flex flex-wrap gap-2">
+                {["BECE", "WAEC", "NECO", "JAMB"].map((exam) => (
+                  <span key={exam} className="rounded-full border border-[#E2CDB8] bg-[#F7EFE3] px-3 py-1.5 text-xs font-semibold text-[#4B6B3C]">{exam}</span>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -235,31 +230,31 @@ export function LandingPage({ content }: { content: LandingContent }) {
       </section>
 
       {/* Footer */}
-      <footer className="bg-[#3B241A] text-[#D9C4B0]">
+      <footer className="bg-[#3B241A] text-[#EDDED0]">
         <div className="mx-auto flex max-w-6xl flex-col gap-8 px-5 py-12 sm:flex-row sm:items-start sm:justify-between">
           <div className="max-w-sm">
             <BrimMark />
-            <p className="mt-4 text-xs leading-6 text-[#A08A75]">{content.footer.tagline}</p>
+            <p className="mt-4 text-xs leading-6 text-[#D9C4B0]">{content.footer.tagline}</p>
             {content.footer.contactEmail && (
-              <p className="mt-2 text-xs text-[#A08A75]">Contact: <span className="font-semibold text-[#D9C4B0]">{content.footer.contactEmail}</span></p>
+              <p className="mt-2 text-xs text-[#D9C4B0]">Contact: <span className="font-semibold text-[#F3E5D5]">{content.footer.contactEmail}</span></p>
             )}
           </div>
           <div className="flex gap-14 text-sm">
             <div className="flex flex-col gap-2.5">
-              <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#A08A75]">Product</div>
+              <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#D9C4B0]">Product</div>
               <a href="#features" className="transition hover:text-white">Why BrimLearn</a>
               <a href="#courses" className="transition hover:text-white">Courses</a>
-              <a href="#about" className="transition hover:text-white">About</a>
+              <a href="#contact" className="transition hover:text-white">About & contact</a>
             </div>
             <div className="flex flex-col gap-2.5">
-              <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#A08A75]">Account</div>
+              <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#D9C4B0]">Account</div>
               <button onClick={() => setLocation("/login")} className="text-left transition hover:text-white">Sign in</button>
               <button onClick={() => setLocation("/signup")} className="text-left transition hover:text-white">Create account</button>
               <button onClick={() => setLocation("/admin/login")} className="flex items-center gap-1 text-left transition hover:text-white">Admin console <ArrowUpRight size={12} /></button>
             </div>
           </div>
         </div>
-        <div className="border-t border-white/10 py-5 text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-[#A08A75]">
+        <div className="border-t border-white/10 py-5 text-center text-[10px] font-semibold uppercase tracking-[0.2em] text-[#D9C4B0]">
           BrimLearn · JSS1 – SS3 · learner · parent · tutor
         </div>
       </footer>

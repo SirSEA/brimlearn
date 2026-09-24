@@ -98,8 +98,8 @@ export function Header({ mode, setMobileOpen }: { mode: Mode; setMobileOpen: (op
                   </div>
                 </div>
                 <div className="py-1.5">
-                  <button onClick={() => { setMenuOpen(false); toast("Profile editing is in the settings tab."); }} className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-[#3B241A] hover:bg-[#F7EFE3]"><UserRound size={16} className="text-[#8A7361]" /> Profile</button>
-                  <button onClick={() => { setMenuOpen(false); toast("Settings are ready for your school workspace."); }} className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-[#3B241A] hover:bg-[#F7EFE3]"><Settings2 size={16} className="text-[#8A7361]" /> Settings</button>
+                  <button onClick={() => { setMenuOpen(false); setLocation("/profile"); }} className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-[#3B241A] hover:bg-[#F7EFE3]"><UserRound size={16} className="text-[#8A7361]" /> Profile</button>
+                  <button onClick={() => { setMenuOpen(false); setLocation("/settings"); }} className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-[#3B241A] hover:bg-[#F7EFE3]"><Settings2 size={16} className="text-[#8A7361]" /> Settings</button>
                   {modeMeta[mode].short === "Class" || modeMeta[mode].short === "Teacher" ? (
                     <button onClick={() => { setMenuOpen(false); toast("Your recent classroom rating is 4.9 / 5 from families."); }} className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-[#3B241A] hover:bg-[#F7EFE3]"><Star size={16} className="text-[#B67A17]" /> Teacher rating: 4.9</button>
                   ) : null}

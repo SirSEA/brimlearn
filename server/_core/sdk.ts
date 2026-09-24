@@ -335,6 +335,8 @@ function buildCronUser(
     email: null,
     loginMethod: null,
     role: "user",
+    status: "active",
+    preferences: null,
     passwordHash: null,
     passwordSalt: null,
     createdAt: now,

@@ -49,7 +49,7 @@ export function AdminToday() {
           <h1 className="font-display text-[34px] font-semibold leading-[1.04] tracking-[-0.06em] sm:text-[44px]">The whole school, at a glance.</h1>
           <p className="mt-4 max-w-2xl text-sm leading-6 text-[#D9C4B0]">
             Live counts from your workspace. Use the <span className="font-semibold text-white">Website</span> tab to edit the public landing page and the{" "}
-            <span className="font-semibold text-white">Team &amp; access</span> tab to manage account roles.
+            <span className="font-semibold text-white">Users</span> tab to manage roles, suspend accounts, and assign classes.
           </p>
         </div>
         {!loaded ? (

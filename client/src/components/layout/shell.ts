@@ -73,8 +73,9 @@ export const navForMode = (mode: Mode): NavItem[] => {
     case "school":
       return [
         { key: "today", label: "Today", icon: LayoutDashboard },
-        { key: "users", label: "Team & access", icon: Users },
+        { key: "users", label: "Users", icon: Users },
         { key: "messages", label: "Messages", icon: MessagesSquare },
+        { key: "schools", label: "Schools", icon: Building2 },
         { key: "curriculum", label: "Curriculum", icon: Layers3, modal: "curriculum" },
         { key: "website", label: "Website", icon: Globe },
       ];

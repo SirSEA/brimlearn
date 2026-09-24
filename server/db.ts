@@ -23,6 +23,9 @@ import type {
 } from "@shared/assignment";
 import type { LandingContent, SiteContentDoc, SiteContentStatus } from "@shared/site";
 import { defaultLandingContent, SITE_CONTENT_DOC_ID } from "@shared/site";
+import type { ClassGroup } from "@shared/class";
+import type { ContactMessage, MessageStatus, ContactType } from "@shared/message";
+import type { School, SchoolStatus } from "@shared/school";
 import { ENV } from "./_core/env";
 import { getFirestoreDb } from "./_core/firebase";
 
@@ -34,6 +37,9 @@ const ASSIGNMENTS_COLLECTION = "assignments";
 const SITE_CONTENT_COLLECTION = "siteContent";
 const PASSWORD_RESETS_COLLECTION = "passwordResets";
 const SITE_IMAGES_COLLECTION = "siteImages";
+const CLASSES_COLLECTION = "classes";
+const MESSAGES_COLLECTION = "messages";
+const SCHOOLS_COLLECTION = "schools";
 
 function toDate(value: unknown): Date {
   if (value instanceof Timestamp) return value.toDate();
@@ -47,6 +53,8 @@ type StoredUser = {
   email?: string | null;
   loginMethod?: string | null;
   role?: User["role"];
+  status?: User["status"];
+  preferences?: User["preferences"];
   passwordHash?: string | null;
   passwordSalt?: string | null;
   createdAt?: Date;
@@ -64,6 +72,8 @@ function mapUser(doc: DocumentSnapshot): User | undefined {
     email: data.email ?? null,
     loginMethod: data.loginMethod ?? null,
     role: (data.role ?? "user") as User["role"],
+    status: (data.status ?? "active") as User["status"],
+    preferences: data.preferences ?? null,
     passwordHash: data.passwordHash ?? null,
     passwordSalt: data.passwordSalt ?? null,
     createdAt: toDate(data.createdAt),
@@ -100,6 +110,8 @@ export type UpsertUserInput = {
   email?: string | null;
   loginMethod?: string | null;
   role?: User["role"];
+  status?: User["status"];
+  preferences?: User["preferences"];
   passwordHash?: string | null;
   passwordSalt?: string | null;
   lastSignedIn?: Date;
@@ -122,6 +134,8 @@ export async function upsertUser(user: UpsertUserInput): Promise<void> {
   if (user.loginMethod !== undefined) store.loginMethod = user.loginMethod ?? null;
   if (user.role !== undefined) store.role = user.role;
   else if (user.openId === ENV.ownerOpenId) store.role = "admin";
+  if (user.status !== undefined) store.status = user.status;
+  if (user.preferences !== undefined) store.preferences = user.preferences;
   if (user.passwordHash !== undefined) store.passwordHash = user.passwordHash ?? null;
   if (user.passwordSalt !== undefined) store.passwordSalt = user.passwordSalt ?? null;
   if (user.createdAt !== undefined) store.createdAt = user.createdAt;
@@ -155,6 +169,8 @@ export async function createEmailUser(input: CreateEmailUserInput): Promise<User
     email: input.email,
     loginMethod: EMAIL_LOGIN_METHOD,
     role: input.role,
+    status: "active",
+    preferences: null,
     passwordHash: input.passwordHash,
     passwordSalt: input.passwordSalt,
     createdAt: now,
@@ -818,6 +834,8 @@ export type AdminUserSummary = {
   email: string | null;
   loginMethod: string | null;
   role: User["role"];
+  status: User["status"];
+  isOwner: boolean;
   createdAt: string;
   lastSignedIn: string;
 };
@@ -831,6 +849,8 @@ function mapAdminUser(doc: DocumentSnapshot): AdminUserSummary | undefined {
     email: user.email,
     loginMethod: user.loginMethod,
     role: user.role,
+    status: user.status,
+    isOwner: user.openId === ENV.ownerOpenId && ENV.ownerOpenId.length > 0,
     createdAt: user.createdAt.toISOString(),
     lastSignedIn: user.lastSignedIn.toISOString(),
   };
@@ -859,6 +879,39 @@ export async function setUserRole(
     .set({ role, updatedAt: new Date() }, { merge: true });
   const doc = await getFirestoreDb().collection(USERS_COLLECTION).doc(openId).get();
   return mapAdminUser(doc);
+}
+
+/** Suspends or reactivates an account. Suspended users lose sign-in + live sessions. */
+export async function setUserStatus(
+  openId: string,
+  status: User["status"]
+): Promise<AdminUserSummary | undefined> {
+  if (!ENV.firebaseConfigured) return undefined;
+  await getFirestoreDb()
+    .collection(USERS_COLLECTION)
+    .doc(openId)
+    .set({ status, updatedAt: new Date() }, { merge: true });
+  const doc = await getFirestoreDb().collection(USERS_COLLECTION).doc(openId).get();
+  return mapAdminUser(doc);
+}
+
+/** Deletes a user account and cleans them out of any classes (teacher seat or student roster). */
+export async function deleteUser(openId: string): Promise<void> {
+  if (!ENV.firebaseConfigured) return;
+  const firestore = getFirestoreDb();
+  await firestore.collection(USERS_COLLECTION).doc(openId).delete();
+
+  const batch = firestore.batch();
+  const tutorClasses = await firestore.collection(CLASSES_COLLECTION).where("tutorId", "==", openId).get();
+  tutorClasses.forEach((doc) => {
+    batch.update(doc.ref, { tutorId: null, tutorName: null, updatedAt: new Date() });
+  });
+  const studentClasses = await firestore.collection(CLASSES_COLLECTION).where("studentIds", "array-contains", openId).get();
+  studentClasses.forEach((doc) => {
+    const studentIds = (doc.data().studentIds ?? []).filter((id: string) => id !== openId);
+    batch.update(doc.ref, { studentIds, updatedAt: new Date() });
+  });
+  await batch.commit();
 }
 
 export type AdminOverviewData = {
@@ -924,4 +977,310 @@ export async function getSiteImage(id: string): Promise<StoredSiteImage | null> 
   const data = snap.data() ?? {};
   if (typeof data.dataBase64 !== "string") return null;
   return { mimeType: typeof data.mimeType === "string" ? data.mimeType : "image/png", dataBase64: data.dataBase64 };
+}
+
+/* ---------------------------------------------------------------------------
+ * Classes (admin-created groups assigned to teachers).
+ * Each class is a plain Firestore doc: one owning tutor + a learner array.
+ * ------------------------------------------------------------------------- */
+
+function mapClassGroup(doc: DocumentSnapshot): ClassGroup | undefined {
+  if (!doc.exists) return undefined;
+  const data = doc.data() ?? {};
+  return {
+    id: doc.id,
+    name: String(data.name ?? "Untitled class"),
+    grade: typeof data.grade === "string" ? data.grade : null,
+    subject: typeof data.subject === "string" ? data.subject : null,
+    tutorId: typeof data.tutorId === "string" ? data.tutorId : null,
+    tutorName: typeof data.tutorName === "string" ? data.tutorName : null,
+    studentIds: Array.isArray(data.studentIds)
+      ? data.studentIds.map((id: unknown) => String(id)).filter(Boolean)
+      : [],
+    createdAt: toDate(data.createdAt).toISOString(),
+    updatedAt: toDate(data.updatedAt).toISOString(),
+  };
+}
+
+export async function listClasses(): Promise<ClassGroup[]> {
+  if (!ENV.firebaseConfigured) return [];
+  const snap = await getFirestoreDb()
+    .collection(CLASSES_COLLECTION)
+    .orderBy("createdAt", "desc")
+    .limit(300)
+    .get();
+  return snap.docs
+    .map((doc) => mapClassGroup(doc))
+    .filter((group): group is ClassGroup => Boolean(group));
+}
+
+export type CreateClassInput = {
+  name: string;
+  grade?: string | null;
+  subject?: string | null;
+  tutorId?: string | null;
+  tutorName?: string | null;
+  studentIds?: string[];
+};
+
+export async function createClass(input: CreateClassInput): Promise<ClassGroup> {
+  if (!ENV.firebaseConfigured) {
+    throw new Error("Firestore is not configured. Set FIREBASE_* credentials in .env first.");
+  }
+  const now = new Date();
+  const doc = getFirestoreDb().collection(CLASSES_COLLECTION).doc(nanoid(18));
+  await doc.set({
+    name: input.name.trim(),
+    grade: input.grade ?? null,
+    subject: input.subject ?? null,
+    tutorId: input.tutorId ?? null,
+    tutorName: input.tutorName ?? null,
+    studentIds: input.studentIds ?? [],
+    createdAt: now,
+    updatedAt: now,
+  });
+  const created = await doc.get();
+  const group = mapClassGroup(created);
+  if (!group) throw new Error("Failed to read back the created class");
+  return group;
+}
+
+export type UpdateClassInput = Partial<CreateClassInput>;
+
+export async function updateClass(id: string, input: UpdateClassInput): Promise<ClassGroup | undefined> {
+  if (!ENV.firebaseConfigured) return undefined;
+  const patch: Record<string, unknown> = { updatedAt: new Date() };
+  if (input.name !== undefined) patch.name = input.name.trim();
+  if (input.grade !== undefined) patch.grade = input.grade ?? null;
+  if (input.subject !== undefined) patch.subject = input.subject ?? null;
+  if (input.tutorId !== undefined) patch.tutorId = input.tutorId ?? null;
+  if (input.tutorName !== undefined) patch.tutorName = input.tutorName ?? null;
+  if (input.studentIds !== undefined)
+    patch.studentIds = input.studentIds.map((id) => String(id)).filter(Boolean);
+  const doc = getFirestoreDb().collection(CLASSES_COLLECTION).doc(id);
+  await doc.update(patch);
+  return mapClassGroup(await doc.get());
+}
+
+export async function deleteClass(id: string): Promise<void> {
+  if (!ENV.firebaseConfigured) return;
+  await getFirestoreDb().collection(CLASSES_COLLECTION).doc(id).delete();
+}
+
+/* ---------------------------------------------------------------------------
+ * Contact messages (landing "Contact us" form) — the admin inbox.
+ * ------------------------------------------------------------------------- */
+
+type StoredContactMessage = {
+  type?: ContactType;
+  name?: string;
+  email?: string;
+  phone?: string | null;
+  message?: string;
+  schoolName?: string | null;
+  roleAtSchool?: string | null;
+  learnerCount?: string | null;
+  status?: MessageStatus;
+  createdAt?: Date;
+  readAt?: Date | null;
+};
+
+function mapContactMessage(doc: DocumentSnapshot): ContactMessage | undefined {
+  if (!doc.exists) return undefined;
+  const data = doc.data() ?? {};
+  return {
+    id: doc.id,
+    type: (data.type === "school" ? "school" : "general") as ContactType,
+    name: String(data.name ?? ""),
+    email: String(data.email ?? ""),
+    phone: typeof data.phone === "string" ? data.phone : null,
+    message: String(data.message ?? ""),
+    schoolName: typeof data.schoolName === "string" ? data.schoolName : null,
+    roleAtSchool: typeof data.roleAtSchool === "string" ? data.roleAtSchool : null,
+    learnerCount: typeof data.learnerCount === "string" ? data.learnerCount : null,
+    status: (data.status ?? "new") as MessageStatus,
+    createdAt: toDate(data.createdAt).toISOString(),
+    readAt: data.readAt ? toDate(data.readAt).toISOString() : null,
+  };
+}
+
+export type CreateContactMessageInput = {
+  type: ContactType;
+  name: string;
+  email: string;
+  phone?: string | null;
+  message: string;
+  schoolName?: string | null;
+  roleAtSchool?: string | null;
+  learnerCount?: string | null;
+};
+
+export async function createContactMessage(input: CreateContactMessageInput): Promise<ContactMessage> {
+  if (!ENV.firebaseConfigured) {
+    const doc = { id: `msg_${input.email.replace(/[^a-z0-9]/gi, "").slice(0, 8)}` } as ContactMessage;
+    return doc;
+  }
+  const now = new Date();
+  const doc = getFirestoreDb().collection(MESSAGES_COLLECTION).doc(nanoid(18));
+  await doc.set({
+    type: input.type,
+    name: String(input.name).trim(),
+    email: String(input.email).trim(),
+    phone: input.phone?.trim() || null,
+    message: String(input.message).trim(),
+    schoolName: input.schoolName?.trim() || null,
+    roleAtSchool: input.roleAtSchool?.trim() || null,
+    learnerCount: input.learnerCount?.trim() || null,
+    status: "new",
+    createdAt: now,
+    readAt: null,
+  } satisfies StoredContactMessage);
+  const created = await doc.get();
+  const message = mapContactMessage(created);
+  if (!message) throw new Error("Failed to read back the created message");
+  return message;
+}
+
+export async function listMessages(): Promise<ContactMessage[]> {
+  if (!ENV.firebaseConfigured) return [];
+  const snap = await getFirestoreDb()
+    .collection(MESSAGES_COLLECTION)
+    .orderBy("createdAt", "desc")
+    .limit(300)
+    .get();
+  return snap.docs
+    .map((doc) => mapContactMessage(doc))
+    .filter((message): message is ContactMessage => Boolean(message));
+}
+
+export async function updateMessageStatus(
+  id: string,
+  status: MessageStatus
+): Promise<ContactMessage | undefined> {
+  if (!ENV.firebaseConfigured) return undefined;
+  const doc = getFirestoreDb().collection(MESSAGES_COLLECTION).doc(id);
+  const patch: Record<string, unknown> = { status };
+  if (status !== "new") patch.readAt = patch.readAt ?? new Date();
+  await doc.update(patch);
+  return mapContactMessage(await doc.get());
+}
+
+/* ---------------------------------------------------------------------------
+ * Schools (partnership & API-access requests).
+ * ------------------------------------------------------------------------- */
+
+type StoredSchool = {
+  name?: string;
+  contactName?: string;
+  contactEmail?: string;
+  phone?: string | null;
+  learnerCount?: string | null;
+  messageId?: string | null;
+  status?: SchoolStatus;
+  apiKey?: string | null;
+  createdAt?: Date;
+  decidedAt?: Date | null;
+};
+
+function mapSchool(doc: DocumentSnapshot): School | undefined {
+  if (!doc.exists) return undefined;
+  const data = doc.data() ?? {};
+  return {
+    id: doc.id,
+    name: String(data.name ?? ""),
+    contactName: String(data.contactName ?? ""),
+    contactEmail: String(data.contactEmail ?? ""),
+    phone: typeof data.phone === "string" ? data.phone : null,
+    learnerCount: typeof data.learnerCount === "string" ? data.learnerCount : null,
+    messageId: typeof data.messageId === "string" ? data.messageId : null,
+    status: (data.status ?? "pending") as SchoolStatus,
+    apiKey: typeof data.apiKey === "string" ? data.apiKey : null,
+    createdAt: toDate(data.createdAt).toISOString(),
+    decidedAt: data.decidedAt ? toDate(data.decidedAt).toISOString() : null,
+  };
+}
+
+export type CreateSchoolInput = {
+  name: string;
+  contactName: string;
+  contactEmail: string;
+  phone?: string | null;
+  learnerCount?: string | null;
+  messageId?: string | null;
+};
+
+/** Fetches an existing pending school for a message (dedupe), else creates one. */
+export async function upsertSchoolRequest(
+  input: CreateSchoolInput
+): Promise<School> {
+  if (!ENV.firebaseConfigured) {
+    return {
+      id: `sch_${input.contactEmail.replace(/[^a-z0-9]/gi, "").slice(0, 6)}`,
+      name: input.name,
+      contactName: input.contactName,
+      contactEmail: input.contactEmail,
+      phone: input.phone ?? null,
+      learnerCount: input.learnerCount ?? null,
+      messageId: input.messageId ?? null,
+      status: "pending",
+      apiKey: null,
+      createdAt: new Date().toISOString(),
+      decidedAt: null,
+    };
+  }
+  const col = getFirestoreDb().collection(SCHOOLS_COLLECTION);
+  const existing = await col
+    .where("contactEmail", "==", input.contactEmail.toLowerCase())
+    .where("status", "==", "pending")
+    .limit(1)
+    .get();
+  if (!existing.empty) {
+    const found = mapSchool(existing.docs[0]);
+    if (found) return found;
+  }
+  const now = new Date();
+  const doc = col.doc(nanoid(18));
+  await doc.set({
+    name: String(input.name).trim(),
+    contactName: String(input.contactName).trim(),
+    contactEmail: String(input.contactEmail).trim().toLowerCase(),
+    phone: input.phone?.trim() || null,
+    learnerCount: input.learnerCount?.trim() || null,
+    messageId: input.messageId ?? null,
+    status: "pending",
+    apiKey: null,
+    createdAt: now,
+    decidedAt: null,
+  } satisfies StoredSchool);
+  const created = await doc.get();
+  const school = mapSchool(created);
+  if (!school) throw new Error("Failed to read back the created school");
+  return school;
+}
+
+export async function listSchools(): Promise<School[]> {
+  if (!ENV.firebaseConfigured) return [];
+  const snap = await getFirestoreDb()
+    .collection(SCHOOLS_COLLECTION)
+    .orderBy("createdAt", "desc")
+    .limit(300)
+    .get();
+  return snap.docs
+    .map((doc) => mapSchool(doc))
+    .filter((school): school is School => Boolean(school));
+}
+
+export async function decideSchool(
+  id: string,
+  status: SchoolStatus,
+  apiKey: string | null
+): Promise<School | undefined> {
+  if (!ENV.firebaseConfigured) return undefined;
+  const doc = getFirestoreDb().collection(SCHOOLS_COLLECTION).doc(id);
+  await doc.update({
+    status,
+    ...(apiKey !== null ? { apiKey } : {}),
+    decidedAt: new Date(),
+  });
+  return mapSchool(await doc.get());
 }

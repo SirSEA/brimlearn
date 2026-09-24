@@ -7,6 +7,16 @@ export const ENV = {
   isProduction: process.env.NODE_ENV === "production",
   forgeApiUrl: process.env.BUILT_IN_FORGE_API_URL ?? "",
   forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? "",
+  /**
+   * Model used for quiz & assessment generation. The app ships preconfigured
+   * for Cerebras ("Celebras") — an OpenAI-compatible endpoint. Defaults to the
+   * hosted `gpt-oss-120b`, which supports strict JSON-schema structured
+   * outputs (see server/_core/llm.ts).
+   */
+  aiModel: process.env.AI_MODEL ?? "gpt-oss-120b",
+  /** Admin inbox for contact-form & school-partnership messages. Defaults to
+   *  the seeded admin email so nothing needs to be set for local testing. */
+  contactNotifyEmail: process.env.CONTACT_NOTIFY_EMAIL ?? process.env.ADMIN_EMAIL ?? "",
   // Google OAuth (Sign in with Google). Client credentials from a Google Cloud
   // OAuth 2.0 web client. The callback URL must be registered as an authorized
   // redirect URI in the Google Cloud console.
@@ -28,17 +38,27 @@ export const ENV = {
         process.env.GOOGLE_APPLICATION_CREDENTIALS
     );
   },
-  // Transactional email (password resets, notifications). Until SMTP is
-  // configured, the app runs in "demo" mode and returns reset links directly to
-  // the browser so the flow can be tested without a mail server.
+  // Transactional email (password resets, notifications). Priority:
+  // 1) Resend (RESEND_API_KEY) — the recommended provider for this app.
+  // 2) Generic SMTP (SMTP_*) via nodemailer.
+  // 3) Neither → "demo" mode returns reset links directly to the browser.
+  //
+  // With Resend, use a verified sender domain in the "from" address. If you
+  // have not added a domain yet, `BrimLearn <onboarding@resend.dev>` is the
+  // only sender allowed (it accepts the first 100 emails on a fresh account).
+  resendApiKey: process.env.RESEND_API_KEY ?? "",
   mailHost: process.env.SMTP_HOST ?? "",
   mailPort: Number(process.env.SMTP_PORT ?? "587"),
   mailSecure: process.env.SMTP_SECURE === "true",
   mailUser: process.env.SMTP_USER ?? "",
   mailPass: process.env.SMTP_PASS ?? "",
-  mailFrom: process.env.SMTP_FROM ?? "",
+  /** Shared "from" used by Resend and SMTP (SMTP_FROM). */
+  mailFrom: process.env.MAIL_FROM ?? process.env.SMTP_FROM ?? "",
   get mailConfigured(): boolean {
-    return Boolean(this.mailHost && this.mailPort && this.mailUser && this.mailPass && this.mailFrom);
+    return Boolean(
+      this.resendApiKey ||
+        (this.mailHost && this.mailPort && this.mailUser && this.mailPass && this.mailFrom)
+    );
   },
   // How long a password-reset link stays valid.
   passwordResetTtlMinutes: Number(process.env.PASSWORD_RESET_TTL_MINUTES ?? "30"),

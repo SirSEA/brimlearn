@@ -1,4 +1,4 @@
-import type { UserRole } from "./const";
+import type { UserRole, UserStatus } from "./const";
 
 /**
  * User stored in the Firestore `users` collection. The document id IS the
@@ -11,6 +11,13 @@ export type User = {
   email: string | null;
   loginMethod: string | null;
   role: UserRole;
+  /** active | suspended. Suspended accounts cannot sign in and existing
+   *  sessions are rejected by the auth middleware until reactivated. */
+  status: UserStatus;
+  /** Per-user preferences (set from the Settings tab). */
+  preferences: {
+    emailNotifications?: boolean;
+  } | null;
   /** scrypt hash of the password for email/password accounts. Null for OAuth-only users. */
   passwordHash: string | null;
   /** Hex salt used when hashing `passwordHash`. Null for OAuth-only users. */

@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { CurriculumPrompt } from "@/features/curriculum/CurriculumPrompt";
 import { QuizGenerator } from "@/features/quiz/QuizGenerator";
 import { Header } from "./Header";
@@ -9,21 +9,37 @@ type AppShellProps = {
   mode: Mode;
   onNavigate: (mode: Mode) => void;
   tabs: NavItem[];
-  renderBody: (active: string, go: (key: string) => void, openModal: (which: "curriculum" | "quiz") => void) => ReactNode;
+  /** Pre-selected sidebar key ("profile" / "settings"). Defaults to the mode's home tab. */
+  initialActive?: string;
+  renderBody: (
+    active: string,
+    go: (key: string) => void,
+    openModal: (which: "curriculum" | "quiz") => void,
+  ) => ReactNode;
 };
 
-export default function AppShell({ mode, onNavigate, tabs, renderBody }: AppShellProps) {
-  const [active, setActive] = useState(primaryKeyFor(mode));
+export default function AppShell({
+  mode,
+  onNavigate,
+  tabs,
+  initialActive,
+  renderBody,
+}: AppShellProps) {
+  const [active, setActive] = useState(initialActive ?? primaryKeyFor(mode));
+  const previousMode = useRef<Mode>(mode);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [curriculumOpen, setCurriculumOpen] = useState(false);
   const [quizOpen, setQuizOpen] = useState(false);
 
   useEffect(() => {
+    if (previousMode.current === mode) return;
+    previousMode.current = mode;
     setActive(primaryKeyFor(mode));
   }, [mode]);
 
   const go = (key: string) => setActive(key);
-  const openModal = (which: "curriculum" | "quiz") => (which === "curriculum" ? setCurriculumOpen(true) : setQuizOpen(true));
+  const openModal = (which: "curriculum" | "quiz") =>
+    which === "curriculum" ? setCurriculumOpen(true) : setQuizOpen(true);
   const sidebarProps = {
     mode,
     onNavigate,
@@ -42,7 +58,10 @@ export default function AppShell({ mode, onNavigate, tabs, renderBody }: AppShel
         </div>
         {mobileOpen && (
           <div className="fixed inset-0 z-50 flex lg:hidden">
-            <button className="absolute inset-0 bg-[#1A1512]/45" onClick={() => setMobileOpen(false)} />
+            <button
+              className="absolute inset-0 bg-[#1A1512]/45"
+              onClick={() => setMobileOpen(false)}
+            />
             <div className="relative h-full shadow-2xl">
               <Sidebar {...sidebarProps} onClose={() => setMobileOpen(false)} />
             </div>
@@ -50,10 +69,14 @@ export default function AppShell({ mode, onNavigate, tabs, renderBody }: AppShel
         )}
         <div className="min-w-0 flex-1">
           <Header mode={mode} setMobileOpen={setMobileOpen} />
-          <main className="mx-auto max-w-[1420px] px-5 py-7 lg:px-10 lg:py-9">{renderBody(active, go, openModal)}</main>
+          <main className="mx-auto max-w-[1420px] px-5 py-7 lg:px-10 lg:py-9">
+            {renderBody(active, go, openModal)}
+          </main>
         </div>
       </div>
-      {curriculumOpen && <CurriculumPrompt onClose={() => setCurriculumOpen(false)} />}
+      {curriculumOpen && (
+        <CurriculumPrompt onClose={() => setCurriculumOpen(false)} />
+      )}
       {quizOpen && <QuizGenerator onClose={() => setQuizOpen(false)} />}
     </div>
   );

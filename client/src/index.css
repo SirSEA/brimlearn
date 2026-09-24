@@ -1,11 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Instrument Sans', 'DM Sans', ui-sans-serif, system-ui, sans-serif;
   --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -107,7 +107,7 @@
 
 @layer base {
   * { @apply border-border outline-ring/50; }
-  html { font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif; background: #F7F0E6; font-size: 18px; }
+  html { font-family: 'Instrument Sans', 'DM Sans', ui-sans-serif, system-ui, sans-serif; background: #F7F0E6; font-size: 18px; }
   html body { font-size: 1rem; line-height: 1.6; }
   body { @apply bg-background text-foreground; margin: 0; }
   p, li, td, th, label, input, select, textarea, button, span { letter-spacing: 0.003em; }

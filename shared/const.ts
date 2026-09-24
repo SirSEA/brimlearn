@@ -35,6 +35,10 @@ export type UserRole = (typeof USER_ROLES)[number];
 export const SIGNUP_ROLES = ["student", "parent", "tutor"] as const;
 export type SignupRole = (typeof SIGNUP_ROLES)[number];
 
+/** Account lifecycle status. `suspended` blocks sign-in and existing sessions. */
+export const USER_STATUSES = ["active", "suspended"] as const;
+export type UserStatus = (typeof USER_STATUSES)[number];
+
 /** Login method stored for email/password accounts (as opposed to OAuth platforms). */
 export const EMAIL_LOGIN_METHOD = "email";
 

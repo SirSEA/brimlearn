@@ -16,6 +16,7 @@ import Landing from "./pages/Landing";
 import Lesson from "./pages/Lesson";
 import Parent from "./pages/Parent";
 import Tutor from "./pages/Tutor";
+import { AccountPage } from "./components/account/AccountPage";
 
 function Router() {
   return (
@@ -61,6 +62,16 @@ function Router() {
       <Route path="/learn">
         <AuthGate>
           <Home />
+        </AuthGate>
+      </Route>
+      <Route path="/profile">
+        <AuthGate>
+          <AccountPage initialTab="profile" />
+        </AuthGate>
+      </Route>
+      <Route path="/settings">
+        <AuthGate>
+          <AccountPage initialTab="settings" />
         </AuthGate>
       </Route>
       <Route path="/404">
