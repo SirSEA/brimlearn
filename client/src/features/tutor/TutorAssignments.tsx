@@ -24,6 +24,7 @@ import {
   type CreateAssignmentInput,
 } from "@/_core/api";
 import { publishAssignment } from "@/lib/assignmentStore";
+import { Pagination } from "@/components/ui/Pagination";
 
 type Audience = "class" | "group" | "individual";
 type TeacherType = AssignmentType;
@@ -164,6 +165,8 @@ export function TutorAssignments() {
   const [assignments, setAssignments] =
     useState<AssignmentItem[]>(defaultAssignments);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const pageSize = 6;
 
   const refresh = useCallback(() => {
     setLoading(true);
@@ -183,6 +186,10 @@ export function TutorAssignments() {
   }, [refresh]);
 
   const previewLearners = allToNames(audience, selected);
+
+  const totalPages = Math.max(1, Math.ceil(assignments.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pageItems = assignments.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const pickWorksheet = async (file: File | undefined) => {
     if (!file) return;
@@ -595,7 +602,7 @@ export function TutorAssignments() {
               </span>
             </div>
             <div className="mt-4 space-y-3">
-              {assignments.map((assignment) => (
+              {pageItems.map((assignment) => (
                 <div
                   key={assignment.id}
                   className="rounded-2xl border border-[#F3E9DE] p-3.5"
@@ -635,6 +642,9 @@ export function TutorAssignments() {
                 No assignments yet. Create one above and it will show up here
                 and on every learner’s Tracker.
               </div>
+            )}
+            {!loading && assignments.length > 0 && (
+              <Pagination page={currentPage} pageSize={pageSize} total={assignments.length} onPageChange={setPage} className="mt-5" />
             )}
           </div>
         </div>

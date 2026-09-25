@@ -189,14 +189,14 @@ export function QuizTakeOverlay({ assignment, onClose, onFinish }: Props) {
                 </div>
               )}
 
-              <div className="mt-7 flex items-center justify-between gap-3">
+              <div className="mt-7 flex flex-wrap items-center justify-between gap-3">
                 <div className="text-xs text-[#A08A75]">
                   {answeredCount}/{questions.length} answered
                 </div>
                 <button
                   onClick={next}
                   disabled={!currentAnswered}
-                  className="flex items-center gap-2 rounded-full bg-[#C65A2E] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#A84A22] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex items-center gap-2 rounded-full bg-[#C65A2E] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#A84A22] disabled:cursor-not-allowed disabled:opacity-50 sm:px-5 sm:py-3"
                 >
                   {index === questions.length - 1
                     ? "Finish quiz"

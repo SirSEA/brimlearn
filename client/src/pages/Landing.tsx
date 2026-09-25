@@ -29,8 +29,8 @@ export function LandingPage({ content }: { content: LandingContent }) {
     <div className="min-h-screen bg-[#F7EFE3] text-[#1A1512]">
       {/* Nav */}
       <header className="sticky top-0 z-40 bg-[#3B241A]/95 backdrop-blur">
-        <div className="mx-auto flex h-[72px] max-w-6xl items-center justify-between px-5">
-          <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="text-left" aria-label={content.brand.name}>
+        <div className="mx-auto flex h-[70px] max-w-6xl items-center justify-between gap-3 px-4 sm:h-[72px] sm:px-5">
+          <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="min-w-0 text-left" aria-label={content.brand.name}>
             <BrimMark />
           </button>
           <nav className="hidden items-center gap-8 text-sm font-semibold text-[#F3E5D5] md:flex">
@@ -38,25 +38,27 @@ export function LandingPage({ content }: { content: LandingContent }) {
             <a href="#courses" className="transition hover:text-white">Courses & lessons</a>
             <a href="#contact" className="transition hover:text-white">About & contact</a>
           </nav>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             {authLoading ? null : user ? (
               <button
                 onClick={() => setLocation(roleHomePath(user.role))}
-                className="flex items-center gap-1.5 rounded-full bg-[#FFC857] px-4 py-2 text-sm font-semibold text-[#1A1512] transition hover:bg-[#FFC857]"
+                className="flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[#FFC857] px-3.5 py-2 text-xs font-semibold text-[#1A1512] transition hover:bg-[#FFC857] sm:text-sm"
               >
-                Open my dashboard <ArrowRight size={15} />
+                <span className="hidden sm:inline">Open my dashboard</span>
+                <span className="sm:hidden">Dashboard</span>
+                <ArrowRight size={14} className="hidden sm:block" />
               </button>
             ) : (
               <>
                 <button
                   onClick={() => setLocation("/login")}
-                  className="hidden rounded-full px-4 py-2 text-sm font-semibold text-[#F3E5D5] transition hover:bg-white/10 hover:text-white sm:block"
+                  className="hidden rounded-full px-3.5 py-2 text-xs font-semibold text-[#F3E5D5] transition hover:bg-white/10 hover:text-white sm:block sm:text-sm"
                 >
                   Sign in
                 </button>
                 <button
                   onClick={() => setLocation("/signup")}
-                  className="rounded-full bg-[#FFC857] px-4 py-2 text-sm font-semibold text-[#1A1512] transition hover:bg-[#FFC857]"
+                  className="whitespace-nowrap rounded-full bg-[#FFC857] px-3.5 py-2 text-xs font-semibold text-[#1A1512] transition hover:bg-[#FFC857] sm:px-4 sm:text-sm"
                 >
                   Start learning free
                 </button>
@@ -73,18 +75,18 @@ export function LandingPage({ content }: { content: LandingContent }) {
             <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-[11px] font-semibold text-[#FFC857]">
               <Sparkles size={13} /> {content.hero.eyebrow}
             </div>
-            <h1 className="font-display text-[42px] font-semibold leading-[1.02] tracking-[-0.05em] sm:text-[56px]">{content.hero.headline}</h1>
+            <h1 className="font-display text-4xl font-semibold leading-[1.04] tracking-[-0.05em] sm:text-[56px]">{content.hero.headline}</h1>
             <p className="mt-5 max-w-xl text-base leading-7 text-[#D9C4B0]">{content.hero.subheadline}</p>
             <div className="mt-8 flex flex-wrap gap-3">
               <a
                 href={content.hero.primaryCtaHref}
-                className="inline-flex items-center gap-2 rounded-full bg-[#FFC857] px-6 py-3 text-sm font-semibold text-[#1A1512] shadow-[0_6px_0_#2A1D16] transition hover:bg-[#FFC857]"
+                className="inline-flex items-center gap-2 rounded-full bg-[#FFC857] px-5 py-2.5 text-sm font-semibold text-[#1A1512] shadow-[0_6px_0_#2A1D16] transition hover:bg-[#FFC857] sm:px-6 sm:py-3"
               >
                 {content.hero.primaryCtaLabel} <ArrowRight size={15} />
               </a>
               <a
                 href={content.hero.secondaryCtaHref}
-                className="inline-flex items-center gap-1.5 rounded-full border border-white/25 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/25 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10 sm:px-6 sm:py-3"
               >
                 {content.hero.secondaryCtaLabel}
               </a>
@@ -102,9 +104,9 @@ export function LandingPage({ content }: { content: LandingContent }) {
               <div className="relative h-[340px] w-full overflow-hidden rounded-[32px] bg-[#3B241A]">
                 <div className="absolute -right-14 -top-10 h-60 w-60 rounded-full border-[26px] border-[#E3A72F]/20" />
                 <div className="absolute -bottom-20 right-10 h-60 w-60 rounded-full border-[40px] border-[#E3A72F]/10" />
-                <div className="absolute bottom-8 left-8 rounded-[22px] bg-[#FFC857] p-6 text-[#1A1512] shadow-xl">
-                  <div className="font-display text-3xl font-semibold tracking-[-0.04em]">Practice in small, steady steps</div>
-                  <div className="mt-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#1A1512]">JSS1 · Maths · Week 2</div>
+                <div className="absolute bottom-6 left-6 max-w-[calc(100%-3rem)] rounded-[22px] bg-[#FFC857] p-4 text-[#1A1512] shadow-xl sm:bottom-8 sm:left-8 sm:p-6">
+                  <div className="font-display text-xl font-semibold leading-snug tracking-[-0.04em] sm:text-3xl">Practice in small, steady steps</div>
+                  <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#1A1512] sm:text-xs">JSS1 · Maths · Week 2</div>
                 </div>
               </div>
             )}
@@ -223,7 +225,7 @@ export function LandingPage({ content }: { content: LandingContent }) {
           <div className="absolute -right-10 -top-16 h-56 w-56 rounded-full border-[28px] border-white/20" />
           <h2 className="font-display text-3xl font-semibold tracking-[-0.05em] sm:text-4xl">{content.cta.heading}</h2>
           <p className="mt-3 max-w-xl text-sm leading-7 text-[#1A1512]">{content.cta.body}</p>
-          <a href={content.cta.buttonHref} className="mt-7 inline-flex items-center gap-2 rounded-full bg-[#C65A2E] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#A84A22]">
+          <a href={content.cta.buttonHref} className="mt-7 inline-flex items-center gap-2 rounded-full bg-[#C65A2E] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#A84A22] sm:px-6 sm:py-3">
             {content.cta.buttonLabel} <ArrowUpRight size={15} />
           </a>
         </div>

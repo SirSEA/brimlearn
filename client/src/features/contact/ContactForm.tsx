@@ -134,7 +134,7 @@ export function ContactForm() {
         <button
           onClick={submit}
           disabled={sending}
-          className="inline-flex items-center gap-2 rounded-full bg-[#FFC857] px-6 py-3 text-sm font-semibold text-[#1A1512] transition hover:bg-[#FFC857]/90 disabled:opacity-60"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#FFC857] px-5 py-2.5 text-sm font-semibold text-[#1A1512] transition hover:bg-[#FFC857]/90 disabled:opacity-60 sm:w-auto sm:px-6 sm:py-3"
         >
           <Send size={14} /> {sending ? "Sending…" : "Send message"}
         </button>

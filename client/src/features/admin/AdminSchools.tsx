@@ -2,11 +2,14 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ApiUnavailableError, type School, api } from "@/_core/api";
 import { Building2, Check, X, KeyRound, Mail, Copy } from "lucide-react";
+import { Pagination } from "@/components/ui/Pagination";
 
 export function AdminSchools({ onOpenMessages }: { onOpenMessages?: () => void }) {
   const [schools, setSchools] = useState<School[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [pending, setPending] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const pageSize = 6;
 
   const load = useCallback(async () => {
     setLoaded(true);
@@ -25,6 +28,10 @@ export function AdminSchools({ onOpenMessages }: { onOpenMessages?: () => void }
     const rank = { pending: 0, approved: 1, rejected: 2 } as const;
     return [...schools].sort((a, b) => rank[a.status] - rank[b.status] || new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [schools]);
+
+  const totalPages = Math.max(1, Math.ceil(ordered.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pageItems = ordered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const decide = async (school: School, status: "approved" | "rejected") => {
     setPending(school.id);
@@ -97,7 +104,7 @@ export function AdminSchools({ onOpenMessages }: { onOpenMessages?: () => void }
             </p>
           ) : (
             <div className="space-y-4">
-              {ordered.map((school) => (
+              {pageItems.map((school) => (
                 <div key={school.id} className="rounded-2xl border border-[#F3E9DE] bg-white p-5">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0">
@@ -163,6 +170,9 @@ export function AdminSchools({ onOpenMessages }: { onOpenMessages?: () => void }
                 </div>
               ))}
             </div>
+          )}
+          {loaded && ordered.length > 0 && (
+            <Pagination page={currentPage} pageSize={pageSize} total={ordered.length} onPageChange={setPage} />
           )}
         </div>
       </section>

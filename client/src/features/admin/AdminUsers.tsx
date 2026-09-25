@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ApiUnavailableError, type AdminUser, type AuthRole, api } from "@/_core/api";
 import { Users, Search, ShieldAlert } from "lucide-react";
+import { Pagination } from "@/components/ui/Pagination";
 import { UserDetailModal } from "./UserDetailModal";
 import { useAuth } from "@/_core/hooks/useAuth";
 
@@ -33,6 +34,8 @@ export function AdminUsers() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [selected, setSelected] = useState<AdminUser | null>(null);
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   const load = useCallback(async () => {
     setLoaded(true);
@@ -68,6 +71,10 @@ export function AdminUsers() {
       });
   }, [users, query, filter]);
 
+  const totalPages = Math.max(1, Math.ceil(visible.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pageItems = visible.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
   const updateUser = (updated: AdminUser) => {
     setUsers((current) => current.map((item) => (item.id === updated.id ? updated : item)));
     setSelected(updated);
@@ -92,7 +99,7 @@ export function AdminUsers() {
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A08A75]" />
             <input
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => { setQuery(event.target.value); setPage(1); }}
               placeholder="Search by name or email…"
               className="w-full rounded-xl border border-[#E2CDB8] bg-[#FFFDF8] py-2.5 pl-9 pr-3 text-sm text-[#3B241A] outline-none transition focus:border-[#8CAE70] focus:ring-2 focus:ring-[#FFC857]/40"
             />
@@ -101,7 +108,7 @@ export function AdminUsers() {
             {FILTERS.map((item) => (
               <button
                 key={item.key}
-                onClick={() => setFilter(item.key)}
+                onClick={() => { setFilter(item.key); setPage(1); }}
                 className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
                   filter === item.key ? "bg-[#3B241A] text-white" : "bg-[#F3E9DE] text-[#765F4F] hover:bg-[#EADDCB]"
                 }`}
@@ -120,8 +127,9 @@ export function AdminUsers() {
               {users.length === 0 ? "No accounts yet. Accounts appear here as soon as people sign up." : "No accounts match that filter."}
             </p>
           ) : (
-            <div className="divide-y divide-[#F3E9DE]">
-              {visible.map((user) => (
+            <>
+              <div className="divide-y divide-[#F3E9DE]">
+                {pageItems.map((user) => (
                 <button
                   key={user.id}
                   onClick={() => setSelected(user)}
@@ -156,7 +164,9 @@ export function AdminUsers() {
                   </div>
                 </button>
               ))}
-            </div>
+              </div>
+              <Pagination page={currentPage} pageSize={pageSize} total={visible.length} onPageChange={setPage} />
+            </>
           )}
         </div>
       </section>

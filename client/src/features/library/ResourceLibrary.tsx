@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { api, type Resource } from "@/_core/api";
 import { buildYouTubeEmbedUrl } from "@shared/resource";
+import { Pagination } from "@/components/ui/Pagination";
 
 type Category = "recording" | "reading" | "material" | "worksheet";
 
@@ -82,6 +83,8 @@ export function ResourceLibrary() {
   const [ready, setReady] = useState(false);
   const [isDemo, setIsDemo] = useState(false);
   const [preview, setPreview] = useState<ViewResource | null>(null);
+  const [page, setPage] = useState(1);
+  const pageSize = 9;
 
   useEffect(() => {
     let mounted = true;
@@ -107,6 +110,10 @@ export function ResourceLibrary() {
   const visible = resources.filter(
     (resource) => (filter === "all" || resource.category === filter) && resource.title.toLowerCase().includes(query.toLowerCase())
   );
+
+  const totalPages = Math.max(1, Math.ceil(visible.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pageItems = visible.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   async function download(resource: ViewResource) {
     if (resource.action === "demo" || !resource.fileName) {
@@ -160,17 +167,17 @@ export function ResourceLibrary() {
             <h1 className="font-display text-[34px] font-semibold leading-[1.04] tracking-[-0.06em] sm:text-[40px]">Everything you need, in one shelf.</h1>
             <p className="mt-3 text-sm leading-6 text-[#D9C4B0]">Videos and files your teacher has published — watch lessons and download worksheets for revision.</p>
           </div>
-          <div className="relative"><Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8A7361]" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search the library…" className="w-full rounded-full border border-white/15 bg-white/10 py-3 pl-10 pr-4 text-sm text-white placeholder:text-[#BFA993] outline-none focus:border-[#FFC857] md:w-72" /></div>
+          <div className="relative"><Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8A7361]" /><input value={query} onChange={(event) => { setQuery(event.target.value); setPage(1); }} placeholder="Search the library…" className="w-full rounded-full border border-white/15 bg-white/10 py-3 pl-10 pr-4 text-sm text-white placeholder:text-[#BFA993] outline-none focus:border-[#FFC857] md:w-72" /></div>
         </div>
       </section>
 
       <section className="mt-7 rounded-[27px] border border-[#E2CDB8] bg-[#FFFDF8] p-6 sm:p-7">
         <div className="flex flex-wrap items-center gap-2">
-          {kinds.map((kind) => <button key={kind.key} onClick={() => setFilter(kind.key)} className={`rounded-full px-4 py-2 text-xs font-semibold transition ${filter === kind.key ? "bg-[#C65A2E] text-white" : "bg-[#F7EFE3] text-[#765F4F] hover:bg-[#EFEFDD]"}`}>{kind.label}</button>)}
+          {kinds.map((kind) => <button key={kind.key} onClick={() => { setFilter(kind.key); setPage(1); }} className={`rounded-full px-4 py-2 text-xs font-semibold transition ${filter === kind.key ? "bg-[#C65A2E] text-white" : "bg-[#F7EFE3] text-[#765F4F] hover:bg-[#EFEFDD]"}`}>{kind.label}</button>)}
           <span className="ml-auto text-xs font-semibold text-[#A08A75]">{ready ? `${visible.length} item${visible.length === 1 ? "" : "s"}` : "Loading…"}</span>
         </div>
         <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {visible.map((resource) => {
+          {pageItems.map((resource) => {
             const Icon = resource.Icon;
             return (
               <div key={resource.id} className="group rounded-[22px] border border-[#F3E9DE] p-5 transition hover:-translate-y-0.5 hover:border-[#C8B3A0] hover:shadow-[0_14px_25px_rgba(55,33,22,.08)]">
@@ -187,6 +194,9 @@ export function ResourceLibrary() {
             </div>
           )}
         </div>
+        {ready && visible.length > 0 && (
+          <Pagination page={currentPage} pageSize={pageSize} total={visible.length} onPageChange={setPage} className="mt-6" />
+        )}
       </section>
 
       {preview && preview.youtubeId && (

@@ -50,10 +50,10 @@ export function Sidebar({ mode, onNavigate, tabs, active, setActive, onClose, on
               <button
                 key={item}
                 onClick={() => { onNavigate(item); onClose?.(); }}
-                className={`flex items-center gap-2 rounded-xl px-2.5 py-2 text-left text-xs transition ${selected ? "bg-[#FFC857] font-semibold text-[#1A1512]" : "text-[#EDDED0] hover:bg-white/10"}`}
+                className={`flex min-w-0 items-center gap-2 rounded-xl px-2.5 py-2 text-left text-xs transition ${selected ? "bg-[#FFC857] font-semibold text-[#1A1512]" : "text-[#EDDED0] hover:bg-white/10"}`}
               >
-                <Icon size={14} />
-                <span>{modeMeta[item].short}</span>
+                <Icon size={14} className="shrink-0" />
+                <span className="truncate">{modeMeta[item].short}</span>
               </button>
             );
           })}

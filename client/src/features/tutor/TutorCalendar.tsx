@@ -238,9 +238,9 @@ export function TutorCalendar() {
 
             <div className="mt-5">
               <div className="text-xs font-semibold text-[#765F4F]">What kind of slot?</div>
-              <div className="mt-2 grid grid-cols-3 gap-2">
+              <div className="mt-2 flex gap-2">
                 {([["live", "Live session", Video], ["deadline", "Deadline", CheckCircle2], ["meeting", "Parent meeting", Users2]] as Array<[CalendarEvent["kind"], string, typeof Video]>).map(([key, label, Icon]) => (
-                  <button key={key} onClick={() => setKind(key)} className={`flex flex-col items-center gap-2 rounded-2xl border p-3.5 text-xs font-semibold transition ${kind === key ? "border-[#4B6B3C] bg-[#E9EED9] text-[#4B6B3C]" : "border-[#E2CDB8] bg-[#FFFDF8] text-[#765F4F] hover:border-[#A9BF87]"}`}><Icon size={17} />{label}</button>
+                  <button key={key} onClick={() => setKind(key)} className={`flex min-w-0 flex-1 flex-col items-center gap-2 rounded-2xl border p-3 text-center text-[11px] font-semibold transition sm:flex-row sm:justify-center sm:p-3.5 sm:text-xs ${kind === key ? "border-[#4B6B3C] bg-[#E9EED9] text-[#4B6B3C]" : "border-[#E2CDB8] bg-[#FFFDF8] text-[#765F4F] hover:border-[#A9BF87]"}`}><Icon size={17} className="shrink-0" />{label}</button>
                 ))}
               </div>
               {kind === "live" && <div className="mt-3 rounded-2xl bg-[#E8EFF9] p-3 text-[11px] leading-5 text-[#274852]">Live sessions run in BrimLearn's embedded classroom. You start it as host; learners join the same room from their Classroom tab — video, chat, and hand-raising included.</div>}
@@ -253,7 +253,7 @@ export function TutorCalendar() {
               <label className="block text-xs font-semibold text-[#765F4F]">Details (optional)<span className="mt-1.5 block"><input value={meta} onChange={(event) => setMeta(event.target.value)} placeholder={kind === "live" ? "JSS1 · BrimLearn Live (embedded room)" : kind === "meeting" ? "Video call · 30 min" : "Whole class · auto-marked"} className="w-full rounded-xl border border-[#E2CDB8] bg-[#FFFDF8] px-3 py-2.5 text-xs font-semibold text-[#3B241A] outline-none placeholder:font-medium placeholder:text-[#B3A089] focus:border-[#8CAE70]" /></span></label>
             </div>
 
-            <div className="mt-6 flex justify-end gap-3">
+            <div className="mt-6 flex flex-wrap justify-end gap-3">
               <button onClick={() => setScheduling(false)} className="rounded-full px-4 py-3 text-sm font-semibold text-[#8A7361] hover:bg-[#F7EFE3]">Cancel</button>
               <button onClick={save} className="rounded-full bg-[#C65A2E] px-5 py-3 text-sm font-semibold text-white hover:bg-[#A84A22]">Schedule slot</button>
             </div>

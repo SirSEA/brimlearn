@@ -908,15 +908,15 @@ function MessageBubble({
               />
             </a>
           ) : message.type === "voice" ? (
-            <div className="flex min-w-[200px] items-center gap-3">
+            <div className="flex min-w-0 items-center gap-3">
               <audio
                 src={message.mediaUrl ?? ""}
                 preload="metadata"
-                className="w-full max-w-[240px]"
+                className="w-full max-w-[200px]"
                 controls
               />
               <span
-                className={`text-[10px] ${mine ? "text-[#F3D9C8]" : "text-[#A08A75]"}`}
+                className={`shrink-0 text-[10px] ${mine ? "text-[#F3D9C8]" : "text-[#A08A75]"}`}
               >
                 {formatDuration(message.voiceDuration)}
               </span>

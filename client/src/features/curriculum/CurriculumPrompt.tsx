@@ -220,7 +220,7 @@ export function CurriculumPrompt({ onClose }: { onClose: () => void }) {
               <label className="flex cursor-pointer items-center gap-2 rounded-full border border-[#E2CDB8] px-4 py-2.5 text-xs font-semibold text-[#765F4F] hover:bg-[#F7EFE3]"><Upload size={14} /> {fileName || "Upload a subject curriculum (PDF)"}<input type="file" accept=".pdf,application/pdf" className="hidden" onChange={(event) => { fileRef.current = event.target.files?.[0] || null; setFileName(event.target.files?.[0]?.name || ""); }} /></label>
               <span className="text-xs text-[#A08A75]">PDF only — we extract the scheme table automatically</span>
             </div>
-            <div className="mt-7 flex justify-end gap-3">
+            <div className="mt-7 flex flex-wrap justify-end gap-3">
               <button onClick={() => setTab("library")} className="rounded-full px-4 py-3 text-sm font-semibold text-[#8A7361] hover:bg-[#F7EFE3]">Back to library</button>
               <button disabled={(!curriculum.trim() && !fileName) || importing} onClick={submit} className="rounded-full bg-[#C65A2E] px-5 py-3 text-sm font-semibold text-white hover:bg-[#A84A22] disabled:cursor-not-allowed disabled:opacity-40">{importing ? "Reading curriculum…" : "Add subject curriculum"} <ChevronRight className="ml-1 inline" size={15} /></button>
             </div>

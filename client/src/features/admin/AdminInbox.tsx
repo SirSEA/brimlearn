@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ApiUnavailableError, type ContactMessage, type MessageStatus, type School, api } from "@/_core/api";
 import { MessagesSquare, Mail, Phone, School as SchoolIcon, Check, X, Archive } from "lucide-react";
+import { Pagination } from "@/components/ui/Pagination";
 
 const STATUS_LABEL: Record<MessageStatus, string> = {
   new: "New",
@@ -29,6 +30,8 @@ export function AdminInbox({ onOpenSchools }: { onOpenSchools?: () => void }) {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [filter, setFilter] = useState<MessageStatus | "all" | "school">("all");
   const [pending, setPending] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const pageSize = 8;
 
   const load = useCallback(async () => {
     setLoaded(true);
@@ -62,6 +65,10 @@ export function AdminInbox({ onOpenSchools }: { onOpenSchools?: () => void }) {
       })
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [messages, filter]);
+
+  const totalPages = Math.max(1, Math.ceil(visible.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pageItems = visible.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const markStatus = async (message: ContactMessage, status: MessageStatus) => {
     setPending(message.id);
@@ -119,7 +126,7 @@ export function AdminInbox({ onOpenSchools }: { onOpenSchools?: () => void }) {
           {filters.map((item) => (
             <button
               key={item.key}
-              onClick={() => setFilter(item.key)}
+              onClick={() => { setFilter(item.key); setPage(1); }}
               className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
                 filter === item.key ? "bg-[#3B241A] text-white" : "bg-[#F3E9DE] text-[#765F4F] hover:bg-[#EADDCB]"
               }`}
@@ -138,7 +145,7 @@ export function AdminInbox({ onOpenSchools }: { onOpenSchools?: () => void }) {
             </p>
           ) : (
             <div className="space-y-3">
-              {visible.map((message) => {
+              {pageItems.map((message) => {
                 const school = schoolByMessage.get(message.id);
                 const open = expanded === message.id;
                 return (
@@ -249,6 +256,9 @@ export function AdminInbox({ onOpenSchools }: { onOpenSchools?: () => void }) {
                 );
               })}
             </div>
+          )}
+          {loaded && visible.length > 0 && (
+            <Pagination page={currentPage} pageSize={pageSize} total={visible.length} onPageChange={setPage} />
           )}
         </div>
       </section>
