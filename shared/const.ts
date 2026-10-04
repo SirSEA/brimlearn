@@ -8,7 +8,7 @@ export const NOT_TUTOR_ERR_MSG = 'Only tutors can publish resources (10003)';
 // Resource files (PDFs, recorded clips) are stored inline as base64 in the
 // Firestore document, so they must stay well under the 1 MiB document limit.
 export const RESOURCE_MAX_BYTES = 512 * 1024;
-export const RESOURCE_MAX_BASE64_CHARS = Math.ceil((RESOURCE_MAX_BYTES * 4) / 3) + 8;
+export const RESOURCE_MAX_BASE64_CHARS = Math.ceil((RESOURCE_MAX_BYTES * 4) / 3) + 8; 
 export const RESOURCE_TOO_LARGE_MSG = 'Files must be 512 KB or smaller. For bigger videos or longer recordings, paste a YouTube link instead.';
 
 // Scheme-of-work PDFs (NERDC weekly plans) parsed server-side. Generous cap:
